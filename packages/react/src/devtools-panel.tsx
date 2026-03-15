@@ -7,10 +7,11 @@ import type {
   EditableFieldConfig,
 } from "@better-auth-devtools/core";
 import { ENDPOINTS } from "@better-auth-devtools/core";
-import { isDevtoolsEnabled } from "@better-auth-devtools/shared";
 import { styles } from "./styles.js";
 
 export interface BetterAuthDevtoolsProps {
+  /** Explicitly enable or disable the panel. Recommended for SSR apps. */
+  enabled?: boolean;
   /** The Better Auth base URL (defaults to current origin + /api/auth) */
   basePath?: string;
   /** Template keys available for user creation */
@@ -32,6 +33,7 @@ interface FetchState<T> {
 }
 
 export function BetterAuthDevtools({
+  enabled: enabledProp,
   basePath = "/api/auth",
   templates = [],
   editableFields = [],
@@ -55,11 +57,11 @@ export function BetterAuthDevtools({
   const [patchValues, setPatchValues] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Check if enabled client-side
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(enabledProp ?? true);
+
   useEffect(() => {
-    setEnabled(isDevtoolsEnabled());
-  }, []);
+    setEnabled(enabledProp ?? true);
+  }, [enabledProp]);
 
   const apiUrl = (endpoint: string) => `${basePath}${endpoint}`;
 

@@ -2,9 +2,14 @@
 
 import { BetterAuthDevtools } from "@better-auth-devtools/react";
 
-export function DevtoolsWrapper() {
+export interface DevtoolsWrapperProps {
+  enabled: boolean;
+}
+
+export function DevtoolsWrapper({ enabled }: DevtoolsWrapperProps) {
   return (
     <BetterAuthDevtools
+      enabled={enabled}
       basePath="/api/auth"
       templates={["admin", "editor", "viewer"]}
       editableFields={[

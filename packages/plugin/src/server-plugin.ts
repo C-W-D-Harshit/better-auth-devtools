@@ -1,5 +1,6 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
+import { setSessionCookie } from "better-auth/cookies";
 import type { DevtoolsPluginConfig } from "@better-auth-devtools/core";
 import {
   ENDPOINTS,
@@ -193,12 +194,21 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
           }
 
           try {
-            // Create a new session using Better Auth's internal adapter
-            const session =
-              await ctx.context.internalAdapter.createSession(
-                userId,
-                ctx.request
+            const user = await ctx.context.internalAdapter.findUserById(userId);
+            if (!user) {
+              return ctx.json(
+                {
+                  error: {
+                    code: ErrorCode.USER_NOT_FOUND,
+                    message: "Managed test user no longer exists",
+                  },
+                },
+                { status: 404 }
               );
+            }
+
+            // Create a new session using Better Auth's internal adapter
+            const session = await ctx.context.internalAdapter.createSession(userId);
 
             if (!session) {
               return ctx.json(
@@ -212,12 +222,10 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
               );
             }
 
-            // Set session cookie
-            const sessionCookie = ctx.context.createAuthCookie("session_token");
-            ctx.setHeader(
-              "Set-Cookie",
-              `${sessionCookie.name}=${session.token};Path=/;HttpOnly;SameSite=Lax`
-            );
+            await setSessionCookie(ctx, {
+              session,
+              user,
+            });
 
             // Get session view from host
             const sessionView = await config.getSessionView({

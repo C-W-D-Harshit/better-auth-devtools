@@ -16,7 +16,7 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'no linter configured'",
-    "test": "echo 'no tests yet'"
+    "test": "pnpm exec vitest run"
   },
   "dependencies": {
     "@better-auth-devtools/shared": "workspace:*"

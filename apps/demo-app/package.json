@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "db:init": "node scripts/bootstrap-db.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "lint": "echo 'no linter configured'",
     "test": "echo 'no tests yet'"
   },
