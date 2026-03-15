@@ -1,0 +1,31 @@
+{
+  "name": "demo-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no linter configured'",
+    "test": "echo 'no tests yet'"
+  },
+  "dependencies": {
+    "better-auth": "^1.2.0",
+    "better-sqlite3": "^12.0.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@better-auth-devtools/plugin": "workspace:*",
+    "@better-auth-devtools/react": "workspace:*",
+    "@better-auth-devtools/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.8.0",
+    "@types/node": "^22.0.0"
+  }
+}

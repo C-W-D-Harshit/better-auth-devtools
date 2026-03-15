@@ -55,7 +55,7 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
           });
 
           return ctx.json(
-            users.map((u: Record<string, unknown>) => ({
+            (users as Record<string, unknown>[]).map((u) => ({
               id: u.id,
               userId: u.userId,
               templateKey: u.templateKey,
