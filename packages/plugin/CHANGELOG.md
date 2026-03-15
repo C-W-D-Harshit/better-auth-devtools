@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.2
+
+### Patch Changes
+
+- Include the package README in the published tarball so the npm page renders the project documentation and unofficial Better Auth disclaimer.
+
 ## 0.1.1-alpha.1
 
 ### Patch Changes

@@ -11,6 +11,7 @@
   },
   "changesets": [
     "cold-snakes-double",
+    "four-schools-rest",
     "warm-donkeys-sip"
   ]
 }
