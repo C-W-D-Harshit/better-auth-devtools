@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.1
+
+### Patch Changes
+
+- d995b58: Fold the public API into a single installable package so users consume `better-auth-devtools/plugin` and `better-auth-devtools/react` from one dependency.
+
 ## 0.1.1-alpha.0
 
 ### Patch Changes

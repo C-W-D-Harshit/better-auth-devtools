@@ -6,7 +6,10 @@
 > [!NOTE]
 > This is an alpha release. Expect API changes, rough edges, incomplete compatibility coverage, and breaking changes before a stable `1.0`.
 
-DevTools for [Better Auth](https://www.better-auth.com/) that let you create managed test users, switch sessions instantly, inspect auth state, and patch approved session fields without rebuilding your app around fake login flows.
+An unofficial devtool for [Better Auth](https://www.better-auth.com/) that lets you create managed test users, switch sessions instantly, inspect auth state, and patch approved session fields without rebuilding your app around fake login flows.
+
+> [!IMPORTANT]
+> This project is unofficial. It is not affiliated with, endorsed by, or maintained by the Better Auth team.
 
 This repo is a Turborepo monorepo with a Next.js demo app and a split package architecture for the Better Auth plugin, React panel, core contracts, and shared utilities.
 
@@ -69,7 +72,6 @@ Working today:
 
 Not done yet:
 
-- package publishing
 - broader framework examples
 - production-safe distribution story
 - full integration test coverage in the demo app
