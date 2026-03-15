@@ -27,8 +27,8 @@ importers:
         specifier: ^1.2.0
         version: 1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15)))
       better-auth-devtools:
-        specifier: 0.1.1-alpha.0
-        version: 0.1.1-alpha.0(better-auth@1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15))))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 0.1.1-alpha.4
+        version: 0.1.1-alpha.4(better-auth@1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15))))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       better-sqlite3:
         specifier: ^12.0.0
         version: 12.8.0
@@ -683,8 +683,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  better-auth-devtools@0.1.1-alpha.0:
-    resolution: {integrity: sha512-qqpFhFn1LL+D6JO4VDs+94Peu28LgR7/pvTvifowrioDybu+smiYQhrynnybLtRwRe4YfdszaqjrBK4+qqZSRA==}
+  better-auth-devtools@0.1.1-alpha.4:
+    resolution: {integrity: sha512-KRcawv0uRdcyVyMRcHo/PViH783yjbm0DwKTh2lJ0ogSUuO/hesfqvKOn2XaEfZv/8Jj58Z+OM0taZHcHjx1GQ==}
     peerDependencies:
       better-auth: '>=1.2.0'
       react: '>=18.0.0'
@@ -2113,7 +2113,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-auth-devtools@0.1.1-alpha.0(better-auth@1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15))))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  better-auth-devtools@0.1.1-alpha.4(better-auth@1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15))))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       better-auth: 1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15)))
       react: 19.2.4
