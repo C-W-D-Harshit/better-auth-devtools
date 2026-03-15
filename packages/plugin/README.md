@@ -1,12 +1,12 @@
-# @better-auth-devtools/plugin
+# better-auth-devtools
 
-Better Auth DevTools server and client plugin.
+Better Auth DevTools as a single installable package.
 
 This package is currently in alpha and may introduce breaking changes between releases.
 
-Exports:
+Use subpath exports:
 
-- `devtoolsPlugin(config)`
-- `devtoolsClientPlugin()`
+- `better-auth-devtools/plugin`
+- `better-auth-devtools/react`
 
 See the root README for setup and demo usage.

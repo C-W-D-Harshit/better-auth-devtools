@@ -1,7 +1,7 @@
 {
   "name": "@better-auth-devtools/react",
   "version": "0.1.1-alpha.0",
-  "private": false,
+  "private": true,
   "description": "Floating React panel for Better Auth DevTools with managed test user switching and session editing.",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,9 +19,6 @@
     "type": "git",
     "url": "git+https://github.com/C-W-D-Harshit/better-auth-devtools.git",
     "directory": "packages/react"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "exports": {
     ".": {
@@ -43,7 +40,7 @@
     "react"
   ],
   "dependencies": {
-    "@better-auth-devtools/plugin": "workspace:*"
+    "better-auth-devtools": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

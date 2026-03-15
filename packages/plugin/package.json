@@ -1,8 +1,8 @@
 {
-  "name": "@better-auth-devtools/plugin",
+  "name": "better-auth-devtools",
   "version": "0.1.1-alpha.0",
   "private": false,
-  "description": "Better Auth DevTools server and client plugin for managed test users, session switching, and session inspection.",
+  "description": "Better Auth DevTools for managed test users, session switching, and a React DevTools panel via plugin/react subpath exports.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,6 +27,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
     }
   },
   "scripts": {
@@ -44,11 +52,17 @@
     "react"
   ],
   "peerDependencies": {
-    "better-auth": ">=1.2.0"
+    "better-auth": ">=1.2.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "better-auth": "^1.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "typescript": "^5.8.0"
   }
 }

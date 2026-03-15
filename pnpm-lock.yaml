@@ -23,15 +23,12 @@ importers:
 
   apps/demo-app:
     dependencies:
-      '@better-auth-devtools/plugin':
-        specifier: workspace:*
-        version: link:../../packages/plugin
-      '@better-auth-devtools/react':
-        specifier: workspace:*
-        version: link:../../packages/react
       better-auth:
         specifier: ^1.2.0
         version: 1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15)))
+      better-auth-devtools:
+        specifier: workspace:*
+        version: link:../../packages/plugin
       better-sqlite3:
         specifier: ^12.0.0
         version: 12.8.0
@@ -72,16 +69,28 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.15
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
       better-auth:
         specifier: ^1.2.0
         version: 1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15)))
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
 
   packages/react:
     dependencies:
-      '@better-auth-devtools/plugin':
+      better-auth-devtools:
         specifier: workspace:*
         version: link:../plugin
     devDependencies:

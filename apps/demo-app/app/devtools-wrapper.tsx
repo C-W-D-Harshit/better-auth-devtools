@@ -1,6 +1,6 @@
 "use client";
 
-import { BetterAuthDevtools } from "@better-auth-devtools/react";
+import { BetterAuthDevtools } from "better-auth-devtools/react";
 
 export interface DevtoolsWrapperProps {
   enabled: boolean;

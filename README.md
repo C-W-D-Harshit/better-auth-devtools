@@ -128,48 +128,22 @@ The product model is intentionally narrow:
 
 That gives you a much cleaner security and compatibility story than “log in as any user in the database.”
 
-## Packages
+## Package
 
-### `@better-auth-devtools/plugin`
+Install one package:
 
-Exports the Better Auth server plugin and matching client plugin:
+- `better-auth-devtools`
 
-- `devtoolsPlugin(config)`
-- `devtoolsClientPlugin()`
+Use it through subpath exports:
 
-Server responsibilities:
+- `better-auth-devtools/plugin`
+- `better-auth-devtools/react`
 
-- registers the `devtoolsUser` table
-- exposes the devtools endpoints
-- enforces runtime guards
-- creates sessions through Better Auth internals
-- sets session cookies through Better Auth cookie helpers
+`better-auth-devtools/plugin` exposes the Better Auth server plugin, client plugin, shared types, endpoint constants, and validation helpers.
 
-Client responsibilities:
+`better-auth-devtools/react` exposes the floating React panel for managed user creation, switching, session inspection, and approved field editing.
 
-- exposes typed actions for the devtools endpoints
-- provides Better Auth client-plugin inference metadata
-
-### `@better-auth-devtools/react`
-
-Exports:
-
-- `BetterAuthDevtools`
-
-The panel is intentionally simple:
-
-- floating trigger
-- template-based user creation
-- managed-user search and switching
-- session inspection
-- editable-field UI for approved patch keys
-
-The public npm surface is intentionally small:
-
-- `@better-auth-devtools/plugin`
-- `@better-auth-devtools/react`
-
-Internal contracts and helpers are kept inside the repo and are not intended to be installed directly.
+Internal workspace packages still exist in this repo for development, but they are not intended to be installed directly.
 
 ## API Surface
 
@@ -195,7 +169,7 @@ In the demo app, the effective URLs are:
 
 ```ts
 import { betterAuth } from "better-auth";
-import { devtoolsPlugin } from "@better-auth-devtools/plugin";
+import { devtoolsPlugin } from "better-auth-devtools/plugin";
 
 export const auth = betterAuth({
   database,
@@ -263,7 +237,7 @@ export const auth = betterAuth({
 
 ```ts
 import { createAuthClient } from "better-auth/react";
-import { devtoolsClientPlugin } from "@better-auth-devtools/plugin";
+import { devtoolsClientPlugin } from "better-auth-devtools/plugin";
 
 export const authClient = createAuthClient({
   plugins: [devtoolsClientPlugin()],
@@ -275,7 +249,7 @@ export const authClient = createAuthClient({
 ```tsx
 "use client";
 
-import { BetterAuthDevtools } from "@better-auth-devtools/react";
+import { BetterAuthDevtools } from "better-auth-devtools/react";
 
 export function Devtools() {
   return (
@@ -354,8 +328,7 @@ This repo is configured for Changesets-based npm publishing.
 
 It is currently in prerelease mode with the `alpha` tag, so published versions are expected to look like:
 
-- `@better-auth-devtools/plugin@0.1.1-alpha.0`
-- `@better-auth-devtools/react@0.1.1-alpha.0`
+- `better-auth-devtools@0.1.1-alpha.0`
 
 Typical flow:
 
@@ -375,10 +348,9 @@ pnpm pre:exit
 
 Automated publishing is wired through [`release.yml`](/Users/harshit/Documents/Developer/better-auth-devtools/.github/workflows/release.yml). On pushes to `main`, Changesets will either open a version PR or publish packages when pending changesets are present and `NPM_TOKEN` is configured in GitHub Actions.
 
-Published packages:
+Published package:
 
-- `@better-auth-devtools/plugin`
-- `@better-auth-devtools/react`
+- `better-auth-devtools`
 
 ## License
 

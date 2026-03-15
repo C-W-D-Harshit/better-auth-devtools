@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import Database from "better-sqlite3";
-import { devtoolsPlugin } from "@better-auth-devtools/plugin";
+import { devtoolsPlugin } from "better-auth-devtools/plugin";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 

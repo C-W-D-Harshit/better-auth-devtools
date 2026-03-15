@@ -1,11 +1,5 @@
 # @better-auth-devtools/react
 
-Floating React DevTools panel for Better Auth DevTools.
+Internal workspace package for the React panel source.
 
-This package is currently in alpha and may introduce breaking changes between releases.
-
-Exports:
-
-- `BetterAuthDevtools`
-
-See the root README for setup and demo usage.
+This package is no longer part of the intended public npm surface. Install `better-auth-devtools` and import from `better-auth-devtools/react` instead.

@@ -9,6 +9,7 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "demo-app",
+    "@better-auth-devtools/react",
     "@better-auth-devtools/core",
     "@better-auth-devtools/shared"
   ]

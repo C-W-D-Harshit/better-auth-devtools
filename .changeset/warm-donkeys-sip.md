@@ -1,6 +1,5 @@
 ---
-"@better-auth-devtools/plugin": patch
-"@better-auth-devtools/react": patch
+"better-auth-devtools": patch
 ---
 
-Collapse the public npm surface to two packages by moving shared contracts into `@better-auth-devtools/plugin` and making `@better-auth-devtools/core` and `@better-auth-devtools/shared` internal-only workspace packages.
+Fold the public API into a single installable package so users consume `better-auth-devtools/plugin` and `better-auth-devtools/react` from one dependency.
