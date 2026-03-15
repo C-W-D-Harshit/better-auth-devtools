@@ -3,12 +3,18 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "changeset": "changeset",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "pre:enter:alpha": "changeset pre enter alpha",
+    "pre:exit": "changeset pre exit",
+    "release": "changeset publish",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0",
     "vitest": "^4.0.18"

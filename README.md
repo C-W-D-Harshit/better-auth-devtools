@@ -3,6 +3,9 @@
 > [!WARNING]
 > Development-only auth tooling. This project is designed for local and trusted development environments only. It must stay disabled in production.
 
+> [!NOTE]
+> This is an alpha release. Expect API changes, rough edges, incomplete compatibility coverage, and breaking changes before a stable `1.0`.
+
 DevTools for [Better Auth](https://www.better-auth.com/) that let you create managed test users, switch sessions instantly, inspect auth state, and patch approved session fields without rebuilding your app around fake login flows.
 
 This repo is a Turborepo monorepo with a Next.js demo app and a split package architecture for the Better Auth plugin, React panel, core contracts, and shared utilities.
@@ -51,7 +54,7 @@ better-auth-devtools/
 ## Current Status
 
 > [!NOTE]
-> The repo is implemented and runnable, but still early. The package APIs are usable inside this workspace, the demo app works, and the plugin flow is real. Publishing, compatibility hardening, and broader framework support are not done yet.
+> This repo is in alpha. The demo app works, the package flow is real, and npm release plumbing is in place, but the APIs and integration details are still expected to change.
 
 Working today:
 
@@ -355,6 +358,42 @@ Additional guardrails in this repo:
 - seeded scenario presets
 - support for more Better Auth integration shapes after the Next.js path is hardened
 
+## Release
+
+This repo is configured for Changesets-based npm publishing.
+
+It is currently in prerelease mode with the `alpha` tag, so published versions are expected to look like:
+
+- `@better-auth-devtools/plugin@0.1.1-alpha.0`
+- `@better-auth-devtools/react@0.1.1-alpha.0`
+- `@better-auth-devtools/core@0.1.1-alpha.0`
+- `@better-auth-devtools/shared@0.1.1-alpha.0`
+
+Typical flow:
+
+```bash
+pnpm changeset
+pnpm version-packages
+pnpm build
+pnpm release
+```
+
+Useful prerelease commands:
+
+```bash
+pnpm pre:enter:alpha
+pnpm pre:exit
+```
+
+Automated publishing is wired through [`release.yml`](/Users/harshit/Documents/Developer/better-auth-devtools/.github/workflows/release.yml). On pushes to `main`, Changesets will either open a version PR or publish packages when pending changesets are present and `NPM_TOKEN` is configured in GitHub Actions.
+
+Published packages:
+
+- `@better-auth-devtools/plugin`
+- `@better-auth-devtools/react`
+- `@better-auth-devtools/core`
+- `@better-auth-devtools/shared`
+
 ## License
 
-No license has been added to this repo yet.
+MIT

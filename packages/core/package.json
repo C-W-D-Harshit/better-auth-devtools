@@ -1,10 +1,17 @@
 {
   "name": "@better-auth-devtools/core",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.1-alpha.0",
+  "private": false,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -18,6 +25,12 @@
     "lint": "echo 'no linter configured'",
     "test": "pnpm exec vitest run"
   },
+  "keywords": [
+    "better-auth",
+    "auth",
+    "devtools",
+    "typescript"
+  ],
   "dependencies": {
     "@better-auth-devtools/shared": "workspace:*"
   },
