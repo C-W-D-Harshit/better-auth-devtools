@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.7
+
+### Patch Changes
+
+- Split browser-safe setup helpers away from server integration wiring to avoid dragging server code into client bundles, and add concrete response types to the shipped client plugin actions.
+
 ## 0.1.1-alpha.6
 
 ### Patch Changes
