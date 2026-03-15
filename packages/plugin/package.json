@@ -2,6 +2,7 @@
   "name": "@better-auth-devtools/plugin",
   "version": "0.1.1-alpha.0",
   "private": false,
+  "description": "Better Auth DevTools server and client plugin for managed test users, session switching, and session inspection.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,6 +10,16 @@
     "dist"
   ],
   "license": "MIT",
+  "author": "Harshit",
+  "homepage": "https://github.com/C-W-D-Harshit/better-auth-devtools#readme",
+  "bugs": {
+    "url": "https://github.com/C-W-D-Harshit/better-auth-devtools/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/C-W-D-Harshit/better-auth-devtools.git",
+    "directory": "packages/plugin"
+  },
   "publishConfig": {
     "access": "public"
   },
