@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { motion } from "motion/react";
-import Link from "next/link";
-import { Bebas_Neue, Work_Sans } from "next/font/google";
+import React, { useState } from "react"
+import { motion } from "motion/react"
+import Link from "next/link"
+import { Bebas_Neue, Work_Sans } from "next/font/google"
 import {
   Users,
   ArrowRightLeft,
@@ -19,27 +19,27 @@ import {
   Hexagon,
   Triangle,
   ChevronRight,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Spotlight } from "@/components/ui/spotlight";
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { Timeline } from "@/components/ui/timeline";
-import { Button as MovingBorderButton } from "@/components/ui/moving-border";
-import { FloatingNav } from "@/components/ui/floating-navbar";
-import { TracingBeam } from "@/components/ui/tracing-beam";
-import DecryptedText from "@/components/ui/decrypted-text";
+import { Spotlight } from "@/components/ui/spotlight"
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid"
+import { Timeline } from "@/components/ui/timeline"
+import { Button as MovingBorderButton } from "@/components/ui/moving-border"
+import { FloatingNav } from "@/components/ui/floating-navbar"
+import { TracingBeam } from "@/components/ui/tracing-beam"
+import DecryptedText from "@/components/ui/decrypted-text"
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-bebas",
-});
+})
 
 const workSans = Work_Sans({
   subsets: ["latin"],
   variable: "--font-work",
-});
+})
 
 // ─── Geometric decorative components ────────────────────────────────
 
@@ -48,7 +48,7 @@ function DiamondBullet({ className = "" }: { className?: string }) {
     <span
       className={`inline-block h-2 w-2 rotate-45 bg-[#F59E0B] ${className}`}
     />
-  );
+  )
 }
 
 function GeometricSeparator() {
@@ -60,7 +60,7 @@ function GeometricSeparator() {
       <DiamondBullet />
       <div className="h-px flex-1 bg-white/[0.06]" />
     </div>
-  );
+  )
 }
 
 function SkewedDivider() {
@@ -69,7 +69,7 @@ function SkewedDivider() {
       <div className="absolute inset-0 -skew-y-2 bg-[#0D1117]" />
       <div className="absolute inset-0 -skew-y-2 border-b-2 border-white/[0.04]" />
     </div>
-  );
+  )
 }
 
 // ─── Feature header patterns ─────────────────────────────────────────
@@ -78,8 +78,8 @@ function FeatureHeaderPattern({
   color,
   index,
 }: {
-  color: string;
-  index: number;
+  color: string
+  index: number
 }) {
   const patterns = [
     // Diagonal lines
@@ -98,7 +98,7 @@ function FeatureHeaderPattern({
         />
       ))}
       <div
-        className="absolute bottom-0 right-0 h-16 w-16 opacity-10"
+        className="absolute right-0 bottom-0 h-16 w-16 opacity-10"
         style={{
           background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
         }}
@@ -117,11 +117,11 @@ function FeatureHeaderPattern({
     // Corner accent
     <div key="p3" className="relative h-full w-full overflow-hidden">
       <div
-        className="absolute -right-4 -top-4 h-20 w-20 rotate-45 border-2 opacity-10"
+        className="absolute -top-4 -right-4 h-20 w-20 rotate-45 border-2 opacity-10"
         style={{ borderColor: color }}
       />
       <div
-        className="absolute -left-2 -bottom-2 h-12 w-12 rotate-45 border-2 opacity-10"
+        className="absolute -bottom-2 -left-2 h-12 w-12 rotate-45 border-2 opacity-10"
         style={{ borderColor: color }}
       />
     </div>,
@@ -160,39 +160,47 @@ function FeatureHeaderPattern({
     // Cross pattern
     <div key="p6" className="relative h-full w-full overflow-hidden">
       <div
-        className="absolute left-1/2 top-1/2 h-px w-full -translate-x-1/2 opacity-10"
+        className="absolute top-1/2 left-1/2 h-px w-full -translate-x-1/2 opacity-10"
         style={{ backgroundColor: color }}
       />
       <div
-        className="absolute left-1/2 top-1/2 h-full w-px -translate-y-1/2 opacity-10"
+        className="absolute top-1/2 left-1/2 h-full w-px -translate-y-1/2 opacity-10"
         style={{ backgroundColor: color }}
       />
       <div
-        className="absolute right-4 top-4 h-3 w-3 rotate-45 opacity-20"
+        className="absolute top-4 right-4 h-3 w-3 rotate-45 opacity-20"
         style={{ backgroundColor: color }}
       />
     </div>,
-  ];
-  return patterns[index % patterns.length];
+  ]
+  return patterns[index % patterns.length]
 }
 
 // ─── Copy button hook ────────────────────────────────────────────────
 
 function useCopyToClipboard() {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
   const copy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return { copied, copy };
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return { copied, copy }
 }
 
 // ─── Nav items ───────────────────────────────────────────────────────
 
 const navItems = [
-  { name: "Features", link: "#features", icon: <Diamond className="h-4 w-4" /> },
-  { name: "How it Works", link: "#how-it-works", icon: <Triangle className="h-4 w-4" /> },
+  {
+    name: "Features",
+    link: "#features",
+    icon: <Diamond className="h-4 w-4" />,
+  },
+  {
+    name: "How it Works",
+    link: "#how-it-works",
+    icon: <Triangle className="h-4 w-4" />,
+  },
   { name: "Code", link: "#code", icon: <Terminal className="h-4 w-4" /> },
   {
     name: "GitHub",
@@ -200,11 +208,11 @@ const navItems = [
     icon: <Github className="h-4 w-4" />,
     target: "_blank",
   },
-];
+]
 
 // ─── Features data ───────────────────────────────────────────────────
 
-const installCommand = "pnpm add better-auth-devtools";
+const installCommand = "pnpm add better-auth-devtools"
 
 const devtoolsSetupSnippet = `import {
   createDevtoolsIntegration,
@@ -255,7 +263,7 @@ export const devtools = createDevtoolsIntegration(defineDevtoolsConfig({
 }), {
   position: "bottom-right",
   triggerLabel: "Auth DevTools",
-});`;
+});`
 
 const serverSetupSnippet = `import { betterAuth } from "better-auth";
 import { devtools } from "./devtools";
@@ -263,7 +271,7 @@ import { devtools } from "./devtools";
 export const auth = betterAuth({
   database,
   plugins: [devtools.serverPlugin],
-});`;
+});`
 
 const clientSetupSnippet = `"use client";
 
@@ -277,7 +285,7 @@ export const authClient = createAuthClient({
 
 export function Devtools() {
   return <BetterAuthDevtools {...devtools.panelProps} />;
-}`;
+}`
 
 const features = [
   {
@@ -328,7 +336,7 @@ const features = [
     icon: <Lock className="h-5 w-5 text-[#10B981]" />,
     color: "#10B981",
   },
-];
+]
 
 // ─── Timeline data ──────────────────────────────────────────────────
 
@@ -337,7 +345,10 @@ const timelineData = [
     title: "Install",
     content: (
       <div>
-        <p className="mb-4 text-sm text-neutral-400" style={{ fontFamily: "var(--font-work)" }}>
+        <p
+          className="mb-4 text-sm text-neutral-400"
+          style={{ fontFamily: "var(--font-work)" }}
+        >
           Install the package from npm.
         </p>
         <div className="border-2 border-white/[0.06] bg-[#0D1117]">
@@ -354,14 +365,19 @@ const timelineData = [
     title: "Configure",
     content: (
       <div>
-        <p className="mb-4 text-sm text-neutral-400" style={{ fontFamily: "var(--font-work)" }}>
-          Define your managed test-user templates once, then reuse the generated server plugin,
-          client plugin, and panel props.
+        <p
+          className="mb-4 text-sm text-neutral-400"
+          style={{ fontFamily: "var(--font-work)" }}
+        >
+          Define your managed test-user templates once, then reuse the generated
+          server plugin, client plugin, and panel props.
         </p>
         <div className="border-2 border-white/[0.06] bg-[#0D1117]">
           <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-2">
             <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
-            <span className="font-mono text-xs text-neutral-500">devtools.ts</span>
+            <span className="font-mono text-xs text-neutral-500">
+              devtools.ts
+            </span>
           </div>
           <pre className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-white">
             {devtoolsSetupSnippet}
@@ -374,43 +390,46 @@ const timelineData = [
     title: "Develop",
     content: (
       <div>
-        <p className="mb-4 text-sm text-neutral-400" style={{ fontFamily: "var(--font-work)" }}>
-          Run your app with <code className="font-mono text-xs">DEV_AUTH_ENABLED=true</code> in
-          development. Create managed test users, switch sessions, inspect the current session,
-          and patch approved fields from the panel.
+        <p
+          className="mb-4 text-sm text-neutral-400"
+          style={{ fontFamily: "var(--font-work)" }}
+        >
+          Run your app with{" "}
+          <code className="font-mono text-xs">DEV_AUTH_ENABLED=true</code> in
+          development. Create managed test users, switch sessions, inspect the
+          current session, and patch approved fields from the panel.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
-          {["Create Test Users", "Switch Sessions", "Patch Approved Fields"].map(
-            (text, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] p-3"
-              >
-                <div className="h-2 w-2 rotate-45 bg-[#10B981]" />
-                <span className="text-xs text-neutral-300">{text}</span>
-              </div>
-            )
-          )}
+          {[
+            "Create Test Users",
+            "Switch Sessions",
+            "Patch Approved Fields",
+          ].map((text, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] p-3"
+            >
+              <div className="h-2 w-2 rotate-45 bg-[#10B981]" />
+              <span className="text-xs text-neutral-300">{text}</span>
+            </div>
+          ))}
         </div>
       </div>
     ),
   },
-];
+]
 
 // ─── Main Page Component ─────────────────────────────────────────────
 
 export default function Page() {
-  const { copied: npmCopied, copy: copyNpm } = useCopyToClipboard();
-  const { copied: ctaCopied, copy: copyCta } = useCopyToClipboard();
+  const { copied: npmCopied, copy: copyNpm } = useCopyToClipboard()
+  const { copied: ctaCopied, copy: copyCta } = useCopyToClipboard()
 
   return (
     <div
       className={`${bebasNeue.variable} ${workSans.variable} min-h-screen bg-[#0D1117] text-white`}
       style={{ fontFamily: "var(--font-work)" }}
     >
-      {/* ─── Floating Navigation ─────────────────────────────────── */}
-      <FloatingNav navItems={navItems} className="z-[5000]" />
-
       {/* ─── Tracing Beam wraps main content ─────────────────────── */}
       <TracingBeam className="max-w-7xl px-4 md:px-8">
         {/* ─── HERO SECTION ────────────────────────────────────────── */}
@@ -466,7 +485,7 @@ export default function Page() {
             <div className="mx-auto max-w-2xl">
               <TextGenerateEffect
                 words="Unofficial, development-only tooling for Better Auth. Create managed test users, switch sessions instantly, inspect current session state, and patch approved fields from a React panel."
-                className="!text-base !font-normal !leading-relaxed !text-neutral-400 md:!text-lg [&_div]:!text-base [&_div]:!text-neutral-400 md:[&_div]:!text-lg [&_span]:!text-neutral-400"
+                className="!text-base !leading-relaxed !font-normal !text-neutral-400 md:!text-lg [&_div]:!text-base [&_div]:!text-neutral-400 md:[&_div]:!text-lg [&_span]:!text-neutral-400"
                 duration={0.4}
               />
             </div>
@@ -478,7 +497,10 @@ export default function Page() {
               transition={{ duration: 0.6, delay: 0.8 }}
               className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
             >
-              <Link href="https://github.com/C-W-D-Harshit/better-auth-devtools" target="_blank">
+              <Link
+                href="https://github.com/C-W-D-Harshit/better-auth-devtools"
+                target="_blank"
+              >
                 <MovingBorderButton
                   borderRadius="0px"
                   containerClassName="h-14 w-52"
@@ -513,7 +535,10 @@ export default function Page() {
         <GeometricSeparator />
 
         {/* ─── FEATURES SECTION ────────────────────────────────────── */}
-        <section id="features" className="scroll-mt-24 px-2 py-12 md:px-0 md:py-20">
+        <section
+          id="features"
+          className="scroll-mt-24 px-2 py-12 md:px-0 md:py-20"
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -546,7 +571,7 @@ export default function Page() {
                 header={
                   <div className="relative h-full min-h-[6rem] bg-[#0D1117]">
                     <FeatureHeaderPattern color={feature.color} index={i} />
-                    <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                    <div className="absolute right-3 bottom-3 flex items-center gap-2">
                       <span
                         className="text-4xl tracking-wider opacity-20"
                         style={{
@@ -617,9 +642,7 @@ export default function Page() {
           </motion.div>
 
           {/* Timeline wrapper with style overrides */}
-          <div
-            className="[&_.dark\:bg-neutral-950]:!bg-[#0D1117] [&_.dark\:bg-black]:!bg-[#0D1117] [&_.bg-white]:!bg-[#0D1117] [&_.dark\:bg-neutral-800]:!bg-[#F59E0B] [&_.dark\:border-neutral-700]:!border-[#F59E0B] [&_.from-purple-500]:!from-[#F59E0B] [&_.via-blue-500]:!via-[#F59E0B]/50 [&_.dark\:text-neutral-500]:!text-[#F59E0B] [&_.dark\:via-neutral-700]:!via-[#F59E0B]/20 [&_h2]:!hidden [&_h2+p]:!hidden"
-          >
+          <div className="[&_.bg-white]:!bg-[#0D1117] [&_.dark\:bg-black]:!bg-[#0D1117] [&_.dark\:bg-neutral-800]:!bg-[#F59E0B] [&_.dark\:bg-neutral-950]:!bg-[#0D1117] [&_.dark\:border-neutral-700]:!border-[#F59E0B] [&_.dark\:text-neutral-500]:!text-[#F59E0B] [&_.dark\:via-neutral-700]:!via-[#F59E0B]/20 [&_.from-purple-500]:!from-[#F59E0B] [&_.via-blue-500]:!via-[#F59E0B]/50 [&_h2]:!hidden [&_h2+p]:!hidden">
             <Timeline data={timelineData} />
           </div>
         </section>
@@ -657,7 +680,7 @@ export default function Page() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="border-2 border-white/[0.06] bg-[#0D1117]"
+              className="min-w-0 overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]"
             >
               <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-3">
                 <div className="flex items-center gap-2">
@@ -666,7 +689,9 @@ export default function Page() {
                     Server Setup
                   </span>
                 </div>
-                <span className="font-mono text-[10px] text-neutral-600">auth.ts</span>
+                <span className="font-mono text-[10px] text-neutral-600">
+                  auth.ts
+                </span>
               </div>
               <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-white">
                 {serverSetupSnippet}
@@ -679,7 +704,7 @@ export default function Page() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="border-2 border-white/[0.06] bg-[#0D1117]"
+              className="min-w-0 overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]"
             >
               <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-3">
                 <div className="flex items-center gap-2">
@@ -688,7 +713,9 @@ export default function Page() {
                     Client Setup
                   </span>
                 </div>
-                <span className="font-mono text-[10px] text-neutral-600">client.tsx</span>
+                <span className="font-mono text-[10px] text-neutral-600">
+                  client.tsx
+                </span>
               </div>
               <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-white">
                 {clientSetupSnippet}
@@ -704,7 +731,7 @@ export default function Page() {
           {/* Background decorative */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#F59E0B]/20 to-transparent" />
-            <Hexagon className="absolute -bottom-10 -right-10 h-60 w-60 text-[#F59E0B] opacity-[0.02]" />
+            <Hexagon className="absolute -right-10 -bottom-10 h-60 w-60 text-[#F59E0B] opacity-[0.02]" />
             <Triangle className="absolute -top-10 -left-10 h-40 w-40 text-[#3B82F6] opacity-[0.02]" />
           </div>
 
@@ -725,15 +752,15 @@ export default function Page() {
               </div>
 
               <h2
-                className="mx-auto mb-5 max-w-3xl text-center text-4xl leading-tight tracking-wider text-white text-balance sm:text-5xl md:text-6xl"
+                className="mx-auto mb-5 max-w-3xl text-center text-4xl leading-tight tracking-wider text-balance text-white sm:text-5xl md:text-6xl"
                 style={{ fontFamily: "var(--font-bebas)" }}
               >
                 READY TO TRY IT?
               </h2>
 
               <p className="mx-auto mb-10 max-w-2xl text-center text-sm leading-relaxed text-neutral-400 md:text-base">
-                Install the package, wire it into Better Auth, and use managed test users for
-                repeatable auth checks during development.
+                Install the package, wire it into Better Auth, and use managed
+                test users for repeatable auth checks during development.
               </p>
 
               <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 md:flex-row md:items-stretch">
@@ -742,7 +769,7 @@ export default function Page() {
                   className="group flex w-full items-center justify-between gap-4 border-2 border-white/[0.06] bg-[#0D1117] px-6 py-4 transition-colors hover:border-white/[0.12] md:max-w-[30rem]"
                 >
                   <span className="shrink-0 text-[#10B981]">$</span>
-                  <code className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm text-neutral-300">
+                  <code className="min-w-0 flex-1 overflow-hidden font-mono text-sm text-ellipsis whitespace-nowrap text-neutral-300">
                     {installCommand}
                   </code>
                   {ctaCopied ? (
@@ -815,5 +842,5 @@ export default function Page() {
         </footer>
       </TracingBeam>
     </div>
-  );
+  )
 }
