@@ -43,14 +43,11 @@
     "plugin",
     "react"
   ],
-  "dependencies": {
-    "@better-auth-devtools/core": "workspace:*",
-    "@better-auth-devtools/shared": "workspace:*"
-  },
   "peerDependencies": {
     "better-auth": ">=1.2.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "better-auth": "^1.2.0",
     "typescript": "^5.8.0"
   }

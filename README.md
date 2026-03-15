@@ -164,22 +164,12 @@ The panel is intentionally simple:
 - session inspection
 - editable-field UI for approved patch keys
 
-### `@better-auth-devtools/core`
+The public npm surface is intentionally small:
 
-Defines the contracts shared between the plugin and UI:
+- `@better-auth-devtools/plugin`
+- `@better-auth-devtools/react`
 
-- endpoint constants
-- request and response payloads
-- plugin config types
-- managed-user and session-view types
-- validation helpers
-
-### `@better-auth-devtools/shared`
-
-Internal helpers used across packages:
-
-- environment guard logic
-- shared error codes and error shape
+Internal contracts and helpers are kept inside the repo and are not intended to be installed directly.
 
 ## API Surface
 
@@ -366,8 +356,6 @@ It is currently in prerelease mode with the `alpha` tag, so published versions a
 
 - `@better-auth-devtools/plugin@0.1.1-alpha.0`
 - `@better-auth-devtools/react@0.1.1-alpha.0`
-- `@better-auth-devtools/core@0.1.1-alpha.0`
-- `@better-auth-devtools/shared@0.1.1-alpha.0`
 
 Typical flow:
 
@@ -391,8 +379,6 @@ Published packages:
 
 - `@better-auth-devtools/plugin`
 - `@better-auth-devtools/react`
-- `@better-auth-devtools/core`
-- `@better-auth-devtools/shared`
 
 ## License
 

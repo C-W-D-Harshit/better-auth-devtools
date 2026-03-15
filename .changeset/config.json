@@ -8,6 +8,8 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "demo-app"
+    "demo-app",
+    "@better-auth-devtools/core",
+    "@better-auth-devtools/shared"
   ]
 }

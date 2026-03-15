@@ -1,5 +1,5 @@
 import type { BetterAuthClientPlugin } from "better-auth/client";
-import { ENDPOINTS } from "@better-auth-devtools/core";
+import { ENDPOINTS } from "./endpoints.js";
 import type { devtoolsPlugin } from "./server-plugin.js";
 
 export const devtoolsClientPlugin = () => {

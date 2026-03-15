@@ -1,7 +1,7 @@
 {
   "name": "@better-auth-devtools/core",
   "version": "0.1.1-alpha.0",
-  "private": false,
+  "private": true,
   "description": "Shared types, endpoint payloads, and validation helpers for Better Auth DevTools.",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,9 +19,6 @@
     "type": "git",
     "url": "git+https://github.com/C-W-D-Harshit/better-auth-devtools.git",
     "directory": "packages/core"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "exports": {
     ".": {
@@ -42,9 +39,6 @@
     "devtools",
     "typescript"
   ],
-  "dependencies": {
-    "@better-auth-devtools/shared": "workspace:*"
-  },
   "devDependencies": {
     "typescript": "^5.8.0"
   }

@@ -5,8 +5,8 @@ import type {
   ManagedTestUserRecord,
   DevtoolsSessionView,
   EditableFieldConfig,
-} from "@better-auth-devtools/core";
-import { ENDPOINTS } from "@better-auth-devtools/core";
+} from "@better-auth-devtools/plugin";
+import { ENDPOINTS } from "@better-auth-devtools/plugin";
 import { styles } from "./styles.js";
 
 export interface BetterAuthDevtoolsProps {

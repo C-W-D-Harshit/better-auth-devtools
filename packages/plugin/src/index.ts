@@ -1,5 +1,9 @@
 export { devtoolsPlugin } from "./server-plugin.js";
 export { devtoolsClientPlugin } from "./client-plugin.js";
+export { ENDPOINTS, ROUTE_PREFIX } from "./endpoints.js";
+export { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
+export { DevtoolsError, ErrorCode } from "./errors.js";
+export { isDevtoolsEnabled } from "./guards.js";
 
 export type {
   DevtoolsPluginConfig,
@@ -12,6 +16,9 @@ export type {
   CreateManagedUserArgs,
   GetSessionViewArgs,
   PatchSessionArgs,
+} from "./types.js";
+
+export type {
   ListUsersResponse,
   CreateUserRequest,
   CreateUserResponse,
@@ -20,4 +27,5 @@ export type {
   SessionResponse,
   UpdateSessionRequest,
   UpdateSessionResponse,
-} from "@better-auth-devtools/core";
+  DevtoolsErrorResponse,
+} from "./payloads.js";

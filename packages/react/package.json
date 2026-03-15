@@ -43,8 +43,7 @@
     "react"
   ],
   "dependencies": {
-    "@better-auth-devtools/core": "workspace:*",
-    "@better-auth-devtools/shared": "workspace:*"
+    "@better-auth-devtools/plugin": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

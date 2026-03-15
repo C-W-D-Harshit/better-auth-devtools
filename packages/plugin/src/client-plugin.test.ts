@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { devtoolsClientPlugin } from "./client-plugin.js";
-import { ENDPOINTS } from "@better-auth-devtools/core";
+import { ENDPOINTS } from "./endpoints.js";
 
 describe("devtoolsClientPlugin", () => {
   it("exposes typed action factories and path methods", async () => {

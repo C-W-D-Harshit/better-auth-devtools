@@ -1,13 +1,11 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
-import type { DevtoolsPluginConfig } from "@better-auth-devtools/core";
-import {
-  ENDPOINTS,
-  isValidTemplateKey,
-  filterAllowedPatchKeys,
-} from "@better-auth-devtools/core";
-import { isDevtoolsEnabled, ErrorCode } from "@better-auth-devtools/shared";
+import { ENDPOINTS } from "./endpoints.js";
+import { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
+import type { DevtoolsPluginConfig } from "./types.js";
+import { ErrorCode } from "./errors.js";
+import { isDevtoolsEnabled } from "./guards.js";
 
 function guardCheck() {
   if (!isDevtoolsEnabled()) {

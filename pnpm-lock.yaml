@@ -23,9 +23,6 @@ importers:
 
   apps/demo-app:
     dependencies:
-      '@better-auth-devtools/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@better-auth-devtools/plugin':
         specifier: workspace:*
         version: link:../../packages/plugin
@@ -65,24 +62,16 @@ importers:
         version: 5.9.3
 
   packages/core:
-    dependencies:
-      '@better-auth-devtools/shared':
-        specifier: workspace:*
-        version: link:../shared
     devDependencies:
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
 
   packages/plugin:
-    dependencies:
-      '@better-auth-devtools/core':
-        specifier: workspace:*
-        version: link:../core
-      '@better-auth-devtools/shared':
-        specifier: workspace:*
-        version: link:../shared
     devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
       better-auth:
         specifier: ^1.2.0
         version: 1.5.5(better-sqlite3@12.8.0)(mongodb@7.1.0)(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15)))
@@ -92,12 +81,9 @@ importers:
 
   packages/react:
     dependencies:
-      '@better-auth-devtools/core':
+      '@better-auth-devtools/plugin':
         specifier: workspace:*
-        version: link:../core
-      '@better-auth-devtools/shared':
-        specifier: workspace:*
-        version: link:../shared
+        version: link:../plugin
     devDependencies:
       '@types/react':
         specifier: ^19.0.0

@@ -19,8 +19,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@better-auth-devtools/plugin": "workspace:*",
-    "@better-auth-devtools/react": "workspace:*",
-    "@better-auth-devtools/core": "workspace:*"
+    "@better-auth-devtools/react": "workspace:*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.0.0",
