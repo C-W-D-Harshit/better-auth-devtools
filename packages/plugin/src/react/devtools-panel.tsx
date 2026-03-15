@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ENDPOINTS } from "../endpoints.js";
 import type {
   DevtoolsSessionView,
-  EditableFieldConfig,
+  DevtoolsPanelFieldConfig,
   ManagedTestUserRecord,
 } from "../types.js";
 import { styles } from "./styles.js";
@@ -13,7 +13,7 @@ export interface BetterAuthDevtoolsProps {
   enabled?: boolean;
   basePath?: string;
   templates?: string[];
-  editableFields?: EditableFieldConfig[];
+  editableFields?: DevtoolsPanelFieldConfig[];
   defaultOpen?: boolean;
   position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   triggerLabel?: string;

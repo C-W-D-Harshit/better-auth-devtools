@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.6
+
+### Patch Changes
+
+- Reduce integration setup by adding `defineDevtoolsConfig`, `createDevtoolsPanelProps`, and `createDevtoolsIntegration`, so apps can configure server, client, and panel wiring from one shared source of truth.
+
 ## 0.1.1-alpha.3
 
 ### Patch Changes

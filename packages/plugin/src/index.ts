@@ -4,6 +4,11 @@ export { ENDPOINTS, ROUTE_PREFIX } from "./endpoints.js";
 export { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
 export { DevtoolsError, ErrorCode } from "./errors.js";
 export { isDevtoolsEnabled } from "./guards.js";
+export {
+  createDevtoolsIntegration,
+  createDevtoolsPanelProps,
+  defineDevtoolsConfig,
+} from "./setup.js";
 
 export type {
   DevtoolsPluginConfig,
@@ -13,10 +18,17 @@ export type {
   DevtoolsSessionView,
   DevtoolsSessionPatch,
   EditableFieldConfig,
+  DevtoolsPanelFieldConfig,
   CreateManagedUserArgs,
   GetSessionViewArgs,
   PatchSessionArgs,
 } from "./types.js";
+
+export type {
+  DevtoolsIntegration,
+  DevtoolsPanelConfig,
+  DevtoolsPanelProps,
+} from "./setup.js";
 
 export type {
   ListUsersResponse,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { devtools } from "@/lib/auth-options.mjs";
 import { DevtoolsWrapper } from "./devtools-wrapper";
 
 export const metadata: Metadata = {
@@ -11,15 +12,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const devtoolsEnabled =
-    process.env.DEV_AUTH_ENABLED === "true" &&
-    process.env.NODE_ENV !== "production";
-
   return (
     <html lang="en">
       <body style={{ fontFamily: "system-ui, sans-serif", margin: 0, padding: "20px", background: "#f5f5f5" }}>
         {children}
-        <DevtoolsWrapper enabled={devtoolsEnabled} />
+        <DevtoolsWrapper panelProps={devtools.panelProps} />
       </body>
     </html>
   );

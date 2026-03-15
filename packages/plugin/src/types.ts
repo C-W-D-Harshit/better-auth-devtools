@@ -33,6 +33,8 @@ export interface EditableFieldConfig {
   validate?: (value: unknown) => boolean;
 }
 
+export type DevtoolsPanelFieldConfig = Omit<EditableFieldConfig, "validate">;
+
 export interface CreateManagedUserArgs {
   templateKey: string;
   template: ManagedTestUserTemplate;

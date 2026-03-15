@@ -1,14 +1,17 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import Database from "better-sqlite3";
-import { devtoolsPlugin } from "better-auth-devtools/plugin";
+import {
+  createDevtoolsIntegration,
+  defineDevtoolsConfig,
+} from "better-auth-devtools/plugin";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 
 export const dbFile = join(currentDir, "..", "demo.db");
 export const db = new Database(dbFile);
 
-export const devtoolsConfig = {
+export const devtoolsConfig = defineDevtoolsConfig({
   templates: {
     admin: {
       label: "Admin",
@@ -96,7 +99,12 @@ export const devtoolsConfig = {
       editableFields: ["role"],
     };
   },
-};
+});
+
+export const devtools = createDevtoolsIntegration(devtoolsConfig, {
+  position: "bottom-right",
+  triggerLabel: "Auth DevTools",
+});
 
 export const authOptions = {
   database: db,
@@ -111,5 +119,5 @@ export const authOptions = {
       },
     },
   },
-  plugins: [devtoolsPlugin(devtoolsConfig)],
+  plugins: [devtools.serverPlugin],
 };
