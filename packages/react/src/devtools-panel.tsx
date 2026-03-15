@@ -192,6 +192,8 @@ export function BetterAuthDevtools({
         return;
       }
       setSession({ data: data.session, loading: false, error: null });
+      // Reload the page so the app reflects the updated session-backed state.
+      window.location.reload();
     } catch (e) {
       setActionError(
         e instanceof Error ? e.message : "Failed to update session"
