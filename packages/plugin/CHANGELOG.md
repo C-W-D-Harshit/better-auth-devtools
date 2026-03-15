@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.3
+
+### Patch Changes
+
+- Update the published package README so npm shows the current unofficial Better Auth devtool positioning, installation flow, AI agent prompt, and minimal usage examples.
+
 ## 0.1.1-alpha.2
 
 ### Patch Changes
