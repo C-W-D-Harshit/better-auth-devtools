@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import type { Variants } from "motion/react";
 import Link from "next/link";
 import { Bebas_Neue, Work_Sans } from "next/font/google";
 import {
@@ -16,8 +15,6 @@ import {
   Copy,
   Check,
   Github,
-  Package,
-  ExternalLink,
   Diamond,
   Hexagon,
   Triangle,
@@ -32,7 +29,6 @@ import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 import { FloatingNav } from "@/components/ui/floating-navbar";
 import { TracingBeam } from "@/components/ui/tracing-beam";
 import DecryptedText from "@/components/ui/decrypted-text";
-import CountUp from "@/components/ui/count-up";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -208,12 +204,87 @@ const navItems = [
 
 // ─── Features data ───────────────────────────────────────────────────
 
+const installCommand = "pnpm add better-auth-devtools";
+
+const devtoolsSetupSnippet = `import {
+  createDevtoolsIntegration,
+  defineDevtoolsConfig,
+} from "better-auth-devtools/plugin";
+
+export const devtools = createDevtoolsIntegration(defineDevtoolsConfig({
+  templates: {
+    admin: { label: "Admin", meta: { role: "admin" } },
+    editor: { label: "Editor", meta: { role: "editor" } },
+    viewer: { label: "Viewer", meta: { role: "viewer" } },
+  },
+  editableFields: [
+    {
+      key: "role",
+      label: "Role",
+      type: "select",
+      options: ["admin", "editor", "viewer"],
+    },
+  ],
+  async createManagedUser(args) {
+    return {
+      userId: crypto.randomUUID(),
+      email: args.email,
+      label: args.template.label,
+    };
+  },
+  async getSessionView(args) {
+    return {
+      userId: args.userId,
+      fields: {
+        sessionId: args.sessionId,
+        role: "viewer",
+      },
+      editableFields: ["role"],
+    };
+  },
+  async patchSession(args) {
+    return {
+      userId: args.userId,
+      fields: {
+        sessionId: args.sessionId,
+        role: String(args.patch.role ?? "viewer"),
+      },
+      editableFields: ["role"],
+    };
+  },
+}), {
+  position: "bottom-right",
+  triggerLabel: "Auth DevTools",
+});`;
+
+const serverSetupSnippet = `import { betterAuth } from "better-auth";
+import { devtools } from "./devtools";
+
+export const auth = betterAuth({
+  database,
+  plugins: [devtools.serverPlugin],
+});`;
+
+const clientSetupSnippet = `"use client";
+
+import { createAuthClient } from "better-auth/react";
+import { BetterAuthDevtools } from "better-auth-devtools/react";
+import { devtools } from "./devtools";
+
+export const authClient = createAuthClient({
+  plugins: [devtools.clientPlugin],
+});
+
+export function Devtools() {
+  return <BetterAuthDevtools {...devtools.panelProps} />;
+}`;
+
 const features = [
   {
     num: "01",
     title: "Managed Test Users",
     description:
-      "Create disposable test users from pre-defined templates. Admin, Editor, Viewer — ready in milliseconds.",
+      "Create managed test users from the templates you define. Keep real accounts out of your everyday auth checks.",
     icon: <Users className="h-5 w-5 text-[#F59E0B]" />,
     color: "#F59E0B",
   },
@@ -221,7 +292,7 @@ const features = [
     num: "02",
     title: "Instant Session Switching",
     description:
-      "Switch between test users with one click. No credentials, no login forms, no wasted time.",
+      "Switch into a managed test user in one click and reload the app against the new Better Auth session.",
     icon: <ArrowRightLeft className="h-5 w-5 text-[#3B82F6]" />,
     color: "#3B82F6",
   },
@@ -229,7 +300,7 @@ const features = [
     num: "03",
     title: "Session Inspection",
     description:
-      "View all current session data in real-time. Tokens, roles, metadata — everything exposed.",
+      "Inspect the current session view your app exposes, including user fields and any approved metadata.",
     icon: <Eye className="h-5 w-5 text-[#10B981]" />,
     color: "#10B981",
   },
@@ -237,15 +308,15 @@ const features = [
     num: "04",
     title: "Session Patching",
     description:
-      "Edit approved session fields on-the-fly. Change roles, permissions, and metadata without re-authenticating.",
+      "Patch only the fields you explicitly allow, then refresh the app with the updated auth state.",
     icon: <Pencil className="h-5 w-5 text-[#F59E0B]" />,
     color: "#F59E0B",
   },
   {
     num: "05",
-    title: "Role-Based Testing",
+    title: "Repeatable Auth Scenarios",
     description:
-      "Multiple user templates with different roles and permissions. Test every access level thoroughly.",
+      "Define stable personas like Admin, Editor, and Viewer so auth-gated UI is easy to verify and easy to repeat.",
     icon: <ShieldCheck className="h-5 w-5 text-[#3B82F6]" />,
     color: "#3B82F6",
   },
@@ -253,26 +324,11 @@ const features = [
     num: "06",
     title: "Dev-Only Safety",
     description:
-      "Only active when NODE_ENV=development and DEV_AUTH_ENABLED=true. Zero risk in production.",
+      "Runs only when DEV_AUTH_ENABLED=true outside production. Keep it explicit, local, and easy to disable.",
     icon: <Lock className="h-5 w-5 text-[#10B981]" />,
     color: "#10B981",
   },
 ];
-
-// ─── Animation variants ─────────────────────────────────────────────
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 },
-};
-
-const staggerContainer: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
 
 // ─── Timeline data ──────────────────────────────────────────────────
 
@@ -282,17 +338,14 @@ const timelineData = [
     content: (
       <div>
         <p className="mb-4 text-sm text-neutral-400" style={{ fontFamily: "var(--font-work)" }}>
-          Add the package to your project with a single command.
+          Install the package from npm.
         </p>
         <div className="border-2 border-white/[0.06] bg-[#0D1117]">
           <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-2">
             <div className="h-2 w-2 rotate-45 bg-[#F59E0B]" />
             <span className="font-mono text-xs text-neutral-500">terminal</span>
           </div>
-          <pre className="p-4 font-mono text-sm">
-            <span className="text-[#10B981]">$</span>{" "}
-            <span className="text-white">npm install better-auth-devtools</span>
-          </pre>
+          <pre className="overflow-x-auto p-4 font-mono text-sm text-white">{`$ ${installCommand}`}</pre>
         </div>
       </div>
     ),
@@ -302,33 +355,16 @@ const timelineData = [
     content: (
       <div>
         <p className="mb-4 text-sm text-neutral-400" style={{ fontFamily: "var(--font-work)" }}>
-          Add the plugin to your Better Auth server config and set up the client.
+          Define your managed test-user templates once, then reuse the generated server plugin,
+          client plugin, and panel props.
         </p>
         <div className="border-2 border-white/[0.06] bg-[#0D1117]">
           <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-2">
             <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
-            <span className="font-mono text-xs text-neutral-500">auth.ts</span>
+            <span className="font-mono text-xs text-neutral-500">devtools.ts</span>
           </div>
-          <pre className="overflow-x-auto p-4 font-mono text-sm leading-relaxed">
-            <span className="text-[#3B82F6]">import</span>
-            <span className="text-white">{" { devAuthPlugin }"}</span>
-            <span className="text-[#3B82F6]"> from</span>
-            <span className="text-[#F59E0B]"> &quot;better-auth-devtools&quot;</span>
-            {"\n\n"}
-            <span className="text-neutral-500">{"// In your auth config"}</span>
-            {"\n"}
-            <span className="text-white">{"plugins: ["}</span>
-            {"\n"}
-            <span className="text-white">{"  devAuthPlugin({"}</span>
-            {"\n"}
-            <span className="text-white">{"    "}</span>
-            <span className="text-[#10B981]">enabled</span>
-            <span className="text-white">{": "}</span>
-            <span className="text-[#F59E0B]">true</span>
-            {"\n"}
-            <span className="text-white">{"  })"}</span>
-            {"\n"}
-            <span className="text-white">{"]"}</span>
+          <pre className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-white">
+            {devtoolsSetupSnippet}
           </pre>
         </div>
       </div>
@@ -339,11 +375,12 @@ const timelineData = [
     content: (
       <div>
         <p className="mb-4 text-sm text-neutral-400" style={{ fontFamily: "var(--font-work)" }}>
-          Start your dev server. The DevTools panel appears automatically. Switch users, inspect
-          sessions, patch roles — all from the browser.
+          Run your app with <code className="font-mono text-xs">DEV_AUTH_ENABLED=true</code> in
+          development. Create managed test users, switch sessions, inspect the current session,
+          and patch approved fields from the panel.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
-          {["Switch users instantly", "Inspect sessions live", "Patch roles on-the-fly"].map(
+          {["Create Test Users", "Switch Sessions", "Patch Approved Fields"].map(
             (text, i) => (
               <div
                 key={i}
@@ -403,9 +440,9 @@ export default function Page() {
               transition={{ duration: 0.5 }}
               className="mb-8 inline-flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 py-2"
             >
-              <div className="h-2 w-2 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
+              <div className="h-2 w-2 rounded-full bg-[#F59E0B] shadow-[0_0_8px_#F59E0B]" />
               <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
-                Unofficial Better Auth Plugin
+                Alpha Release
               </span>
             </motion.div>
 
@@ -428,7 +465,7 @@ export default function Page() {
             {/* Subtitle with TextGenerateEffect */}
             <div className="mx-auto max-w-2xl">
               <TextGenerateEffect
-                words="A dev-only DevTools panel for Better Auth. Managed test users, instant session switching, real-time inspection."
+                words="Unofficial, development-only tooling for Better Auth. Create managed test users, switch sessions instantly, inspect current session state, and patch approved fields from a React panel."
                 className="!text-base !font-normal !leading-relaxed !text-neutral-400 md:!text-lg [&_div]:!text-base [&_div]:!text-neutral-400 md:[&_div]:!text-lg [&_span]:!text-neutral-400"
                 duration={0.4}
               />
@@ -449,19 +486,19 @@ export default function Page() {
                   className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-sm font-semibold tracking-wider text-white uppercase"
                 >
                   <span className="flex items-center gap-2">
-                    Get Started
+                    View on GitHub
                     <ChevronRight className="h-4 w-4" />
                   </span>
                 </MovingBorderButton>
               </Link>
 
               <button
-                onClick={() => copyNpm("npm install better-auth-devtools")}
+                onClick={() => copyNpm(installCommand)}
                 className="group flex h-14 items-center gap-3 border-2 border-white/[0.06] bg-[#161B22] px-6 transition-colors hover:border-white/[0.12]"
               >
                 <Terminal className="h-4 w-4 text-[#10B981]" />
                 <code className="font-mono text-sm text-neutral-300">
-                  npm install better-auth-devtools
+                  {installCommand}
                 </code>
                 {npmCopied ? (
                   <Check className="h-4 w-4 text-[#10B981]" />
@@ -472,50 +509,6 @@ export default function Page() {
             </motion.div>
           </div>
         </section>
-
-        {/* ─── STATS BAR ───────────────────────────────────────────── */}
-        <motion.section
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="border-y-2 border-white/[0.06] bg-[#161B22]"
-        >
-          <div className="mx-auto grid max-w-6xl grid-cols-2 md:grid-cols-4">
-            {[
-              { value: 5, label: "API Endpoints", suffix: "" },
-              { value: 3, label: "User Templates", suffix: "" },
-              { value: 0, label: "Config in Prod", suffix: "" },
-              { value: 100, label: "Type-Safe", suffix: "%" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className={`flex flex-col items-center justify-center border-white/[0.06] px-6 py-8 md:py-10 ${
-                  i < 3 ? "border-r-2" : ""
-                } ${i < 2 ? "border-b-2 md:border-b-0" : ""}`}
-              >
-                <div
-                  className="flex items-baseline gap-0.5 text-5xl text-white md:text-6xl"
-                  style={{ fontFamily: "var(--font-bebas)" }}
-                >
-                  <CountUp
-                    to={stat.value}
-                    from={0}
-                    duration={2}
-                    className="text-5xl text-white md:text-6xl"
-                  />
-                  {stat.suffix && (
-                    <span className="text-3xl text-[#F59E0B] md:text-4xl">{stat.suffix}</span>
-                  )}
-                </div>
-                <span className="mt-2 text-xs tracking-widest text-neutral-500 uppercase">
-                  {stat.label}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
 
         <GeometricSeparator />
 
@@ -539,7 +532,7 @@ export default function Page() {
               className="text-4xl tracking-wider text-white md:text-6xl"
               style={{ fontFamily: "var(--font-bebas)" }}
             >
-              EVERYTHING YOU NEED
+              BUILT FOR AUTH TESTING
             </h2>
           </motion.div>
 
@@ -619,7 +612,7 @@ export default function Page() {
               className="text-4xl tracking-wider text-white md:text-6xl"
               style={{ fontFamily: "var(--font-bebas)" }}
             >
-              THREE STEPS TO FREEDOM
+              SET IT UP FAST
             </h2>
           </motion.div>
 
@@ -653,7 +646,7 @@ export default function Page() {
               className="text-4xl tracking-wider text-white md:text-6xl"
               style={{ fontFamily: "var(--font-bebas)" }}
             >
-              DEAD SIMPLE SETUP
+              WIRE IT INTO BETTER AUTH
             </h2>
           </motion.div>
 
@@ -675,77 +668,8 @@ export default function Page() {
                 </div>
                 <span className="font-mono text-[10px] text-neutral-600">auth.ts</span>
               </div>
-              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed">
-                <span className="text-[#3B82F6]">import</span>
-                <span className="text-white">{" { betterAuth }"}</span>
-                <span className="text-[#3B82F6]"> from </span>
-                <span className="text-[#F59E0B]">&quot;better-auth&quot;</span>
-                {"\n"}
-                <span className="text-[#3B82F6]">import</span>
-                <span className="text-white">{" { devAuthPlugin }"}</span>
-                <span className="text-[#3B82F6]"> from </span>
-                <span className="text-[#F59E0B]">&quot;better-auth-devtools&quot;</span>
-                {"\n\n"}
-                <span className="text-[#3B82F6]">export const</span>
-                <span className="text-white"> auth = </span>
-                <span className="text-[#3B82F6]">betterAuth</span>
-                <span className="text-white">({"{"}</span>
-                {"\n"}
-                <span className="text-neutral-500">  {"// ...your config"}</span>
-                {"\n"}
-                <span className="text-white">  plugins: [</span>
-                {"\n"}
-                <span className="text-white">    </span>
-                <span className="text-[#3B82F6]">devAuthPlugin</span>
-                <span className="text-white">({"{"}</span>
-                {"\n"}
-                <span className="text-white">      </span>
-                <span className="text-[#10B981]">enabled</span>
-                <span className="text-white">: </span>
-                <span className="text-[#F59E0B]">true</span>
-                <span className="text-white">,</span>
-                {"\n"}
-                <span className="text-white">      </span>
-                <span className="text-[#10B981]">users</span>
-                <span className="text-white">{": ["}</span>
-                {"\n"}
-                <span className="text-white">{"        { "}</span>
-                <span className="text-[#10B981]">name</span>
-                <span className="text-white">{": "}</span>
-                <span className="text-[#F59E0B]">&quot;Admin&quot;</span>
-                <span className="text-white">{", "}</span>
-                <span className="text-[#10B981]">role</span>
-                <span className="text-white">{": "}</span>
-                <span className="text-[#F59E0B]">&quot;admin&quot;</span>
-                <span className="text-white">{" },"}</span>
-                {"\n"}
-                <span className="text-white">{"        { "}</span>
-                <span className="text-[#10B981]">name</span>
-                <span className="text-white">{": "}</span>
-                <span className="text-[#F59E0B]">&quot;Editor&quot;</span>
-                <span className="text-white">{", "}</span>
-                <span className="text-[#10B981]">role</span>
-                <span className="text-white">{": "}</span>
-                <span className="text-[#F59E0B]">&quot;editor&quot;</span>
-                <span className="text-white">{" },"}</span>
-                {"\n"}
-                <span className="text-white">{"        { "}</span>
-                <span className="text-[#10B981]">name</span>
-                <span className="text-white">{": "}</span>
-                <span className="text-[#F59E0B]">&quot;Viewer&quot;</span>
-                <span className="text-white">{", "}</span>
-                <span className="text-[#10B981]">role</span>
-                <span className="text-white">{": "}</span>
-                <span className="text-[#F59E0B]">&quot;viewer&quot;</span>
-                <span className="text-white">{" }"}</span>
-                {"\n"}
-                <span className="text-white">{"      ]"}</span>
-                {"\n"}
-                <span className="text-white">{"    })"}</span>
-                {"\n"}
-                <span className="text-white">{"  ]"}</span>
-                {"\n"}
-                <span className="text-white">{"})"}</span>
+              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-white">
+                {serverSetupSnippet}
               </pre>
             </motion.div>
 
@@ -764,49 +688,10 @@ export default function Page() {
                     Client Setup
                   </span>
                 </div>
-                <span className="font-mono text-[10px] text-neutral-600">auth-client.ts</span>
+                <span className="font-mono text-[10px] text-neutral-600">client.tsx</span>
               </div>
-              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed">
-                <span className="text-[#3B82F6]">import</span>
-                <span className="text-white">{" { createAuthClient }"}</span>
-                <span className="text-[#3B82F6]"> from </span>
-                <span className="text-[#F59E0B]">&quot;better-auth/react&quot;</span>
-                {"\n"}
-                <span className="text-[#3B82F6]">import</span>
-                <span className="text-white">{" { devAuthClient }"}</span>
-                <span className="text-[#3B82F6]"> from </span>
-                {"\n"}
-                <span className="text-[#F59E0B]">  &quot;better-auth-devtools/client&quot;</span>
-                {"\n\n"}
-                <span className="text-[#3B82F6]">export const</span>
-                <span className="text-white"> authClient = </span>
-                {"\n"}
-                <span className="text-white">  </span>
-                <span className="text-[#3B82F6]">createAuthClient</span>
-                <span className="text-white">({"{"}</span>
-                {"\n"}
-                <span className="text-white">    plugins: [</span>
-                {"\n"}
-                <span className="text-white">      </span>
-                <span className="text-[#3B82F6]">devAuthClient</span>
-                <span className="text-white">()</span>
-                {"\n"}
-                <span className="text-white">    ]</span>
-                {"\n"}
-                <span className="text-white">  {"})"}</span>
-                {"\n\n"}
-                <span className="text-neutral-500">{"// Use in your app"}</span>
-                {"\n"}
-                <span className="text-[#3B82F6]">const</span>
-                <span className="text-white">{" { "}</span>
-                {"\n"}
-                <span className="text-white">  switchUser, </span>
-                {"\n"}
-                <span className="text-white">  getSession, </span>
-                {"\n"}
-                <span className="text-white">  patchSession</span>
-                {"\n"}
-                <span className="text-white">{"} = authClient"}</span>
+              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-white">
+                {clientSetupSnippet}
               </pre>
             </motion.div>
           </div>
@@ -823,81 +708,67 @@ export default function Page() {
             <Triangle className="absolute -top-10 -left-10 h-40 w-40 text-[#3B82F6] opacity-[0.02]" />
           </div>
 
-          <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="relative z-10 mx-auto max-w-4xl">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              className="border border-white/[0.06] bg-[#161B22]/70 px-6 py-12 backdrop-blur-sm md:px-12 md:py-14"
             >
+              <div className="mb-5 flex items-center justify-center gap-3">
+                <div className="h-px w-10 bg-[#F59E0B]" />
+                <span className="font-mono text-[11px] tracking-[0.28em] text-[#F59E0B] uppercase">
+                  Start Testing
+                </span>
+                <div className="h-px w-10 bg-[#F59E0B]" />
+              </div>
+
               <h2
-                className="mb-6 text-4xl leading-tight tracking-wider text-white sm:text-5xl md:text-7xl lg:text-8xl"
+                className="mx-auto mb-5 max-w-3xl text-center text-4xl leading-tight tracking-wider text-white text-balance sm:text-5xl md:text-6xl"
                 style={{ fontFamily: "var(--font-bebas)" }}
               >
-                STOP TESTING WITH
-                <br />
-                <span className="text-[#F59E0B]">REAL CREDENTIALS</span>
+                READY TO TRY IT?
               </h2>
 
-              <p className="mx-auto mb-10 max-w-xl text-sm text-neutral-500 md:text-base">
-                Better Auth DevTools gives you managed test users, instant session switching, and
-                real-time inspection. All dev-only. All type-safe.
+              <p className="mx-auto mb-10 max-w-2xl text-center text-sm leading-relaxed text-neutral-400 md:text-base">
+                Install the package, wire it into Better Auth, and use managed test users for
+                repeatable auth checks during development.
               </p>
 
-              <div className="flex flex-col items-center gap-5">
+              <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 md:flex-row md:items-stretch">
+                <button
+                  onClick={() => copyCta(installCommand)}
+                  className="group flex w-full items-center justify-between gap-4 border-2 border-white/[0.06] bg-[#0D1117] px-6 py-4 transition-colors hover:border-white/[0.12] md:max-w-[30rem]"
+                >
+                  <span className="shrink-0 text-[#10B981]">$</span>
+                  <code className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm text-neutral-300">
+                    {installCommand}
+                  </code>
+                  {ctaCopied ? (
+                    <Check className="h-4 w-4 shrink-0 text-[#10B981]" />
+                  ) : (
+                    <Copy className="h-4 w-4 shrink-0 text-neutral-600 transition-colors group-hover:text-white" />
+                  )}
+                </button>
+
                 <Link
                   href="https://github.com/C-W-D-Harshit/better-auth-devtools"
                   target="_blank"
+                  className="w-full md:w-auto"
                 >
                   <MovingBorderButton
                     borderRadius="0px"
-                    containerClassName="h-16 w-64"
+                    containerClassName="h-16 w-full md:w-64"
                     borderClassName="h-20 w-20 bg-[radial-gradient(#F59E0B_40%,transparent_60%)] opacity-[0.8]"
                     className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-base font-bold tracking-widest text-white uppercase"
                   >
                     <span className="flex items-center gap-2">
-                      Get Started Now
+                      View on GitHub
                       <ChevronRight className="h-5 w-5" />
                     </span>
                   </MovingBorderButton>
                 </Link>
-
-                <button
-                  onClick={() => copyCta("npm install better-auth-devtools")}
-                  className="group flex items-center gap-3 border-2 border-white/[0.06] bg-[#161B22] px-6 py-4 transition-colors hover:border-[#F59E0B]/20"
-                >
-                  <span className="text-[#10B981]">$</span>
-                  <code className="font-mono text-sm text-neutral-300">
-                    npm install better-auth-devtools
-                  </code>
-                  {ctaCopied ? (
-                    <Check className="h-4 w-4 text-[#10B981]" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-neutral-600 transition-colors group-hover:text-white" />
-                  )}
-                </button>
-
-                <div className="flex items-center gap-6 pt-2">
-                  <Link
-                    href="https://github.com/C-W-D-Harshit/better-auth-devtools"
-                    target="_blank"
-                    className="flex items-center gap-2 text-sm text-neutral-500 transition-colors hover:text-white"
-                  >
-                    <Github className="h-4 w-4" />
-                    GitHub
-                    <ExternalLink className="h-3 w-3" />
-                  </Link>
-                  <div className="h-4 w-px bg-white/[0.06]" />
-                  <Link
-                    href="https://www.npmjs.com/package/better-auth-devtools"
-                    target="_blank"
-                    className="flex items-center gap-2 text-sm text-neutral-500 transition-colors hover:text-white"
-                  >
-                    <Package className="h-4 w-4" />
-                    npm
-                    <ExternalLink className="h-3 w-3" />
-                  </Link>
-                </div>
               </div>
             </motion.div>
           </div>
@@ -938,19 +809,6 @@ export default function Page() {
                 >
                   npm
                 </Link>
-                <DiamondBullet className="h-1 w-1" />
-                <Link href="#features" className="transition-colors hover:text-white">
-                  Features
-                </Link>
-                <DiamondBullet className="h-1 w-1" />
-                <Link href="#code" className="transition-colors hover:text-white">
-                  Docs
-                </Link>
-              </div>
-
-              <div className="font-mono text-[10px] tracking-wider text-neutral-700">
-                DEV-ONLY <span className="text-[#10B981]">/</span> TYPE-SAFE{" "}
-                <span className="text-[#10B981]">/</span> ZERO CONFIG IN PROD
               </div>
             </div>
           </div>
