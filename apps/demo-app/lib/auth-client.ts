@@ -1,8 +1,8 @@
 import { createAuthClient } from "better-auth/react";
-import { devtools } from "./auth-options.mjs";
+import { devtoolsClientPlugin } from "better-auth-devtools/plugin";
 
 export const authClient = createAuthClient({
-  plugins: [devtools.clientPlugin],
+  plugins: [devtoolsClientPlugin()],
 });
 
 export const { useSession, signIn, signOut } = authClient;

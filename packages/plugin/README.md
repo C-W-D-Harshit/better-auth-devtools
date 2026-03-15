@@ -98,10 +98,10 @@ Client auth:
 
 ```ts
 import { createAuthClient } from "better-auth/react";
-import { devtools } from "./devtools";
+import { devtoolsClientPlugin } from "better-auth-devtools/plugin";
 
 export const authClient = createAuthClient({
-  plugins: [devtools.clientPlugin],
+  plugins: [devtoolsClientPlugin()],
 });
 ```
 
@@ -184,7 +184,7 @@ export function Devtools() {
 }
 ```
 
-Use the lower-level API if you need to customize the panel props separately from the server config. For most apps, `createDevtoolsIntegration(...)` is the simpler path.
+Use the lower-level API if you need to customize the panel props separately from the server config. For most apps, `createDevtoolsIntegration(...)` is the simpler path for server wiring and panel props, while client auth should still use `devtoolsClientPlugin()` directly.
 
 ## Demo
 
