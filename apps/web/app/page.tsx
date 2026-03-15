@@ -27,7 +27,6 @@ import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid"
 import { Timeline } from "@/components/ui/timeline"
 import { Button as MovingBorderButton } from "@/components/ui/moving-border"
 import { FloatingNav } from "@/components/ui/floating-navbar"
-import { TracingBeam } from "@/components/ui/tracing-beam"
 import DecryptedText from "@/components/ui/decrypted-text"
 
 const bebasNeue = Bebas_Neue({
@@ -351,12 +350,12 @@ const timelineData = [
         >
           Install the package from npm.
         </p>
-        <div className="border-2 border-white/[0.06] bg-[#0D1117]">
-          <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-2">
+        <div className="overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]">
+          <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4">
             <div className="h-2 w-2 rotate-45 bg-[#F59E0B]" />
             <span className="font-mono text-xs text-neutral-500">terminal</span>
           </div>
-          <pre className="overflow-x-auto p-4 font-mono text-sm text-white">{`$ ${installCommand}`}</pre>
+          <pre className="overflow-x-auto p-3 font-mono text-xs text-white sm:p-4 sm:text-sm">{`$ ${installCommand}`}</pre>
         </div>
       </div>
     ),
@@ -372,14 +371,14 @@ const timelineData = [
           Define your managed test-user templates once, then reuse the generated
           server plugin, client plugin, and panel props.
         </p>
-        <div className="border-2 border-white/[0.06] bg-[#0D1117]">
-          <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-2">
+        <div className="overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]">
+          <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4">
             <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
             <span className="font-mono text-xs text-neutral-500">
               devtools.ts
             </span>
           </div>
-          <pre className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-white">
+          <pre className="overflow-x-auto p-3 font-mono text-[10px] leading-relaxed text-white sm:p-4 sm:text-sm">
             {devtoolsSetupSnippet}
           </pre>
         </div>
@@ -399,7 +398,7 @@ const timelineData = [
           development. Create managed test users, switch sessions, inspect the
           current session, and patch approved fields from the panel.
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-2 sm:gap-3 sm:grid-cols-3">
           {[
             "Create Test Users",
             "Switch Sessions",
@@ -427,13 +426,12 @@ export default function Page() {
 
   return (
     <div
-      className={`${bebasNeue.variable} ${workSans.variable} min-h-screen bg-[#0D1117] text-white`}
+      className={`${bebasNeue.variable} ${workSans.variable} min-h-screen overflow-x-hidden bg-[#0D1117] text-white`}
       style={{ fontFamily: "var(--font-work)" }}
     >
-      {/* ─── Tracing Beam wraps main content ─────────────────────── */}
-      <TracingBeam className="max-w-7xl px-4 md:px-8">
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
         {/* ─── HERO SECTION ────────────────────────────────────────── */}
-        <section className="relative min-h-screen overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24">
+        <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden py-12 md:min-h-screen md:pt-32 md:pb-24">
           {/* Spotlight */}
           <Spotlight
             className="-top-40 left-0 md:-top-20 md:left-60"
@@ -457,7 +455,7 @@ export default function Page() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="mb-8 inline-flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 py-2"
+              className="mb-5 inline-flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 py-2 sm:mb-8"
             >
               <div className="h-2 w-2 rounded-full bg-[#F59E0B] shadow-[0_0_8px_#F59E0B]" />
               <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
@@ -470,22 +468,22 @@ export default function Page() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mb-6"
+              className="mb-4 sm:mb-6"
               style={{ fontFamily: "var(--font-bebas)" }}
             >
-              <span className="block text-7xl leading-none tracking-wider text-white sm:text-8xl md:text-9xl lg:text-[10rem]">
+              <span className="block text-6xl leading-none tracking-wider text-white sm:text-8xl md:text-9xl lg:text-[10rem]">
                 BETTER AUTH
               </span>
-              <span className="block text-7xl leading-none tracking-wider text-[#F59E0B] sm:text-8xl md:text-9xl lg:text-[10rem]">
+              <span className="block text-6xl leading-none tracking-wider text-[#F59E0B] sm:text-8xl md:text-9xl lg:text-[10rem]">
                 DEVTOOLS
               </span>
             </motion.h1>
 
             {/* Subtitle with TextGenerateEffect */}
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-2xl px-2 sm:px-0">
               <TextGenerateEffect
                 words="Unofficial, development-only tooling for Better Auth. Create managed test users, switch sessions instantly, inspect current session state, and patch approved fields from a React panel."
-                className="!text-base !leading-relaxed !font-normal !text-neutral-400 md:!text-lg [&_div]:!text-base [&_div]:!text-neutral-400 md:[&_div]:!text-lg [&_span]:!text-neutral-400"
+                className="!text-sm !leading-relaxed !font-normal !text-neutral-400 sm:!text-base md:!text-lg [&_div]:!text-sm [&_div]:!text-neutral-400 sm:[&_div]:!text-base md:[&_div]:!text-lg [&_span]:!text-neutral-400"
                 duration={0.4}
               />
             </div>
@@ -495,15 +493,16 @@ export default function Page() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.8 }}
-              className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+              className="mt-8 flex flex-col items-center gap-3 sm:mt-10 sm:flex-row sm:gap-4 sm:justify-center"
             >
               <Link
                 href="https://github.com/C-W-D-Harshit/better-auth-devtools"
                 target="_blank"
+                className="w-full sm:w-auto"
               >
                 <MovingBorderButton
                   borderRadius="0px"
-                  containerClassName="h-14 w-52"
+                  containerClassName="h-12 w-full sm:h-14 sm:w-52"
                   borderClassName="h-20 w-20 bg-[radial-gradient(#F59E0B_40%,transparent_60%)] opacity-[0.8]"
                   className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-sm font-semibold tracking-wider text-white uppercase"
                 >
@@ -516,10 +515,10 @@ export default function Page() {
 
               <button
                 onClick={() => copyNpm(installCommand)}
-                className="group flex h-14 items-center gap-3 border-2 border-white/[0.06] bg-[#161B22] px-6 transition-colors hover:border-white/[0.12]"
+                className="group flex h-12 w-full items-center justify-between gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 transition-colors hover:border-white/[0.12] sm:h-14 sm:w-auto sm:justify-center sm:gap-3 sm:px-6"
               >
-                <Terminal className="h-4 w-4 text-[#10B981]" />
-                <code className="font-mono text-sm text-neutral-300">
+                <Terminal className="h-4 w-4 shrink-0 text-[#10B981]" />
+                <code className="font-mono text-xs text-neutral-300 sm:text-sm">
                   {installCommand}
                 </code>
                 {npmCopied ? (
@@ -561,7 +560,7 @@ export default function Page() {
             </h2>
           </motion.div>
 
-          <BentoGrid className="gap-0 md:auto-rows-[22rem] md:grid-cols-3">
+          <BentoGrid className="gap-3 md:gap-0 md:auto-rows-[22rem] md:grid-cols-3">
             {features.map((feature, i) => (
               <BentoGridItem
                 key={i}
@@ -682,7 +681,7 @@ export default function Page() {
               transition={{ duration: 0.5 }}
               className="min-w-0 overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]"
             >
-              <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-3">
+              <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4 sm:py-3">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rotate-45 bg-[#F59E0B]" />
                   <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
@@ -693,7 +692,7 @@ export default function Page() {
                   auth.ts
                 </span>
               </div>
-              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-white">
+              <pre className="overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-white sm:p-5 sm:text-[13px]">
                 {serverSetupSnippet}
               </pre>
             </motion.div>
@@ -706,7 +705,7 @@ export default function Page() {
               transition={{ duration: 0.5 }}
               className="min-w-0 overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]"
             >
-              <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-4 py-3">
+              <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4 sm:py-3">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
                   <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
@@ -717,7 +716,7 @@ export default function Page() {
                   client.tsx
                 </span>
               </div>
-              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-white">
+              <pre className="overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-white sm:p-5 sm:text-[13px]">
                 {clientSetupSnippet}
               </pre>
             </motion.div>
@@ -741,7 +740,7 @@ export default function Page() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="border border-white/[0.06] bg-[#161B22]/70 px-6 py-12 backdrop-blur-sm md:px-12 md:py-14"
+              className="border border-white/[0.06] bg-[#161B22]/70 px-4 py-10 backdrop-blur-sm sm:px-6 sm:py-12 md:px-12 md:py-14"
             >
               <div className="mb-5 flex items-center justify-center gap-3">
                 <div className="h-px w-10 bg-[#F59E0B]" />
@@ -752,7 +751,7 @@ export default function Page() {
               </div>
 
               <h2
-                className="mx-auto mb-5 max-w-3xl text-center text-4xl leading-tight tracking-wider text-balance text-white sm:text-5xl md:text-6xl"
+                className="mx-auto mb-5 max-w-3xl text-center text-3xl leading-tight tracking-wider text-balance text-white sm:text-5xl md:text-6xl"
                 style={{ fontFamily: "var(--font-bebas)" }}
               >
                 READY TO TRY IT?
@@ -766,10 +765,10 @@ export default function Page() {
               <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 md:flex-row md:items-stretch">
                 <button
                   onClick={() => copyCta(installCommand)}
-                  className="group flex w-full items-center justify-between gap-4 border-2 border-white/[0.06] bg-[#0D1117] px-6 py-4 transition-colors hover:border-white/[0.12] md:max-w-[30rem]"
+                  className="group flex w-full items-center justify-between gap-3 border-2 border-white/[0.06] bg-[#0D1117] px-4 py-3 transition-colors hover:border-white/[0.12] sm:gap-4 sm:px-6 sm:py-4 md:max-w-[30rem]"
                 >
                   <span className="shrink-0 text-[#10B981]">$</span>
-                  <code className="min-w-0 flex-1 overflow-hidden font-mono text-sm text-ellipsis whitespace-nowrap text-neutral-300">
+                  <code className="min-w-0 flex-1 overflow-hidden font-mono text-xs text-ellipsis whitespace-nowrap text-neutral-300 sm:text-sm">
                     {installCommand}
                   </code>
                   {ctaCopied ? (
@@ -786,13 +785,13 @@ export default function Page() {
                 >
                   <MovingBorderButton
                     borderRadius="0px"
-                    containerClassName="h-16 w-full md:w-64"
+                    containerClassName="h-14 w-full sm:h-16 md:w-64"
                     borderClassName="h-20 w-20 bg-[radial-gradient(#F59E0B_40%,transparent_60%)] opacity-[0.8]"
-                    className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-base font-bold tracking-widest text-white uppercase"
+                    className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-sm font-bold tracking-widest text-white uppercase sm:text-base"
                   >
                     <span className="flex items-center gap-2">
                       View on GitHub
-                      <ChevronRight className="h-5 w-5" />
+                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                     </span>
                   </MovingBorderButton>
                 </Link>
@@ -840,7 +839,7 @@ export default function Page() {
             </div>
           </div>
         </footer>
-      </TracingBeam>
+      </div>
     </div>
   )
 }
