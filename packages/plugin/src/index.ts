@@ -5,10 +5,10 @@ export { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
 export { DevtoolsError, ErrorCode } from "./errors.js";
 export { isDevtoolsEnabled } from "./guards.js";
 export {
-  createDevtoolsIntegration,
   createDevtoolsPanelProps,
   defineDevtoolsConfig,
-} from "./setup.js";
+} from "./panel.js";
+export { createDevtoolsIntegration } from "./integration.js";
 
 export type {
   DevtoolsPluginConfig,
@@ -25,10 +25,10 @@ export type {
 } from "./types.js";
 
 export type {
-  DevtoolsIntegration,
   DevtoolsPanelConfig,
   DevtoolsPanelProps,
-} from "./setup.js";
+} from "./panel.js";
+export type { DevtoolsIntegration } from "./integration.js";
 
 export type {
   ListUsersResponse,

@@ -4,6 +4,7 @@
   "private": false,
   "description": "Unofficial Better Auth devtool for managed test users, session switching, and a React DevTools panel via plugin/react subpath exports.",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -39,7 +40,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'no linter configured'",

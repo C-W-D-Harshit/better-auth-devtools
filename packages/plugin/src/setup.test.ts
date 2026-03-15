@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  createDevtoolsIntegration,
-  createDevtoolsPanelProps,
-  defineDevtoolsConfig,
-} from "./setup.js";
+import { createDevtoolsIntegration } from "./integration.js";
+import { createDevtoolsPanelProps, defineDevtoolsConfig } from "./panel.js";
 
 describe("setup helpers", () => {
   it("derives client-safe panel props from config", () => {

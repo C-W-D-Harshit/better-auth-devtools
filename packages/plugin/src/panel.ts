@@ -1,6 +1,4 @@
-import { devtoolsClientPlugin } from "./client-plugin.js";
 import { isDevtoolsEnabled } from "./guards.js";
-import { devtoolsPlugin } from "./server-plugin.js";
 import type {
   DevtoolsPanelFieldConfig,
   DevtoolsPluginConfig,
@@ -17,13 +15,6 @@ export interface DevtoolsPanelConfig {
 export interface DevtoolsPanelProps extends DevtoolsPanelConfig {
   templates: string[];
   editableFields: DevtoolsPanelFieldConfig[];
-}
-
-export interface DevtoolsIntegration {
-  enabled: boolean;
-  clientPlugin: ReturnType<typeof devtoolsClientPlugin>;
-  serverPlugin: ReturnType<typeof devtoolsPlugin>;
-  panelProps: DevtoolsPanelProps;
 }
 
 export function defineDevtoolsConfig<TConfig extends DevtoolsPluginConfig>(
@@ -51,17 +42,5 @@ export function createDevtoolsPanelProps(
     triggerLabel: overrides.triggerLabel,
     templates: Object.keys(config.templates),
     editableFields,
-  };
-}
-
-export function createDevtoolsIntegration(
-  config: DevtoolsPluginConfig,
-  panel: DevtoolsPanelConfig = {}
-): DevtoolsIntegration {
-  return {
-    enabled: panel.enabled ?? isDevtoolsEnabled(),
-    clientPlugin: devtoolsClientPlugin(),
-    serverPlugin: devtoolsPlugin(config),
-    panelProps: createDevtoolsPanelProps(config, panel),
   };
 }
