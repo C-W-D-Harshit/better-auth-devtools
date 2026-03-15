@@ -1,15 +1,9 @@
 # Better Auth DevTools
 
 > [!WARNING]
-> Development-only auth tooling. Keep it disabled in production.
+> Unofficial, alpha, development-only tooling for Better Auth. Do not enable it in production.
 
-> [!NOTE]
-> This is an alpha release.
-
-> [!IMPORTANT]
-> This project is unofficial. It is not affiliated with, endorsed by, or maintained by the Better Auth team.
-
-`better-auth-devtools` is an unofficial Better Auth devtool for local auth scenario testing. It gives you managed test users, instant session switching, session inspection, and a React panel for approved session-field edits.
+`better-auth-devtools` is a Better Auth devtool for local auth scenario testing. It gives you managed test users, instant session switching, session inspection, and a React panel for approved session-field edits.
 
 ## Installation
 
