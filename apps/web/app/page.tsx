@@ -801,19 +801,36 @@ export default function Page() {
         </section>
 
         {/* ─── FOOTER ──────────────────────────────────────────────── */}
-        <footer className="border-t-2 border-white/[0.06] px-2 py-8 md:px-0">
+        <footer className="border-t-2 border-white/[0.06] px-2 py-10 md:px-0">
           <div className="mx-auto max-w-6xl">
-            <p className="text-center text-sm text-neutral-500">
-              made with{" "}
-              <span className="text-red-500">&hearts;</span> by{" "}
-              <Link
-                href="https://x.com/cwd_harshit"
-                target="_blank"
-                className="text-white underline decoration-white/30 underline-offset-4 transition-colors hover:text-[#F59E0B] hover:decoration-[#F59E0B]/50"
-              >
-                Harshit
-              </Link>
-            </p>
+            <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+              <div className="flex items-center gap-3">
+                <span
+                  className="text-xl tracking-wider text-white"
+                  style={{ fontFamily: "var(--font-bebas)" }}
+                >
+                  BETTER AUTH
+                </span>
+                <span
+                  className="text-xl tracking-wider text-[#F59E0B]"
+                  style={{ fontFamily: "var(--font-bebas)" }}
+                >
+                  DEVTOOLS
+                </span>
+              </div>
+
+              <p className="text-xs text-neutral-500">
+                made with{" "}
+                <span className="text-red-500">&hearts;</span> by{" "}
+                <Link
+                  href="https://x.com/cwd_harshit"
+                  target="_blank"
+                  className="text-white underline decoration-white/30 underline-offset-4 transition-colors hover:text-[#F59E0B] hover:decoration-[#F59E0B]/50"
+                >
+                  Harshit
+                </Link>
+              </p>
+            </div>
           </div>
         </footer>
       </div>
