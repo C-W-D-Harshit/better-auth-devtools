@@ -431,7 +431,7 @@ export default function Page() {
     >
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         {/* ─── HERO SECTION ────────────────────────────────────────── */}
-        <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden py-12 md:min-h-screen md:pt-32 md:pb-24">
+        <section className="relative flex min-h-dvh flex-col justify-center py-12 md:min-h-screen md:pt-32 md:pb-24">
           {/* Spotlight */}
           <Spotlight
             className="-top-40 left-0 md:-top-20 md:left-60"
@@ -726,7 +726,7 @@ export default function Page() {
         <SkewedDivider />
 
         {/* ─── CTA SECTION ─────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-2 py-20 md:px-0 md:py-32">
+        <section className="relative px-2 py-20 md:px-0 md:py-32">
           {/* Background decorative */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#F59E0B]/20 to-transparent" />
