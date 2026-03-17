@@ -431,7 +431,7 @@ export default function Page() {
     >
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         {/* ─── HERO SECTION ────────────────────────────────────────── */}
-        <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden py-12 md:min-h-screen md:pt-32 md:pb-24">
+        <section className="relative flex min-h-dvh flex-col justify-center py-12 md:min-h-screen md:pt-32 md:pb-24">
           {/* Spotlight */}
           <Spotlight
             className="-top-40 left-0 md:-top-20 md:left-60"
@@ -726,7 +726,7 @@ export default function Page() {
         <SkewedDivider />
 
         {/* ─── CTA SECTION ─────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-2 py-20 md:px-0 md:py-32">
+        <section className="relative px-2 py-20 md:px-0 md:py-32">
           {/* Background decorative */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#F59E0B]/20 to-transparent" />
@@ -804,38 +804,25 @@ export default function Page() {
         <footer className="border-t-2 border-white/[0.06] px-2 py-10 md:px-0">
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-              <div className="flex items-center gap-3">
-                <span
-                  className="text-xl tracking-wider text-white"
-                  style={{ fontFamily: "var(--font-bebas)" }}
-                >
-                  BETTER AUTH
-                </span>
-                <span
-                  className="text-xl tracking-wider text-[#F59E0B]"
-                  style={{ fontFamily: "var(--font-bebas)" }}
-                >
-                  DEVTOOLS
-                </span>
-              </div>
+              <span
+                className="text-xl tracking-wider"
+                style={{ fontFamily: "var(--font-bebas)" }}
+              >
+                <span className="text-white">BETTER AUTH </span>
+                <span className="text-[#F59E0B]">DEVTOOLS</span>
+              </span>
 
-              <div className="flex items-center gap-4 text-xs text-neutral-600">
+              <p className="text-xs text-neutral-500">
+                made with{" "}
+                <span className="text-red-500">&hearts;</span> by{" "}
                 <Link
-                  href="https://github.com/C-W-D-Harshit/better-auth-devtools"
+                  href="https://x.com/cwd_harshit"
                   target="_blank"
-                  className="transition-colors hover:text-white"
+                  className="text-white underline decoration-white/30 underline-offset-4 transition-colors hover:text-[#F59E0B] hover:decoration-[#F59E0B]/50"
                 >
-                  GitHub
+                  Harshit
                 </Link>
-                <DiamondBullet className="h-1 w-1" />
-                <Link
-                  href="https://www.npmjs.com/package/better-auth-devtools"
-                  target="_blank"
-                  className="transition-colors hover:text-white"
-                >
-                  npm
-                </Link>
-              </div>
+              </p>
             </div>
           </div>
         </footer>
