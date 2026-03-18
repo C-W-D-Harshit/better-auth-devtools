@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, createElement } from "react";
 import type {
   ManagedTestUserRecord,
   DevtoolsSessionView,
@@ -31,6 +31,102 @@ interface FetchState<T> {
   loading: boolean;
   error: string | null;
 }
+
+/* ── Inline SVG icons (no deps) ──────────────── */
+
+function ShieldIcon() {
+  return createElement(
+    "svg",
+    {
+      width: 12,
+      height: 12,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "#0c0c0f",
+      strokeWidth: 2.5,
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    },
+    createElement("path", {
+      d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    })
+  );
+}
+
+function XIcon() {
+  return createElement(
+    "svg",
+    {
+      width: 14,
+      height: 14,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2,
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    },
+    createElement("line", { x1: 18, y1: 6, x2: 6, y2: 18 }),
+    createElement("line", { x1: 6, y1: 6, x2: 18, y2: 18 })
+  );
+}
+
+function RefreshIcon() {
+  return createElement(
+    "svg",
+    {
+      width: 11,
+      height: 11,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2.5,
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    },
+    createElement("polyline", { points: "23 4 23 10 17 10" }),
+    createElement("path", { d: "M20.49 15a9 9 0 1 1-2.12-9.36L23 10" })
+  );
+}
+
+function PlusIcon() {
+  return createElement(
+    "svg",
+    {
+      width: 11,
+      height: 11,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2.5,
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    },
+    createElement("line", { x1: 12, y1: 5, x2: 12, y2: 19 }),
+    createElement("line", { x1: 5, y1: 12, x2: 19, y2: 12 })
+  );
+}
+
+function AlertIcon() {
+  return createElement(
+    "svg",
+    {
+      width: 13,
+      height: 13,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2,
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    },
+    createElement("circle", { cx: 12, cy: 12, r: 10 }),
+    createElement("line", { x1: 12, y1: 8, x2: 12, y2: 12 }),
+    createElement("line", { x1: 12, y1: 16, x2: 12.01, y2: 16 })
+  );
+}
+
+/* ── Component ───────────────────────────────── */
 
 export function BetterAuthDevtools({
   enabled: enabledProp,
@@ -163,7 +259,6 @@ export function BetterAuthDevtools({
         return;
       }
       setSession({ data: data.session, loading: false, error: null });
-      // Reload the page so the app reflects the new session
       window.location.reload();
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to login");
@@ -192,7 +287,6 @@ export function BetterAuthDevtools({
         return;
       }
       setSession({ data: data.session, loading: false, error: null });
-      // Reload the page so the app reflects the updated session-backed state.
       window.location.reload();
     } catch (e) {
       setActionError(
@@ -229,25 +323,40 @@ export function BetterAuthDevtools({
           style={styles.trigger}
           title={triggerLabel}
         >
+          <span style={styles.triggerIcon}>
+            <ShieldIcon />
+          </span>
           {triggerLabel}
         </button>
       ) : (
         <div style={styles.panel}>
+          {/* ── Header ──────────────────────── */}
           <div style={styles.header}>
-            <span style={styles.headerTitle}>{triggerLabel}</span>
+            <div style={styles.headerLeft}>
+              <span style={styles.headerIcon}>
+                <ShieldIcon />
+              </span>
+              <span style={styles.headerTitle}>{triggerLabel}</span>
+              <span style={styles.headerBadge}>dev</span>
+            </div>
             <button
               onClick={() => setIsOpen(false)}
               style={styles.closeButton}
+              title="Close"
             >
-              x
+              <XIcon />
             </button>
           </div>
 
+          {/* ── Error banner ────────────────── */}
           {actionError && (
-            <div style={styles.errorBanner}>{actionError}</div>
+            <div style={styles.errorBanner}>
+              <AlertIcon />
+              <span>{actionError}</span>
+            </div>
           )}
 
-          {/* Templates */}
+          {/* ── Templates ──────────────────── */}
           {templates.length > 0 && (
             <div style={styles.section}>
               <div style={styles.sectionTitle}>Create Test User</div>
@@ -259,17 +368,26 @@ export function BetterAuthDevtools({
                     disabled={actionLoading}
                     style={styles.templateButton}
                   >
-                    + {t}
+                    <PlusIcon /> {t}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* User List */}
+          {/* ── User list ──────────────────── */}
           <div style={styles.section}>
-            <div style={styles.sectionTitle}>Managed Users</div>
-            {users.loading && <div style={styles.muted}>Loading...</div>}
+            <div style={styles.sectionTitle}>
+              <span>
+                Managed Users
+                {users.data && (
+                  <span style={{ fontWeight: 400, color: "#55555e", marginLeft: "6px" }}>
+                    {users.data.length}
+                  </span>
+                )}
+              </span>
+            </div>
+            {users.loading && <div style={styles.muted}>Loading users...</div>}
             {users.error && <div style={styles.errorText}>{users.error}</div>}
             {users.data && users.data.length > 5 && (
               <input
@@ -281,7 +399,7 @@ export function BetterAuthDevtools({
               />
             )}
             {users.data && filteredUsers.length === 0 && (
-              <div style={styles.muted}>No managed users yet</div>
+              <div style={styles.emptyState}>No managed users yet</div>
             )}
             <div style={styles.userList}>
               {filteredUsers.map((u) => (
@@ -302,24 +420,33 @@ export function BetterAuthDevtools({
             </div>
           </div>
 
-          {/* Session Inspector */}
+          {/* ── Session inspector ──────────── */}
           <div style={styles.section}>
             <div style={styles.sectionTitle}>
-              Current Session
+              <span style={{ display: "flex", alignItems: "center" }}>
+                Session
+                {session.data ? (
+                  <span style={styles.statusDot} title="Active" />
+                ) : !session.loading ? (
+                  <span style={styles.statusDotInactive} title="No session" />
+                ) : null}
+              </span>
               <button
                 onClick={fetchSession}
                 style={styles.refreshButton}
-                title="Refresh"
+                title="Refresh session"
               >
-                Refresh
+                <RefreshIcon /> Refresh
               </button>
             </div>
-            {session.loading && <div style={styles.muted}>Loading...</div>}
+            {session.loading && (
+              <div style={styles.muted}>Loading session...</div>
+            )}
             {session.error && (
               <div style={styles.errorText}>{session.error}</div>
             )}
             {!session.loading && !session.data && !session.error && (
-              <div style={styles.muted}>No active session</div>
+              <div style={styles.emptyState}>No active session</div>
             )}
             {session.data && (
               <div style={styles.sessionFields}>
@@ -337,7 +464,7 @@ export function BetterAuthDevtools({
             )}
           </div>
 
-          {/* Session Patch Editor */}
+          {/* ── Session patch editor ───────── */}
           {editableFields.length > 0 && session.data && (
             <div style={styles.section}>
               <div style={styles.sectionTitle}>Edit Session</div>
