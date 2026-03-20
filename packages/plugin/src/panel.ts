@@ -2,6 +2,7 @@ import { isDevtoolsEnabled } from "./guards.js";
 import type {
   DevtoolsPanelFieldConfig,
   DevtoolsPluginConfig,
+  ManagedTestUserTemplate,
 } from "./types.js";
 
 export interface DevtoolsPanelConfig {
@@ -12,27 +13,44 @@ export interface DevtoolsPanelConfig {
   triggerLabel?: string;
 }
 
-export interface DevtoolsPanelProps extends DevtoolsPanelConfig {
-  templates: string[];
-  editableFields: DevtoolsPanelFieldConfig[];
+export interface DevtoolsPanelProps<
+  TTemplateKey extends string = string,
+  TEditableKey extends string = string,
+> extends DevtoolsPanelConfig {
+  templates: TTemplateKey[];
+  editableFields: DevtoolsPanelFieldConfig<TEditableKey>[];
 }
 
-export function defineDevtoolsConfig<TConfig extends DevtoolsPluginConfig>(
-  config: TConfig
-): TConfig {
+export function defineDevtoolsConfig<
+  const TTemplates extends Record<string, ManagedTestUserTemplate>,
+  TFields extends Record<string, unknown> = Record<string, unknown>,
+  TEditableKey extends keyof TFields & string = keyof TFields & string,
+>(config: DevtoolsPluginConfig<TTemplates, TFields, TEditableKey>) {
   return config;
 }
 
-export function createDevtoolsPanelProps(
-  config: Pick<DevtoolsPluginConfig, "templates" | "editableFields">,
+/**
+ * Build client-consumable panel props from your shared devtools config.
+ * In Next.js App Router, keep database-backed config on the server and pass
+ * the returned `panelProps` into a client wrapper from a server layout.
+ */
+export function createDevtoolsPanelProps<
+  TTemplates extends Record<string, ManagedTestUserTemplate>,
+  TFields extends Record<string, unknown>,
+  TEditableKey extends keyof TFields & string,
+>(
+  config: Pick<
+    DevtoolsPluginConfig<TTemplates, TFields, TEditableKey>,
+    "templates" | "editableFields"
+  >,
   overrides: DevtoolsPanelConfig = {}
-): DevtoolsPanelProps {
+): DevtoolsPanelProps<keyof TTemplates & string, TEditableKey> {
   const editableFields = (config.editableFields ?? []).map((field) => ({
     key: field.key,
     label: field.label,
     type: field.type,
     options: field.options,
-  })) satisfies DevtoolsPanelFieldConfig[];
+  })) satisfies DevtoolsPanelFieldConfig<TEditableKey>[];
 
   return {
     enabled: overrides.enabled ?? isDevtoolsEnabled(),
@@ -40,7 +58,7 @@ export function createDevtoolsPanelProps(
     defaultOpen: overrides.defaultOpen,
     position: overrides.position,
     triggerLabel: overrides.triggerLabel,
-    templates: Object.keys(config.templates),
+    templates: Object.keys(config.templates) as Array<keyof TTemplates & string>,
     editableFields,
   };
 }

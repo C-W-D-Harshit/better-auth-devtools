@@ -7,13 +7,15 @@
     "@better-auth-devtools/plugin": "0.1.0",
     "@better-auth-devtools/react": "0.1.0",
     "@better-auth-devtools/shared": "0.1.0",
-    "better-auth-devtools": "0.1.1-alpha.0"
+    "better-auth-devtools": "0.1.1-alpha.0",
+    "web": "0.0.1"
   },
   "changesets": [
     "cold-snakes-double",
     "four-schools-rest",
     "funny-pens-lie",
     "neat-lions-juggle",
+    "rare-rice-float",
     "sharp-lies-smile",
     "warm-donkeys-sip"
   ]

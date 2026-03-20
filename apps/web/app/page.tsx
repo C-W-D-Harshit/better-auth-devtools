@@ -233,23 +233,41 @@ export const devtools = createDevtoolsIntegration(defineDevtoolsConfig({
     },
   ],
   async createManagedUser(args) {
+    // Create a real user in your app database and return the real ID.
+    const user = await db.user.create({
+      data: {
+        email: args.email,
+        name: args.template.label,
+        role: String(args.template.meta?.role ?? "viewer"),
+      },
+    });
+
     return {
-      userId: crypto.randomUUID(),
-      email: args.email,
+      userId: user.id,
+      email: user.email,
       label: args.template.label,
     };
   },
   async getSessionView(args) {
+    const user = await db.user.findUnique({ where: { id: args.userId } });
+
     return {
       userId: args.userId,
+      email: user?.email,
+      label: user?.name,
       fields: {
         sessionId: args.sessionId,
-        role: "viewer",
+        role: user?.role ?? "viewer",
       },
       editableFields: ["role"],
     };
   },
   async patchSession(args) {
+    await db.user.update({
+      where: { id: args.userId },
+      data: { role: String(args.patch.role ?? "viewer") },
+    });
+
     return {
       userId: args.userId,
       fields: {
@@ -276,14 +294,19 @@ const clientSetupSnippet = `"use client";
 
 import { createAuthClient } from "better-auth/react";
 import { BetterAuthDevtools } from "better-auth-devtools/react";
-import { devtools } from "./devtools";
+import type { BetterAuthDevtoolsProps } from "better-auth-devtools/react";
+import { devtoolsClientPlugin } from "better-auth-devtools/plugin";
 
 export const authClient = createAuthClient({
-  plugins: [devtools.clientPlugin],
+  plugins: [devtoolsClientPlugin()],
 });
 
-export function Devtools() {
-  return <BetterAuthDevtools {...devtools.panelProps} />;
+export function DevtoolsWrapper({
+  panelProps,
+}: {
+  panelProps: BetterAuthDevtoolsProps;
+}) {
+  return <BetterAuthDevtools {...panelProps} />;
 }`
 
 const features = [
@@ -368,8 +391,10 @@ const timelineData = [
           className="mb-4 text-sm text-neutral-400"
           style={{ fontFamily: "var(--font-work)" }}
         >
-          Define your managed test-user templates once, then reuse the generated
-          server plugin, client plugin, and panel props.
+          Define your templates and host-app callbacks, then connect them to
+          your real user model. In Next.js App Router, keep database-backed
+          devtools code on the server and pass panel props into a client
+          wrapper.
         </p>
         <div className="overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]">
           <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4">
@@ -396,7 +421,9 @@ const timelineData = [
           Run your app with{" "}
           <code className="font-mono text-xs">DEV_AUTH_ENABLED=true</code> in
           development. Create managed test users, switch sessions, inspect the
-          current session, and patch approved fields from the panel.
+          current session, and patch approved fields from the panel. If you use
+          Prisma or another ORM, make sure the plugin storage model exists
+          before testing the panel.
         </p>
         <div className="grid gap-2 sm:gap-3 sm:grid-cols-3">
           {[
@@ -638,6 +665,11 @@ export default function Page() {
             >
               SET IT UP FAST
             </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-400 md:text-base">
+              Define templates once, but keep DB-backed devtools config on the
+              server. The panel stays client-safe by receiving serializable
+              props from your layout.
+            </p>
           </motion.div>
 
           {/* Timeline wrapper with style overrides */}
@@ -670,6 +702,12 @@ export default function Page() {
             >
               WIRE IT INTO BETTER AUTH
             </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-400 md:text-base">
+              Use the server plugin from your Better Auth config, use{" "}
+              <code className="font-mono text-xs">devtoolsClientPlugin()</code>{" "}
+              in the auth client, and pass panel props into a client wrapper in
+              Next.js App Router.
+            </p>
           </motion.div>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -721,6 +759,31 @@ export default function Page() {
               </pre>
             </motion.div>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
+            className="mt-6 border-2 border-white/[0.06] bg-[#161B22] p-4"
+          >
+            <p className="text-sm leading-relaxed text-neutral-300">
+              <span className="font-semibold text-white">
+                createManagedUser
+              </span>{" "}
+              must create a real user in your app database.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+              If you use Prisma, add the <code className="font-mono text-xs">DevtoolsUser</code>{" "}
+              model and run <code className="font-mono text-xs">prisma generate</code>{" "}
+              plus <code className="font-mono text-xs">prisma db push</code>.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+              In Next.js App Router, pass <code className="font-mono text-xs">panelProps</code>{" "}
+              from a server layout into a client wrapper instead of importing a
+              DB-backed devtools module directly into the client.
+            </p>
+          </motion.div>
         </section>
 
         <SkewedDivider />

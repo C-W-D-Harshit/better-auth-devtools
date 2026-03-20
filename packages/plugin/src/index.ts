@@ -1,5 +1,5 @@
 export { devtoolsPlugin } from "./server-plugin.js";
-export { devtoolsClientPlugin } from "./client-plugin.js";
+export { devtoolsClientPlugin, devtoolsClientPluginFor } from "./client-plugin.js";
 export { ENDPOINTS, ROUTE_PREFIX } from "./endpoints.js";
 export { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
 export { DevtoolsError, ErrorCode } from "./errors.js";
@@ -11,8 +11,18 @@ export {
 export { createDevtoolsIntegration } from "./integration.js";
 
 export type {
+  DevtoolsClientActions,
+  DevtoolsClientPlugin,
+  DevtoolsFetchError,
+  DevtoolsFetchResult,
+} from "./client-plugin.js";
+
+export type {
   DevtoolsPluginConfig,
   DevtoolsTemplateKey,
+  InferDevtoolsTemplateKey,
+  InferDevtoolsSessionFields,
+  InferDevtoolsEditableKey,
   ManagedTestUserTemplate,
   ManagedTestUserRecord,
   DevtoolsSessionView,

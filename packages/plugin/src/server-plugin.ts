@@ -3,9 +3,18 @@ import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import { ENDPOINTS } from "./endpoints.js";
 import { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
-import type { DevtoolsPluginConfig } from "./types.js";
+import type {
+  DevtoolsPluginConfig,
+  DevtoolsSessionPatch,
+  ManagedTestUserRecord,
+  ManagedTestUserTemplate,
+} from "./types.js";
 import { ErrorCode } from "./errors.js";
 import { isDevtoolsEnabled } from "./guards.js";
+import type {
+  CreateUserRequest,
+  UpdateSessionRequest,
+} from "./payloads.js";
 
 function guardCheck() {
   if (!isDevtoolsEnabled()) {
@@ -21,7 +30,29 @@ function guardCheck() {
   return { enabled: true } as const;
 }
 
-export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
+function toManagedTestUserRecord(
+  record: Record<string, unknown>
+): ManagedTestUserRecord {
+  return {
+    id: String(record.id),
+    userId: String(record.userId),
+    templateKey: String(record.templateKey),
+    label: String(record.label),
+    email: String(record.email),
+    createdAt:
+      record.createdAt instanceof Date
+        ? record.createdAt.toISOString()
+        : String(record.createdAt),
+  };
+}
+
+export const devtoolsPlugin = <
+  TTemplates extends Record<string, ManagedTestUserTemplate>,
+  TFields extends Record<string, unknown>,
+  TEditableKey extends keyof TFields & string,
+>(
+  config: DevtoolsPluginConfig<TTemplates, TFields, TEditableKey>
+) => {
   return {
     id: "better-auth-devtools",
 
@@ -54,14 +85,7 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
           });
 
           return ctx.json(
-            (users as Record<string, unknown>[]).map((u) => ({
-              id: u.id,
-              userId: u.userId,
-              templateKey: u.templateKey,
-              label: u.label,
-              email: u.email,
-              createdAt: u.createdAt,
-            }))
+            (users as Record<string, unknown>[]).map(toManagedTestUserRecord)
           );
         }
       ),
@@ -75,7 +99,9 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
             return ctx.json({ error: guard.error }, { status: 403 });
           }
 
-          const body = ctx.body as { template?: string } | undefined;
+          const body = ctx.body as
+            | CreateUserRequest<keyof TTemplates & string>
+            | undefined;
           const templateKey = body?.template;
 
           if (!templateKey || !isValidTemplateKey(templateKey, config.templates)) {
@@ -125,12 +151,7 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
 
             return ctx.json({
               user: {
-                id: record.id,
-                userId: record.userId,
-                templateKey: record.templateKey,
-                label: record.label,
-                email: record.email,
-                createdAt: record.createdAt,
+                ...toManagedTestUserRecord(record as Record<string, unknown>),
               },
             });
           } catch (e) {
@@ -289,7 +310,7 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
           }
 
           const body = ctx.body as
-            | { patch?: Record<string, unknown> }
+            | UpdateSessionRequest<TFields, TEditableKey>
             | undefined;
           const patch = body?.patch;
 
@@ -369,7 +390,7 @@ export const devtoolsPlugin = (config: DevtoolsPluginConfig) => {
             const sessionView = await config.patchSession({
               userId: session.user.id,
               sessionId: session.session.id,
-              patch: allowed,
+              patch: allowed as DevtoolsSessionPatch<TFields, TEditableKey>,
             });
 
             return ctx.json({ session: sessionView });

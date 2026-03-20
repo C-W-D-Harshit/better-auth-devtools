@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.8
+
+### Patch Changes
+
+- Improve the public TypeScript API, document Next.js App Router integration more clearly, and refresh the landing-page content and responsiveness.
+
 ## 0.1.1-alpha.7
 
 ### Patch Changes

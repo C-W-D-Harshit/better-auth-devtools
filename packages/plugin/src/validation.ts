@@ -1,30 +1,39 @@
-import type { EditableFieldConfig, ManagedTestUserTemplate } from "./types.js";
+import type {
+  DevtoolsSessionPatch,
+  EditableFieldConfig,
+  ManagedTestUserTemplate,
+} from "./types.js";
 
-export function isValidTemplateKey(
-  key: string,
-  templates: Record<string, ManagedTestUserTemplate>
-): boolean {
+export function isValidTemplateKey<
+  TTemplates extends Record<string, ManagedTestUserTemplate>,
+>(key: string, templates: TTemplates): key is keyof TTemplates & string {
   return key in templates;
 }
 
-export function filterAllowedPatchKeys(
+export function filterAllowedPatchKeys<
+  TFields extends Record<string, unknown>,
+  TEditableKey extends keyof TFields & string,
+>(
   patch: Record<string, unknown>,
-  editableFields: EditableFieldConfig[]
+  editableFields: EditableFieldConfig<TEditableKey>[]
 ): {
-  allowed: Record<string, unknown>;
+  allowed: DevtoolsSessionPatch<TFields, TEditableKey>;
   disallowed: string[];
 } {
   const allowedKeys = new Set(editableFields.map((field) => field.key));
-  const allowed: Record<string, unknown> = {};
+  const allowed: Partial<Record<TEditableKey, unknown>> = {};
   const disallowed: string[] = [];
 
   for (const [key, value] of Object.entries(patch)) {
-    if (allowedKeys.has(key)) {
-      allowed[key] = value;
+    if (allowedKeys.has(key as TEditableKey)) {
+      allowed[key as TEditableKey] = value;
     } else {
       disallowed.push(key);
     }
   }
 
-  return { allowed, disallowed };
+  return {
+    allowed: allowed as DevtoolsSessionPatch<TFields, TEditableKey>,
+    disallowed,
+  };
 }
