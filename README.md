@@ -7,12 +7,6 @@
 
 ## Installation
 
-AI agent prompt:
-
-```text
-Install and integrate better-auth-devtools as an unofficial development-only Better Auth utility. Use better-auth-devtools/plugin for the Better Auth server/client plugin setup and better-auth-devtools/react for the floating panel. Keep it disabled in production, require DEV_AUTH_ENABLED=true, use managed test users only, create real host-app users in createManagedUser, add the DevtoolsUser storage model, and for Next.js App Router keep DB-backed devtools config on the server while passing panelProps into a client wrapper.
-```
-
 ```bash
 pnpm add better-auth-devtools
 ```
