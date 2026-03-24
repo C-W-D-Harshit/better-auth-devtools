@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const baseUrl = "https://better-auth-devtools.vercel.app";
+const baseUrl = "https://www.better-auth-devtools.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

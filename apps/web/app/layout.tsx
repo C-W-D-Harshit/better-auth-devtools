@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 const siteTitle = "Better Auth DevTools";
-const siteUrl = "https://better-auth-devtools.vercel.app";
+const siteUrl = "https://www.better-auth-devtools.com";
 
 export const metadata: Metadata = {
   title: {

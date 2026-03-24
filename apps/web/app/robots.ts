@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: "https://better-auth-devtools.vercel.app/sitemap.xml",
+    sitemap: "https://www.better-auth-devtools.com/sitemap.xml",
   };
 }
