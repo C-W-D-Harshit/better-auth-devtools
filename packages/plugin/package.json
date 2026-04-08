@@ -1,6 +1,6 @@
 {
   "name": "better-auth-devtools",
-  "version": "0.1.1-alpha.8",
+  "version": "0.1.1-alpha.9",
   "private": false,
   "description": "Unofficial Better Auth devtool for managed test users, session switching, and a React DevTools panel via plugin/react subpath exports.",
   "type": "module",

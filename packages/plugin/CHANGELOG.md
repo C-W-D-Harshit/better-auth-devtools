@@ -1,5 +1,11 @@
 # @better-auth-devtools/plugin
 
+## 0.1.1-alpha.9
+
+### Patch Changes
+
+- Refresh the public docs to follow a more official Better Auth plugin structure with clearer installation, configuration, usage, schema, and migration guidance.
+
 ## 0.1.1-alpha.8
 
 ### Patch Changes
