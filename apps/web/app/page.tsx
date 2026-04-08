@@ -774,9 +774,11 @@ export default function Page() {
               must create a real user in your app database.
             </p>
             <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-              If you use Prisma, add the <code className="font-mono text-xs">DevtoolsUser</code>{" "}
-              model and run <code className="font-mono text-xs">prisma generate</code>{" "}
-              plus <code className="font-mono text-xs">prisma db push</code>.
+              The plugin provides its own Better Auth schema. After adding it,
+              rerun <code className="font-mono text-xs">npx auth@latest migrate</code>{" "}
+              for built-in adapters, or{" "}
+              <code className="font-mono text-xs">npx auth@latest generate</code>{" "}
+              before your Prisma or Drizzle migration flow.
             </p>
             <p className="mt-2 text-sm leading-relaxed text-neutral-400">
               In Next.js App Router, pass <code className="font-mono text-xs">panelProps</code>{" "}

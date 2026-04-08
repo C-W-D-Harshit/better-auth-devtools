@@ -3,14 +3,21 @@
 > [!WARNING]
 > Unofficial, alpha, development-only tooling for Better Auth. Do not enable it in production.
 
-`better-auth-devtools` is a Better Auth devtool for local auth scenario testing. It gives you managed test users, instant session switching, session inspection, and a React panel for approved session-field edits.
+`better-auth-devtools` is a community Better Auth plugin for local auth scenario testing. It gives you managed test users, instant session switching, session inspection, and a React panel for approved session-field edits.
+
+## Overview
+
+1. The plugin stores managed test-user records in its own Better Auth model.
+2. Each managed test-user record points to a real Better Auth user in your app.
+3. Switching users creates a Better Auth session for that real user.
+4. The panel only shows and edits fields your app exposes through `getSessionView` and `patchSession`.
 
 ## Installation
 
 AI agent prompt:
 
 ```text
-Install and integrate better-auth-devtools as an unofficial development-only Better Auth utility. Use better-auth-devtools/plugin for the Better Auth server/client plugin setup and better-auth-devtools/react for the floating panel. Keep it disabled in production, require DEV_AUTH_ENABLED=true, use managed test users only, create real host-app users in createManagedUser, add the DevtoolsUser storage model, and for Next.js App Router keep DB-backed devtools config on the server while passing panelProps into a client wrapper.
+Install and integrate better-auth-devtools as an unofficial development-only Better Auth utility. Use better-auth-devtools/plugin for the Better Auth server/client plugin setup and better-auth-devtools/react for the floating panel. Keep it disabled in production, require DEV_AUTH_ENABLED=true, use managed test users only, create real host-app users in createManagedUser, let the plugin provide its Better Auth schema, rerun the Better Auth CLI after adding it, and for Next.js App Router keep DB-backed devtools config on the server while passing panelProps into a client wrapper.
 ```
 
 ```bash
@@ -22,6 +29,10 @@ Peer requirements:
 ```bash
 pnpm add better-auth react react-dom
 ```
+
+### Define the plugin config
+
+Define your templates and host-app callbacks once. In Next.js App Router, keep database-backed devtools code on the server and pass panel props into a client wrapper from a server layout.
 
 Use these subpath exports:
 
@@ -40,17 +51,6 @@ DEV_AUTH_ENABLED=true
 ```
 
 The devtools run only when DEV_AUTH_ENABLED=true and the app is not running in production.
-
-## How it works
-
-1. The package stores managed test-user records in its own model.
-2. Each managed test-user record points to a real Better Auth user in your app.
-3. Switching users creates a Better Auth session for that real user.
-4. The panel only shows and edits fields your app exposes through `getSessionView` and `patchSession`.
-
-## Quick Start
-
-Define your templates and host-app callbacks once. In Next.js App Router, keep database-backed devtools code on the server and pass panel props into a client wrapper from a server layout.
 
 ```ts
 import {
@@ -129,7 +129,7 @@ export const devtools = createDevtoolsIntegration(devtoolsConfig, {
 
 `createManagedUser` must create a real Better Auth user in your app database and return that real user ID.
 
-Server auth:
+### Add the plugin to your auth config
 
 ```ts
 import { betterAuth } from "better-auth";
@@ -141,7 +141,25 @@ export const auth = betterAuth({
 });
 ```
 
-Client auth:
+### Migrate or generate the database schema
+
+The server plugin already declares its storage model through Better Auth's plugin `schema`, including the `devtoolsUser` table used for managed test-user records. You do not need to hand-write a `DevtoolsUser` model just to use this package.
+
+After adding the plugin to your Better Auth config, rerun the Better Auth CLI so the plugin schema is picked up:
+
+```bash
+npx auth@latest migrate
+```
+
+If you use Prisma, Drizzle, or another ORM adapter, generate the schema from your Better Auth config and then apply it with your normal ORM workflow:
+
+```bash
+npx auth@latest generate
+```
+
+Rerun the CLI whenever you add the plugin or change plugin-managed schema.
+
+### Add the client plugin
 
 ```ts
 import { createAuthClient } from "better-auth/react";
@@ -153,38 +171,29 @@ export const authClient = createAuthClient({
 });
 ```
 
-## Prisma / ORM storage requirements
+If you want strongly typed client actions, pass your devtools config type to `devtoolsClientPluginFor<...>()`. In Next.js App Router, use a type-only import or a shared type alias instead of importing a DB-backed runtime module into client code.
 
-The plugin stores its managed test-user records in your auth database. If you use Prisma, add this model:
+## Configuration
 
-```prisma
-model DevtoolsUser {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  templateKey String
-  label       String
-  email       String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-```
+`defineDevtoolsConfig(...)` takes the server-side callbacks and template metadata that drive the plugin:
 
-Then run:
+- `templates`: map of stable test personas. Each template needs a `label` and can optionally include `emailPattern` and `meta`.
+- `editableFields`: optional list of fields the panel may edit. Supported field types are `string`, `number`, `boolean`, and `select`.
+- `createManagedUser`: must create a real user in your app database and return its real `userId`. You can also override `email` and `label`.
+- `getSessionView`: returns the session data the panel should display for the active user.
+- `patchSession`: applies an allowed patch and returns the refreshed session view.
 
-```bash
-pnpm prisma generate
-pnpm prisma db push
-```
+`createDevtoolsIntegration(config, panel)` bundles the server plugin, client plugin, and panel props. The optional `panel` config supports:
 
-Migration alternative:
+- `enabled`
+- `basePath`
+- `defaultOpen`
+- `position`
+- `triggerLabel`
 
-```bash
-pnpm prisma migrate dev
-```
+## Usage
 
-If you use Drizzle or another ORM adapter, add the equivalent storage for the `DevtoolsUser` model before testing the panel.
-
-## Next.js App Router pattern
+### Next.js App Router
 
 Keep the devtools config on the server:
 
@@ -321,7 +330,7 @@ export function DevtoolsWrapper({
 
 Do not import a DB-backed devtools config module directly into a client component.
 
-## Lower-Level API
+### Lower-Level API
 
 ```ts
 import { betterAuth } from "better-auth";
@@ -422,6 +431,20 @@ export function Devtools() {
 
 Use the lower-level API if you need to wire the Better Auth server plugin separately from your panel props. In Next.js App Router, keep the plugin config on the server and pass panel props into a client wrapper.
 
+## Schema
+
+Table name: `devtoolsUser`
+
+| Field | Type | Key | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | PK | Better Auth generated row identifier for the managed test-user record |
+| `userId` | `string` | - | Real Better Auth user ID that the managed test user points to |
+| `templateKey` | `string` | - | Template key used when the managed test user was created |
+| `label` | `string` | - | Display label shown in the panel |
+| `email` | `string` | - | Email shown for the managed test user record |
+| `createdAt` | `date` | - | Creation timestamp for the record |
+| `updatedAt` | `date` | - | Last update timestamp for the record |
+
 ## Troubleshooting
 
 ### Devtools endpoints return disabled or the panel does not show controls
@@ -445,10 +468,10 @@ Fix:
 ### Adapter or model errors appear when listing or creating managed users
 
 Cause:
-- plugin storage model is missing from the ORM schema
+- plugin schema has not been generated or applied for your adapter yet
 
 Fix:
-- add the `DevtoolsUser` model and run ORM generation/migration commands
+- rerun the Better Auth CLI so the plugin schema is generated or migrated for your setup
 
 ### Next.js client code fails when mounting the panel
 
