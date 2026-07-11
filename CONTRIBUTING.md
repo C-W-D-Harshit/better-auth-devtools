@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Better Auth DevTools! This guide 
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or later
+- [Node.js](https://nodejs.org/) v20 or later
 - [pnpm](https://pnpm.io/) v10.24.0 or later (this project enforces a specific `packageManager`)
 - A basic understanding of [Better Auth](https://www.better-auth.com/), React, and TypeScript
 
@@ -36,10 +36,7 @@ This is a [Turborepo](https://turbo.build/repo) monorepo with the following layo
 
 ```
 packages/
-  core/       # Core logic and types
-  plugin/     # Better Auth server & client plugin
-  react/      # React floating panel component
-  shared/     # Shared utilities across packages
+  plugin/     # Published server, client, and React package
 apps/
   demo-app/   # Reference integration / playground
   web/        # Documentation site
@@ -66,6 +63,8 @@ apps/
 | `pnpm lint` | Lint all packages |
 | `pnpm typecheck` | Run TypeScript type checking |
 | `pnpm test` | Run tests across all packages |
+| `pnpm package:check` | Validate and install the packed npm artifact |
+| `pnpm check` | Run every required release gate |
 
 ### Making Changes
 
@@ -90,7 +89,7 @@ Follow the prompts to describe the change and select the appropriate semver bump
 
 1. Keep PRs focused — one feature or fix per PR.
 2. Write a clear title and description explaining **what** changed and **why**.
-3. Ensure all CI checks pass (lint, typecheck, tests, build).
+3. Run `pnpm check` and ensure all CI checks pass.
 4. Link any related issues using `Closes #123` in the PR description.
 5. Be responsive to review feedback.
 
@@ -109,7 +108,7 @@ Follow the prompts to describe the change and select the appropriate semver bump
 
 ## Security
 
-This project is **development-only tooling** and must never be enabled in production. If you discover a security concern, please open an issue describing the risk.
+This project is **development-only tooling** and must never be enabled in production. Follow [SECURITY.md](./SECURITY.md) for private vulnerability reporting.
 
 ## License
 

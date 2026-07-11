@@ -41,7 +41,7 @@ export function createDevtoolsPanelProps<
 >(
   config: Pick<
     DevtoolsPluginConfig<TTemplates, TFields, TEditableKey>,
-    "templates" | "editableFields"
+    "templates" | "editableFields" | "enabled"
   >,
   overrides: DevtoolsPanelConfig = {}
 ): DevtoolsPanelProps<keyof TTemplates & string, TEditableKey> {
@@ -53,12 +53,12 @@ export function createDevtoolsPanelProps<
   })) satisfies DevtoolsPanelFieldConfig<TEditableKey>[];
 
   return {
-    enabled: overrides.enabled ?? isDevtoolsEnabled(),
+    enabled: overrides.enabled ?? isDevtoolsEnabled(config.enabled),
     basePath: overrides.basePath ?? "/api/auth",
     defaultOpen: overrides.defaultOpen,
     position: overrides.position,
     triggerLabel: overrides.triggerLabel,
-    templates: Object.keys(config.templates) as Array<keyof TTemplates & string>,
+    templates: Object.keys(config.templates ?? {}) as Array<keyof TTemplates & string>,
     editableFields,
   };
 }

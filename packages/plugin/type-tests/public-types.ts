@@ -4,6 +4,7 @@ import {
   defineDevtoolsConfig,
   devtoolsClientPlugin,
   devtoolsClientPluginFor,
+  devtools,
 } from "../src/plugin.js";
 import type {
   DevtoolsPluginConfig,
@@ -22,6 +23,8 @@ type Templates = {
 };
 
 function expectType<T>(_value: T) {}
+
+expectType<"better-auth-devtools">(devtools().id);
 
 const templates = {
   admin: { label: "Admin", meta: { role: "admin" as const } },

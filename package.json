@@ -3,10 +3,13 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm package:check",
     "changeset": "changeset",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "pre:enter:alpha": "changeset pre enter alpha",
+    "package:check": "pnpm --filter better-auth-devtools exec publint && pnpm --filter better-auth-devtools exec attw --pack --profile esm-only . && node scripts/smoke-packed-package.mjs",
+    "package:smoke:min": "BETTER_AUTH_SMOKE_VERSION=1.6.11 node scripts/smoke-packed-package.mjs",
+    "pre:enter:beta": "changeset pre enter beta",
     "pre:exit": "changeset pre exit",
     "release": "changeset publish",
     "typecheck": "turbo run typecheck",
@@ -14,13 +17,31 @@
     "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/cli": "^2.29.7",
+    "@playwright/test": "^1.61.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "publint": "^0.3.21",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0",
-    "vitest": "^4.0.18"
+    "typescript-eslint": "^8.57.0",
+    "vite": "8.1.4",
+    "vitest": "^4.1.10"
   },
   "packageManager": "pnpm@10.24.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ],
+    "overrides": {
+      "@babel/core": "7.29.6",
+      "defu": "6.1.7",
+      "picomatch": "4.0.4",
+      "postcss": "8.5.10",
+      "vite": "8.1.4"
+    }
   }
 }

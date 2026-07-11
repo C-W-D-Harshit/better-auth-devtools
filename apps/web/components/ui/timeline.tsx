@@ -1,6 +1,5 @@
 "use client";
 import {
-  useMotionValueEvent,
   useScroll,
   useTransform,
   motion,
@@ -48,9 +47,9 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
       </div>
 
       <div ref={ref} className="relative max-w-7xl mx-auto pb-20">
-        {data.map((item, index) => (
+        {data.map((item) => (
           <div
-            key={index}
+            key={item.title}
             className="pt-6 md:grid md:grid-cols-[18rem_minmax(0,1fr)] md:gap-10 md:pt-32 lg:grid-cols-[22rem_minmax(0,1fr)]"
           >
             <div className="sticky top-40 z-40 flex flex-col items-start self-start md:w-full">

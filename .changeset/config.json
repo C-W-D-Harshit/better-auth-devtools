@@ -7,10 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "demo-app",
-    "@better-auth-devtools/react",
-    "@better-auth-devtools/core",
-    "@better-auth-devtools/shared"
-  ]
+  "ignore": ["demo-app", "web"]
 }

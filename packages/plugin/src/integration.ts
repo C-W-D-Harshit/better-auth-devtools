@@ -31,7 +31,7 @@ export function createDevtoolsIntegration<
   panel: DevtoolsPanelConfig = {}
 ): DevtoolsIntegration<keyof TTemplates & string, TFields, TEditableKey> {
   return {
-    enabled: panel.enabled ?? isDevtoolsEnabled(),
+    enabled: panel.enabled ?? isDevtoolsEnabled(config.enabled),
     clientPlugin: devtoolsClientPlugin<
       keyof TTemplates & string,
       TFields,

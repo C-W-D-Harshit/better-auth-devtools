@@ -32,8 +32,20 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
       - name: Test
         run: pnpm test
+
+      - name: Validate package
+        run: pnpm package:check
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod
 
       - name: Create release PR or publish
         uses: changesets/action@v1

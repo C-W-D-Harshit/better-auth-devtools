@@ -14,7 +14,6 @@ import {
   Terminal,
   Copy,
   Check,
-  Github,
   Diamond,
   Hexagon,
   Triangle,
@@ -26,7 +25,6 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid"
 import { Timeline } from "@/components/ui/timeline"
 import { Button as MovingBorderButton } from "@/components/ui/moving-border"
-import { FloatingNav } from "@/components/ui/floating-navbar"
 import DecryptedText from "@/components/ui/decrypted-text"
 
 const bebasNeue = Bebas_Neue({
@@ -187,42 +185,17 @@ function useCopyToClipboard() {
   return { copied, copy }
 }
 
-// ─── Nav items ───────────────────────────────────────────────────────
-
-const navItems = [
-  {
-    name: "Features",
-    link: "#features",
-    icon: <Diamond className="h-4 w-4" />,
-  },
-  {
-    name: "How it Works",
-    link: "#how-it-works",
-    icon: <Triangle className="h-4 w-4" />,
-  },
-  { name: "Code", link: "#code", icon: <Terminal className="h-4 w-4" /> },
-  {
-    name: "GitHub",
-    link: "https://github.com/C-W-D-Harshit/better-auth-devtools",
-    icon: <Github className="h-4 w-4" />,
-    target: "_blank",
-  },
-]
-
 // ─── Features data ───────────────────────────────────────────────────
 
 const installCommand = "pnpm add better-auth-devtools"
 
-const devtoolsSetupSnippet = `import {
-  createDevtoolsIntegration,
-  defineDevtoolsConfig,
-} from "better-auth-devtools/plugin";
+const devtoolsSetupSnippet = `import { devtools } from "better-auth-devtools";
 
-export const devtools = createDevtoolsIntegration(defineDevtoolsConfig({
+export const authDevtools = devtools({
   templates: {
-    admin: { label: "Admin", meta: { role: "admin" } },
-    editor: { label: "Editor", meta: { role: "editor" } },
-    viewer: { label: "Viewer", meta: { role: "viewer" } },
+    admin: { label: "Admin", user: { role: "admin" } },
+    editor: { label: "Editor", user: { role: "editor" } },
+    viewer: { label: "Viewer", user: { role: "viewer" } },
   },
   editableFields: [
     {
@@ -232,81 +205,22 @@ export const devtools = createDevtoolsIntegration(defineDevtoolsConfig({
       options: ["admin", "editor", "viewer"],
     },
   ],
-  async createManagedUser(args) {
-    // Create a real user in your app database and return the real ID.
-    const user = await db.user.create({
-      data: {
-        email: args.email,
-        name: args.template.label,
-        role: String(args.template.meta?.role ?? "viewer"),
-      },
-    });
-
-    return {
-      userId: user.id,
-      email: user.email,
-      label: args.template.label,
-    };
-  },
-  async getSessionView(args) {
-    const user = await db.user.findUnique({ where: { id: args.userId } });
-
-    return {
-      userId: args.userId,
-      email: user?.email,
-      label: user?.name,
-      fields: {
-        sessionId: args.sessionId,
-        role: user?.role ?? "viewer",
-      },
-      editableFields: ["role"],
-    };
-  },
-  async patchSession(args) {
-    await db.user.update({
-      where: { id: args.userId },
-      data: { role: String(args.patch.role ?? "viewer") },
-    });
-
-    return {
-      userId: args.userId,
-      fields: {
-        sessionId: args.sessionId,
-        role: String(args.patch.role ?? "viewer"),
-      },
-      editableFields: ["role"],
-    };
-  },
-}), {
-  position: "bottom-right",
-  triggerLabel: "Auth DevTools",
 });`
 
 const serverSetupSnippet = `import { betterAuth } from "better-auth";
-import { devtools } from "./devtools";
+import { devtools } from "better-auth-devtools";
 
 export const auth = betterAuth({
   database,
-  plugins: [devtools.serverPlugin],
+  plugins: [devtools()],
 });`
 
 const clientSetupSnippet = `"use client";
 
-import { createAuthClient } from "better-auth/react";
 import { BetterAuthDevtools } from "better-auth-devtools/react";
-import type { BetterAuthDevtoolsProps } from "better-auth-devtools/react";
-import { devtoolsClientPlugin } from "better-auth-devtools/plugin";
 
-export const authClient = createAuthClient({
-  plugins: [devtoolsClientPlugin()],
-});
-
-export function DevtoolsWrapper({
-  panelProps,
-}: {
-  panelProps: BetterAuthDevtoolsProps;
-}) {
-  return <BetterAuthDevtools {...panelProps} />;
+export function DevtoolsWrapper() {
+  return <BetterAuthDevtools />;
 }`
 
 const features = [
@@ -354,7 +268,7 @@ const features = [
     num: "06",
     title: "Dev-Only Safety",
     description:
-      "Runs only when DEV_AUTH_ENABLED=true outside production. Keep it explicit, local, and easy to disable.",
+      "Enables itself in development, stays off in production, and supports an explicit development kill switch.",
     icon: <Lock className="h-5 w-5 text-[#10B981]" />,
     color: "#10B981",
   },
@@ -400,7 +314,7 @@ const timelineData = [
           <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4">
             <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
             <span className="font-mono text-xs text-neutral-500">
-              devtools.ts
+                auth.ts
             </span>
           </div>
           <pre className="overflow-x-auto p-3 font-mono text-[10px] leading-relaxed text-white sm:p-4 sm:text-sm">
@@ -418,21 +332,19 @@ const timelineData = [
           className="mb-4 text-sm text-neutral-400"
           style={{ fontFamily: "var(--font-work)" }}
         >
-          Run your app with{" "}
-          <code className="font-mono text-xs">DEV_AUTH_ENABLED=true</code> in
-          development. Create managed test users, switch sessions, inspect the
-          current session, and patch approved fields from the panel. If you use
-          Prisma or another ORM, make sure the plugin storage model exists
-          before testing the panel.
+          Run your app in development. The panel discovers its templates and
+          capabilities from the server automatically. Create managed test
+          users, switch sessions, inspect the current session, and patch
+          approved fields without shared client configuration.
         </p>
         <div className="grid gap-2 sm:gap-3 sm:grid-cols-3">
           {[
             "Create Test Users",
             "Switch Sessions",
             "Patch Approved Fields",
-          ].map((text, i) => (
+          ].map((text) => (
             <div
-              key={i}
+              key={text}
               className="flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] p-3"
             >
               <div className="h-2 w-2 rotate-45 bg-[#10B981]" />
@@ -486,7 +398,7 @@ export default function Page() {
             >
               <div className="h-2 w-2 rounded-full bg-[#F59E0B] shadow-[0_0_8px_#F59E0B]" />
               <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
-                Alpha Release
+                Beta Release
               </span>
             </motion.div>
 
@@ -541,6 +453,7 @@ export default function Page() {
               </Link>
 
               <button
+                type="button"
                 onClick={() => copyNpm(installCommand)}
                 className="group flex h-12 w-full items-center justify-between gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 transition-colors hover:border-white/[0.12] sm:h-14 sm:w-auto sm:justify-center sm:gap-3 sm:px-6"
               >
@@ -590,7 +503,7 @@ export default function Page() {
           <BentoGrid className="gap-3 md:gap-0 md:auto-rows-[22rem] md:grid-cols-3">
             {features.map((feature, i) => (
               <BentoGridItem
-                key={i}
+                key={feature.num}
                 className={`rounded-none border-2 border-white/[0.06] bg-[#161B22] p-0 shadow-none transition-colors hover:border-white/[0.1] hover:bg-[#1C2129] hover:shadow-none dark:border-white/[0.06] dark:bg-[#161B22] dark:shadow-none ${
                   i === 0 || i === 3 ? "md:col-span-2" : ""
                 }`}
@@ -666,9 +579,9 @@ export default function Page() {
               SET IT UP FAST
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-400 md:text-base">
-              Define templates once, but keep DB-backed devtools config on the
-              server. The panel stays client-safe by receiving serializable
-              props from your layout.
+              Add <code className="font-mono text-xs">devtools()</code> to your
+              Better Auth config and mount the panel. Customize personas only
+              when your application needs them.
             </p>
           </motion.div>
 
@@ -703,10 +616,9 @@ export default function Page() {
               WIRE IT INTO BETTER AUTH
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-400 md:text-base">
-              Use the server plugin from your Better Auth config, use{" "}
-              <code className="font-mono text-xs">devtoolsClientPlugin()</code>{" "}
-              in the auth client, and pass panel props into a client wrapper in
-              Next.js App Router.
+              Two integration points: one server plugin and one zero-prop React
+              component. No client plugin or server-to-client configuration is
+              required for the panel.
             </p>
           </motion.div>
 
@@ -769,9 +681,9 @@ export default function Page() {
           >
             <p className="text-sm leading-relaxed text-neutral-300">
               <span className="font-semibold text-white">
-                createManagedUser
+                Zero-config by default
               </span>{" "}
-              must create a real user in your app database.
+              using Better Auth&apos;s own adapter to create and manage test users.
             </p>
             <p className="mt-2 text-sm leading-relaxed text-neutral-400">
               The plugin provides its own Better Auth schema. After adding it,
@@ -781,9 +693,9 @@ export default function Page() {
               before your Prisma or Drizzle migration flow.
             </p>
             <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-              In Next.js App Router, pass <code className="font-mono text-xs">panelProps</code>{" "}
-              from a server layout into a client wrapper instead of importing a
-              DB-backed devtools module directly into the client.
+              Add templates and editable fields declaratively when you need
+              repeatable roles. Advanced callbacks remain available for custom
+              application data models.
             </p>
           </motion.div>
         </section>
@@ -829,6 +741,7 @@ export default function Page() {
 
               <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 md:flex-row md:items-stretch">
                 <button
+                  type="button"
                   onClick={() => copyCta(installCommand)}
                   className="group flex w-full items-center justify-between gap-3 border-2 border-white/[0.06] bg-[#0D1117] px-4 py-3 transition-colors hover:border-white/[0.12] sm:gap-4 sm:px-6 sm:py-4 md:max-w-[30rem]"
                 >

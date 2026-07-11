@@ -3,6 +3,9 @@ import { ENDPOINTS } from "./endpoints.js";
 import type {
   CreateUserRequest,
   CreateUserResponse,
+  DeleteUserRequest,
+  DeleteUserResponse,
+  DevtoolsPublicConfig,
   DevtoolsErrorResponse,
   ListUsersResponse,
   LoginRequest,
@@ -19,7 +22,7 @@ import type {
   InferDevtoolsTemplateKey,
 } from "./types.js";
 
-type DevtoolsFetchError = DevtoolsErrorResponse["error"] & {
+type DevtoolsFetchError = DevtoolsErrorResponse & {
   status: number;
   statusText: string;
 };
@@ -40,10 +43,14 @@ export interface DevtoolsClientActions<
   TFields extends Record<string, unknown> = Record<string, unknown>,
   TEditableKey extends keyof TFields & string = keyof TFields & string,
 > {
+  getDevtoolsConfig: () => DevtoolsFetchResult<DevtoolsPublicConfig>;
   listDevtoolsUsers: () => DevtoolsFetchResult<ListUsersResponse>;
   createDevtoolsUser: (
     data: CreateUserRequest<TTemplateKey>
   ) => DevtoolsFetchResult<CreateUserResponse>;
+  deleteDevtoolsUser: (
+    data: DeleteUserRequest
+  ) => DevtoolsFetchResult<DeleteUserResponse>;
   loginAsDevtoolsUser: (
     data: LoginRequest
   ) => DevtoolsFetchResult<LoginResponse<TFields, TEditableKey>>;
@@ -85,6 +92,11 @@ export const devtoolsClientPlugin = <
     $InferServerPlugin: {} as ReturnType<typeof devtoolsPlugin>,
     getActions: ($fetch) => {
       return {
+        getDevtoolsConfig: async () => {
+          return $fetch<DevtoolsPublicConfig, DevtoolsFetchError>(
+            ENDPOINTS.CONFIG
+          );
+        },
         listDevtoolsUsers: async () => {
           return $fetch<ListUsersResponse, DevtoolsFetchError>(
             ENDPOINTS.LIST_USERS
@@ -93,6 +105,15 @@ export const devtoolsClientPlugin = <
         createDevtoolsUser: async (data: CreateUserRequest<TTemplateKey>) => {
           return $fetch<CreateUserResponse, DevtoolsFetchError>(
             ENDPOINTS.CREATE_USER,
+            {
+              method: "POST",
+              body: data,
+            }
+          );
+        },
+        deleteDevtoolsUser: async (data: DeleteUserRequest) => {
+          return $fetch<DeleteUserResponse, DevtoolsFetchError>(
+            ENDPOINTS.DELETE_USER,
             {
               method: "POST",
               body: data,
@@ -129,6 +150,7 @@ export const devtoolsClientPlugin = <
     },
     pathMethods: {
       [ENDPOINTS.CREATE_USER]: "POST",
+      [ENDPOINTS.DELETE_USER]: "POST",
       [ENDPOINTS.LOGIN]: "POST",
       [ENDPOINTS.UPDATE_SESSION]: "POST",
     },

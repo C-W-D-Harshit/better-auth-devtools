@@ -1,8 +1,8 @@
 {
   "name": "better-auth-devtools",
-  "version": "0.1.1-alpha.9",
+  "version": "0.2.0-beta.0",
   "private": false,
-  "description": "Unofficial Better Auth devtool for managed test users, session switching, and a React DevTools panel via plugin/react subpath exports.",
+  "description": "Zero-config Better Auth development tools for managed test users, session switching, inspection, and safe field editing.",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -23,7 +23,9 @@
     "directory": "packages/plugin"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true,
+    "tag": "beta"
   },
   "exports": {
     ".": {
@@ -43,7 +45,7 @@
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.type-tests.json",
-    "lint": "echo 'no linter configured'",
+    "lint": "eslint src --max-warnings=0",
     "test": "pnpm exec vitest run"
   },
   "keywords": [
@@ -54,17 +56,28 @@
     "react"
   ],
   "peerDependencies": {
-    "better-auth": ">=1.2.0",
+    "better-auth": ">=1.6.11 <2",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "better-auth": "^1.2.0",
+    "better-auth": "^1.6.23",
+    "better-sqlite3": "^12.8.0",
+    "jsdom": "^26.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }

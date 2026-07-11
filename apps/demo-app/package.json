@@ -9,23 +9,24 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
-    "lint": "echo 'no linter configured'",
-    "test": "echo 'no tests yet'"
+    "lint": "eslint app lib --max-warnings=0",
+    "test": "pnpm exec vitest run --passWithNoTests"
   },
   "dependencies": {
-    "better-auth": "^1.2.0",
-    "better-sqlite3": "^12.0.0",
+    "better-auth": "^1.6.23",
     "better-auth-devtools": "workspace:*",
-    "@better-auth-devtools/react": "workspace:*",
-    "next": "^15.0.0",
+    "better-sqlite3": "^12.0.0",
+    "next": "^15.5.20",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.0.0",
+    "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.8.0",
-    "@types/node": "^22.0.0"
+    "eslint": "^9.39.4",
+    "eslint-config-next": "16.2.10",
+    "typescript": "^5.8.0"
   }
 }
