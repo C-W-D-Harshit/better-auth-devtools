@@ -4,6 +4,8 @@ export interface ManagedTestUserTemplate<
   label: string;
   emailPattern?: string;
   meta?: TMeta;
+  /** Fields written to Better Auth's user model by the zero-config creator. */
+  user?: Record<string, unknown>;
 }
 
 export type DevtoolsTemplateKey<
@@ -84,25 +86,46 @@ export interface DevtoolsPluginConfig<
   TFields extends Record<string, unknown> = Record<string, unknown>,
   TEditableKey extends keyof TFields & string = keyof TFields & string,
 > {
-  templates: TTemplates;
+  /** Defaults to a single generic `user` template. */
+  templates?: TTemplates;
   editableFields?: EditableFieldConfig<TEditableKey>[];
-  createManagedUser: (args: CreateManagedUserArgs<TTemplates>) => Promise<{
+  /**
+   * Optional hard override. By default the plugin creates a verified Better
+   * Auth user through the internal adapter.
+   */
+  createManagedUser?: (args: CreateManagedUserArgs<TTemplates>) => Promise<{
     userId: string;
     email?: string;
     label?: string;
     extra?: Record<string, unknown>;
   }>;
-  getSessionView: (args: GetSessionViewArgs) => Promise<
+  /** Optional override for applications that need a custom session view. */
+  getSessionView?: (args: GetSessionViewArgs) => Promise<
     DevtoolsSessionView<TFields, TEditableKey>
   >;
-  patchSession: (
+  /**
+   * Optional override for editing. Without it, allowed fields are written to
+   * the Better Auth user model.
+   */
+  patchSession?: (
     args: PatchSessionArgs<TFields, TEditableKey>
   ) => Promise<DevtoolsSessionView<TFields, TEditableKey>>;
+  /** Explicit kill switch. Production is always disabled. */
+  enabled?: boolean | (() => boolean);
 }
+
+export type DevtoolsOptions<
+  TTemplates extends Record<string, ManagedTestUserTemplate> = Record<
+    string,
+    ManagedTestUserTemplate
+  >,
+  TFields extends Record<string, unknown> = Record<string, unknown>,
+  TEditableKey extends keyof TFields & string = keyof TFields & string,
+> = DevtoolsPluginConfig<TTemplates, TFields, TEditableKey>;
 
 export type InferDevtoolsTemplateKey<
   TConfig extends DevtoolsPluginConfig<any, any, any>,
-> = keyof TConfig["templates"] & string;
+> = keyof NonNullable<TConfig["templates"]> & string;
 
 export type InferDevtoolsSessionFields<
   TConfig extends DevtoolsPluginConfig<any, any, any>,

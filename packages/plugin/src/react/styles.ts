@@ -133,6 +133,16 @@ export const styles: Record<string, CSSProperties> = {
     marginLeft: "8px",
     flexShrink: 0,
   },
+  deleteButton: {
+    background: "transparent",
+    color: "#fca5a5",
+    border: "1px solid #5c2b33",
+    borderRadius: "5px",
+    padding: "3px 7px",
+    cursor: "pointer",
+    fontSize: "10px",
+    fontFamily: "inherit",
+  },
   sessionFields: {
     display: "flex",
     flexDirection: "column" as const,
@@ -152,10 +162,9 @@ export const styles: Record<string, CSSProperties> = {
   fieldValue: {
     color: "#e0e0e0",
     textAlign: "right" as const,
+    whiteSpace: "pre-wrap" as const,
+    overflowWrap: "anywhere" as const,
     maxWidth: "60%",
-    overflow: "hidden" as const,
-    textOverflow: "ellipsis" as const,
-    whiteSpace: "nowrap" as const,
   },
   editFieldRow: {
     marginBottom: "8px",

@@ -7,6 +7,7 @@ import type {
   DevtoolsPanelFieldConfig,
   ManagedTestUserRecord,
 } from "../types.js";
+import type { DevtoolsPublicConfig } from "../payloads.js";
 import { styles } from "./styles.js";
 
 export interface BetterAuthDevtoolsProps {
@@ -17,12 +18,24 @@ export interface BetterAuthDevtoolsProps {
   defaultOpen?: boolean;
   position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   triggerLabel?: string;
+  /** Reload the host app after switching or editing so auth state refreshes. */
+  reloadOnSessionChange?: boolean;
 }
 
 interface FetchState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+}
+
+function getErrorMessage(data: unknown, fallback: string) {
+  if (!data || typeof data !== "object") return fallback;
+  const payload = data as {
+    message?: unknown;
+    error?: { message?: unknown };
+  };
+  if (typeof payload.error?.message === "string") return payload.error.message;
+  return typeof payload.message === "string" ? payload.message : fallback;
 }
 
 export function BetterAuthDevtools({
@@ -33,6 +46,7 @@ export function BetterAuthDevtools({
   defaultOpen = false,
   position = "bottom-right",
   triggerLabel = "Auth DevTools",
+  reloadOnSessionChange = true,
 }: BetterAuthDevtoolsProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [users, setUsers] = useState<FetchState<ManagedTestUserRecord[]>>({
@@ -47,15 +61,55 @@ export function BetterAuthDevtools({
   });
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [patchValues, setPatchValues] = useState<Record<string, string>>({});
+  const [patchValues, setPatchValues] = useState<
+    Record<string, string | boolean>
+  >({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [enabled, setEnabled] = useState(enabledProp ?? true);
+  const [serverConfig, setServerConfig] = useState<
+    DevtoolsPublicConfig | null | undefined
+  >(undefined);
+
+  const apiUrl = useCallback(
+    (endpoint: string) => `${basePath}${endpoint}`,
+    [basePath]
+  );
 
   useEffect(() => {
-    setEnabled(enabledProp ?? true);
-  }, [enabledProp]);
+    if (enabledProp === false) {
+      setServerConfig(null);
+      return;
+    }
 
-  const apiUrl = (endpoint: string) => `${basePath}${endpoint}`;
+    const controller = new AbortController();
+    fetch(apiUrl(ENDPOINTS.CONFIG), {
+      credentials: "include",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          setServerConfig(null);
+          return;
+        }
+        setServerConfig((await response.json()) as DevtoolsPublicConfig);
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setServerConfig(null);
+        }
+      });
+
+    return () => controller.abort();
+  }, [apiUrl, enabledProp]);
+
+  const enabled = enabledProp ?? serverConfig?.enabled ?? false;
+  const templateOptions =
+    templates.length > 0
+      ? templates.map((key) => ({ key, label: key }))
+      : (serverConfig?.templates ?? []);
+  const activeEditableFields =
+    editableFields.length > 0
+      ? editableFields
+      : (serverConfig?.editableFields ?? []);
 
   const fetchUsers = useCallback(async () => {
     setUsers({ data: null, loading: true, error: null });
@@ -68,7 +122,7 @@ export function BetterAuthDevtools({
         setUsers({
           data: null,
           loading: false,
-          error: data.error?.message ?? "Failed to fetch users",
+          error: getErrorMessage(data, "Failed to fetch users"),
         });
         return;
       }
@@ -80,7 +134,7 @@ export function BetterAuthDevtools({
         error: e instanceof Error ? e.message : "Failed to fetch users",
       });
     }
-  }, [basePath]);
+  }, [apiUrl]);
 
   const fetchSession = useCallback(async () => {
     setSession({ data: null, loading: true, error: null });
@@ -93,7 +147,7 @@ export function BetterAuthDevtools({
         setSession({
           data: null,
           loading: false,
-          error: data.error?.message ?? "Failed to fetch session",
+          error: getErrorMessage(data, "Failed to fetch session"),
         });
         return;
       }
@@ -105,7 +159,7 @@ export function BetterAuthDevtools({
         error: e instanceof Error ? e.message : "Failed to fetch session",
       });
     }
-  }, [basePath]);
+  }, [apiUrl]);
 
   useEffect(() => {
     if (isOpen && enabled) {
@@ -126,7 +180,7 @@ export function BetterAuthDevtools({
       });
       const data = await res.json();
       if (!res.ok) {
-        setActionError(data.error?.message ?? "Failed to create user");
+        setActionError(getErrorMessage(data, "Failed to create user"));
         return;
       }
       await fetchUsers();
@@ -149,11 +203,13 @@ export function BetterAuthDevtools({
       });
       const data = await res.json();
       if (!res.ok) {
-        setActionError(data.error?.message ?? "Failed to login");
+        setActionError(getErrorMessage(data, "Failed to login"));
         return;
       }
       setSession({ data: data.session, loading: false, error: null });
-      window.location.reload();
+      if (reloadOnSessionChange) {
+        window.location.reload();
+      }
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to login");
     } finally {
@@ -166,9 +222,13 @@ export function BetterAuthDevtools({
     setActionError(null);
     try {
       const patch: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(patchValues)) {
-        if (value !== "") {
-          patch[key] = value;
+      for (const field of activeEditableFields) {
+        const value = patchValues[field.key];
+        if (value !== undefined && value !== "") {
+          patch[field.key] =
+            field.type === "number" && typeof value === "string"
+              ? Number(value)
+              : value;
         }
       }
       const res = await fetch(apiUrl(ENDPOINTS.UPDATE_SESSION), {
@@ -179,11 +239,13 @@ export function BetterAuthDevtools({
       });
       const data = await res.json();
       if (!res.ok) {
-        setActionError(data.error?.message ?? "Failed to update session");
+        setActionError(getErrorMessage(data, "Failed to update session"));
         return;
       }
       setSession({ data: data.session, loading: false, error: null });
-      window.location.reload();
+      if (reloadOnSessionChange) {
+        window.location.reload();
+      }
     } catch (e) {
       setActionError(
         e instanceof Error ? e.message : "Failed to update session"
@@ -193,7 +255,35 @@ export function BetterAuthDevtools({
     }
   };
 
-  if (!enabled) {
+  const deleteUser = async (userId: string, label: string) => {
+    if (!window.confirm(`Delete the managed test user “${label}”?`)) {
+      return;
+    }
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      const res = await fetch(apiUrl(ENDPOINTS.DELETE_USER), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActionError(getErrorMessage(data, "Failed to delete user"));
+        return;
+      }
+      await fetchUsers();
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "Failed to delete user"
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (!enabled || serverConfig === undefined) {
     return null;
   }
 
@@ -217,6 +307,7 @@ export function BetterAuthDevtools({
     <div style={{ ...styles.container, ...positionStyle }}>
       {!isOpen ? (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
           style={styles.trigger}
           title={triggerLabel}
@@ -228,10 +319,12 @@ export function BetterAuthDevtools({
           <div style={styles.header}>
             <span style={styles.headerTitle}>{triggerLabel}</span>
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
               style={styles.closeButton}
+              aria-label="Close Better Auth DevTools"
             >
-              x
+              ×
             </button>
           </div>
 
@@ -239,18 +332,19 @@ export function BetterAuthDevtools({
             <div style={styles.errorBanner}>{actionError}</div>
           ) : null}
 
-          {templates.length > 0 ? (
+          {templateOptions.length > 0 ? (
             <div style={styles.section}>
               <div style={styles.sectionTitle}>Create Test User</div>
               <div style={styles.templateGrid}>
-                {templates.map((template) => (
+                {templateOptions.map((template) => (
                   <button
-                    key={template}
-                    onClick={() => createUser(template)}
+                    type="button"
+                    key={template.key}
+                    onClick={() => createUser(template.key)}
                     disabled={actionLoading}
                     style={styles.templateButton}
                   >
-                    + {template}
+                    + {template.label}
                   </button>
                 ))}
               </div>
@@ -260,7 +354,11 @@ export function BetterAuthDevtools({
           <div style={styles.section}>
             <div style={styles.sectionTitle}>
               Managed Users
-              <button onClick={fetchUsers} style={styles.refreshButton}>
+              <button
+                type="button"
+                onClick={fetchUsers}
+                style={styles.refreshButton}
+              >
                 refresh
               </button>
             </div>
@@ -285,11 +383,21 @@ export function BetterAuthDevtools({
                       <div style={styles.userEmail}>{user.email}</div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => loginAs(user.userId)}
                       disabled={actionLoading}
                       style={styles.loginButton}
                     >
                       switch
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteUser(user.userId, user.label)}
+                      disabled={actionLoading}
+                      style={styles.deleteButton}
+                      aria-label={`Delete ${user.label}`}
+                    >
+                      delete
                     </button>
                   </div>
                 ))}
@@ -300,7 +408,11 @@ export function BetterAuthDevtools({
           <div style={styles.section}>
             <div style={styles.sectionTitle}>
               Current Session
-              <button onClick={fetchSession} style={styles.refreshButton}>
+              <button
+                type="button"
+                onClick={fetchSession}
+                style={styles.refreshButton}
+              >
                 refresh
               </button>
             </div>
@@ -315,23 +427,45 @@ export function BetterAuthDevtools({
                 {Object.entries(session.data.fields).map(([key, value]) => (
                   <div key={key} style={styles.fieldRow}>
                     <span style={styles.fieldKey}>{key}</span>
-                    <span style={styles.fieldValue}>{String(value)}</span>
+                    <span style={styles.fieldValue}>
+                      {typeof value === "object" && value !== null
+                        ? JSON.stringify(value, null, 2)
+                        : String(value)}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {editableFields.length > 0 && session.data ? (
+          {activeEditableFields.length > 0 && session.data ? (
             <div style={styles.section}>
               <div style={styles.sectionTitle}>Edit Session</div>
-              {editableFields.map((field) => (
+              {activeEditableFields.map((field) => (
                 <div key={field.key} style={styles.editFieldRow}>
-                  <label style={styles.editFieldLabel}>{field.label}</label>
-                  {field.type === "select" && field.options ? (
+                  <label
+                    htmlFor={`better-auth-devtools-${field.key}`}
+                    style={styles.editFieldLabel}
+                  >
+                    {field.label}
+                  </label>
+                  {field.type === "boolean" ? (
+                    <input
+                      id={`better-auth-devtools-${field.key}`}
+                      type="checkbox"
+                      checked={Boolean(patchValues[field.key])}
+                      onChange={(event) =>
+                        setPatchValues((current) => ({
+                          ...current,
+                          [field.key]: event.target.checked,
+                        }))
+                      }
+                    />
+                  ) : field.type === "select" && field.options ? (
                     <select
+                      id={`better-auth-devtools-${field.key}`}
                       style={styles.editInput}
-                      value={patchValues[field.key] ?? ""}
+                      value={String(patchValues[field.key] ?? "")}
                       onChange={(event) =>
                         setPatchValues((current) => ({
                           ...current,
@@ -348,8 +482,10 @@ export function BetterAuthDevtools({
                     </select>
                   ) : (
                     <input
+                      id={`better-auth-devtools-${field.key}`}
+                      type={field.type === "number" ? "number" : "text"}
                       style={styles.editInput}
-                      value={patchValues[field.key] ?? ""}
+                      value={String(patchValues[field.key] ?? "")}
                       onChange={(event) =>
                         setPatchValues((current) => ({
                           ...current,
@@ -361,6 +497,7 @@ export function BetterAuthDevtools({
                 </div>
               ))}
               <button
+                type="button"
                 onClick={patchSession}
                 disabled={actionLoading}
                 style={styles.saveButton}

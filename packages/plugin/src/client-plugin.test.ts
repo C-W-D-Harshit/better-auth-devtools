@@ -13,6 +13,7 @@ describe("devtoolsClientPlugin", () => {
 
     expect(plugin.pathMethods).toMatchObject({
       [ENDPOINTS.CREATE_USER]: "POST",
+      [ENDPOINTS.DELETE_USER]: "POST",
       [ENDPOINTS.LOGIN]: "POST",
       [ENDPOINTS.UPDATE_SESSION]: "POST",
     });
@@ -20,14 +21,24 @@ describe("devtoolsClientPlugin", () => {
     const actions = plugin.getActions?.($fetch);
     expect(actions).toBeTruthy();
 
+    await actions?.getDevtoolsConfig();
     await actions?.createDevtoolsUser({ template: "admin" });
+    await actions?.deleteDevtoolsUser({ userId: "user_old" });
     await actions?.loginAsDevtoolsUser({ userId: "user_admin_1" });
     await actions?.getDevtoolsSession();
 
     expect(calls).toEqual([
       {
+        path: ENDPOINTS.CONFIG,
+        options: undefined,
+      },
+      {
         path: ENDPOINTS.CREATE_USER,
         options: { method: "POST", body: { template: "admin" } },
+      },
+      {
+        path: ENDPOINTS.DELETE_USER,
+        options: { method: "POST", body: { userId: "user_old" } },
       },
       {
         path: ENDPOINTS.LOGIN,

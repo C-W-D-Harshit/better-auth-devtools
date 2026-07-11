@@ -1,24 +1,10 @@
 # Better Auth DevTools
 
-> [!WARNING]
-> Unofficial, alpha, development-only tooling for Better Auth. Do not enable it in production.
+> Unofficial, beta, development-only tooling for Better Auth. The server endpoints are always disabled when `NODE_ENV=production`.
 
-`better-auth-devtools` is a community Better Auth plugin for local auth scenario testing. It gives you managed test users, instant session switching, session inspection, and a React panel for approved session-field edits.
+Create managed test users, switch sessions, inspect live auth state, and optionally edit approved user fields from a floating React panel.
 
-## Overview
-
-1. The plugin stores managed test-user records in its own Better Auth model.
-2. Each managed test-user record points to a real Better Auth user in your app.
-3. Switching users creates a Better Auth session for that real user.
-4. The panel only shows and edits fields your app exposes through `getSessionView` and `patchSession`.
-
-## Installation
-
-AI agent prompt:
-
-```text
-Install and integrate better-auth-devtools as an unofficial development-only Better Auth utility. Use better-auth-devtools/plugin for the Better Auth server/client plugin setup and better-auth-devtools/react for the floating panel. Keep it disabled in production, require DEV_AUTH_ENABLED=true, use managed test users only, create real host-app users in createManagedUser, let the plugin provide its Better Auth schema, rerun the Better Auth CLI after adding it, and for Next.js App Router keep DB-backed devtools config on the server while passing panelProps into a client wrapper.
-```
+## Install
 
 ```bash
 pnpm add better-auth-devtools
@@ -30,385 +16,21 @@ Peer requirements:
 pnpm add better-auth react react-dom
 ```
 
-### Define the plugin config
+## Quick start
 
-Define your templates and host-app callbacks once. In Next.js App Router, keep database-backed devtools code on the server and pass panel props into a client wrapper from a server layout.
-
-Use these subpath exports:
-
-```ts
-import {
-  createDevtoolsIntegration,
-  defineDevtoolsConfig,
-} from "better-auth-devtools/plugin";
-import { BetterAuthDevtools } from "better-auth-devtools/react";
-```
-
-Required environment guard:
-
-```bash
-DEV_AUTH_ENABLED=true
-```
-
-The devtools run only when DEV_AUTH_ENABLED=true and the app is not running in production.
-
-```ts
-import {
-  createDevtoolsIntegration,
-  defineDevtoolsConfig,
-} from "better-auth-devtools/plugin";
-
-export const devtoolsConfig = defineDevtoolsConfig({
-    templates: {
-      admin: { label: "Admin", meta: { role: "admin" } },
-      viewer: { label: "Viewer", meta: { role: "viewer" } },
-    },
-    editableFields: [
-      {
-        key: "role",
-        label: "Role",
-        type: "select",
-        options: ["admin", "viewer"],
-      },
-    ],
-    async createManagedUser(args) {
-      const user = await db.user.create({
-        data: {
-          email: args.email,
-          name: args.template.label,
-          role: String(args.template.meta?.role ?? "viewer"),
-        },
-      });
-
-      return {
-        userId: user.id,
-        email: user.email,
-        label: args.template.label,
-      };
-    },
-    async getSessionView(args) {
-      const user = await db.user.findUnique({ where: { id: args.userId } });
-
-      return {
-        userId: args.userId,
-        email: user?.email,
-        label: user?.name,
-        fields: {
-          sessionId: args.sessionId,
-          role: user?.role ?? "viewer",
-        },
-        editableFields: ["role"],
-      };
-    },
-    async patchSession(args) {
-      await db.user.update({
-        where: { id: args.userId },
-        data: { role: String(args.patch.role ?? "viewer") },
-      });
-
-      const user = await db.user.findUnique({ where: { id: args.userId } });
-
-      return {
-        userId: args.userId,
-        email: user?.email,
-        label: user?.name,
-        fields: {
-          sessionId: args.sessionId,
-          role: user?.role ?? "viewer",
-        },
-        editableFields: ["role"],
-      };
-    },
-});
-
-export const devtools = createDevtoolsIntegration(devtoolsConfig, {
-  position: "bottom-right",
-  triggerLabel: "Auth DevTools",
-});
-```
-
-`createManagedUser` must create a real Better Auth user in your app database and return that real user ID.
-
-### Add the plugin to your auth config
+Add the plugin to Better Auth:
 
 ```ts
 import { betterAuth } from "better-auth";
-import { devtools } from "./devtools";
+import { devtools } from "better-auth-devtools";
 
 export const auth = betterAuth({
   database,
-  plugins: [devtools.serverPlugin],
+  plugins: [devtools()],
 });
 ```
 
-### Migrate or generate the database schema
-
-The server plugin already declares its storage model through Better Auth's plugin `schema`, including the `devtoolsUser` table used for managed test-user records. You do not need to hand-write a `DevtoolsUser` model just to use this package.
-
-After adding the plugin to your Better Auth config, rerun the Better Auth CLI so the plugin schema is picked up:
-
-```bash
-npx auth@latest migrate
-```
-
-If you use Prisma, Drizzle, or another ORM adapter, generate the schema from your Better Auth config and then apply it with your normal ORM workflow:
-
-```bash
-npx auth@latest generate
-```
-
-Rerun the CLI whenever you add the plugin or change plugin-managed schema.
-
-### Add the client plugin
-
-```ts
-import { createAuthClient } from "better-auth/react";
-import { devtoolsClientPluginFor } from "better-auth-devtools/plugin";
-import type { DevtoolsConfig } from "@/lib/devtools-types";
-
-export const authClient = createAuthClient({
-  plugins: [devtoolsClientPluginFor<DevtoolsConfig>()],
-});
-```
-
-If you want strongly typed client actions, pass your devtools config type to `devtoolsClientPluginFor<...>()`. In Next.js App Router, use a type-only import or a shared type alias instead of importing a DB-backed runtime module into client code.
-
-## Configuration
-
-`defineDevtoolsConfig(...)` takes the server-side callbacks and template metadata that drive the plugin:
-
-- `templates`: map of stable test personas. Each template needs a `label` and can optionally include `emailPattern` and `meta`.
-- `editableFields`: optional list of fields the panel may edit. Supported field types are `string`, `number`, `boolean`, and `select`.
-- `createManagedUser`: must create a real user in your app database and return its real `userId`. You can also override `email` and `label`.
-- `getSessionView`: returns the session data the panel should display for the active user.
-- `patchSession`: applies an allowed patch and returns the refreshed session view.
-
-`createDevtoolsIntegration(config, panel)` bundles the server plugin, client plugin, and panel props. The optional `panel` config supports:
-
-- `enabled`
-- `basePath`
-- `defaultOpen`
-- `position`
-- `triggerLabel`
-
-## Usage
-
-### Next.js App Router
-
-Keep the devtools config on the server:
-
-```ts
-import {
-  createDevtoolsIntegration,
-  defineDevtoolsConfig,
-} from "better-auth-devtools/plugin";
-
-export const devtoolsConfig = defineDevtoolsConfig({
-    templates: {
-      admin: { label: "Admin", meta: { role: "admin" } },
-      viewer: { label: "Viewer", meta: { role: "viewer" } },
-    },
-    editableFields: [
-      {
-        key: "role",
-        label: "Role",
-        type: "select",
-        options: ["admin", "viewer"],
-      },
-    ],
-    async createManagedUser(args) {
-      const user = await db.user.create({
-        data: {
-          email: args.email,
-          name: args.template.label,
-          role: String(args.template.meta?.role ?? "viewer"),
-        },
-      });
-
-      return {
-        userId: user.id,
-        email: user.email,
-        label: args.template.label,
-      };
-    },
-    async getSessionView(args) {
-      const user = await db.user.findUnique({ where: { id: args.userId } });
-
-      return {
-        userId: args.userId,
-        email: user?.email,
-        label: user?.name,
-        fields: {
-          sessionId: args.sessionId,
-          role: user?.role ?? "viewer",
-        },
-        editableFields: ["role"],
-      };
-    },
-    async patchSession(args) {
-      await db.user.update({
-        where: { id: args.userId },
-        data: { role: String(args.patch.role ?? "viewer") },
-      });
-
-      const user = await db.user.findUnique({ where: { id: args.userId } });
-
-      return {
-        userId: args.userId,
-        email: user?.email,
-        label: user?.name,
-        fields: {
-          sessionId: args.sessionId,
-          role: user?.role ?? "viewer",
-        },
-        editableFields: ["role"],
-      };
-    },
-});
-
-export const devtools = createDevtoolsIntegration(devtoolsConfig);
-```
-
-Create a client-safe type bridge:
-
-```ts
-export type DevtoolsConfig = typeof import("./devtools").devtoolsConfig;
-```
-
-Create your auth client with `devtoolsClientPluginFor<...>()`:
-
-```ts
-import { createAuthClient } from "better-auth/react";
-import { devtoolsClientPluginFor } from "better-auth-devtools/plugin";
-import type { DevtoolsConfig } from "@/lib/devtools-types";
-
-export const authClient = createAuthClient({
-  plugins: [devtoolsClientPluginFor<DevtoolsConfig>()],
-});
-```
-
-If you want strongly typed client actions, pass your devtools config type to `devtoolsClientPluginFor<...>()`. In Next.js App Router, use a type-only import or a shared type alias instead of importing a DB-backed runtime module into client code.
-
-Pass `panelProps` from a server layout:
-
-```tsx
-import { devtools } from "@/lib/devtools";
-import { DevtoolsWrapper } from "./devtools-wrapper";
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-        <DevtoolsWrapper panelProps={devtools.panelProps} />
-      </body>
-    </html>
-  );
-}
-```
-
-Render the panel in a client wrapper:
-
-```tsx
-"use client";
-
-import { BetterAuthDevtools } from "better-auth-devtools/react";
-import type { BetterAuthDevtoolsProps } from "better-auth-devtools/react";
-
-export function DevtoolsWrapper({
-  panelProps,
-}: {
-  panelProps: BetterAuthDevtoolsProps;
-}) {
-  return <BetterAuthDevtools {...panelProps} />;
-}
-```
-
-Do not import a DB-backed devtools config module directly into a client component.
-
-### Lower-Level API
-
-```ts
-import { betterAuth } from "better-auth";
-import { createAuthClient } from "better-auth/react";
-import { devtoolsClientPlugin, devtoolsPlugin } from "better-auth-devtools/plugin";
-
-export const auth = betterAuth({
-  database,
-  plugins: [
-    devtoolsPlugin({
-      templates: {
-        admin: { label: "Admin", meta: { role: "admin" } },
-        viewer: { label: "Viewer", meta: { role: "viewer" } },
-      },
-      editableFields: [
-        {
-          key: "role",
-          label: "Role",
-          type: "select",
-          options: ["admin", "viewer"],
-        },
-      ],
-      async createManagedUser(args) {
-        const user = await db.user.create({
-          data: {
-            email: args.email,
-            name: args.template.label,
-            role: String(args.template.meta?.role ?? "viewer"),
-          },
-        });
-
-        return {
-          userId: user.id,
-          email: user.email,
-          label: args.template.label,
-        };
-      },
-      async getSessionView(args) {
-        const user = await db.user.findUnique({ where: { id: args.userId } });
-
-        return {
-          userId: args.userId,
-          email: user?.email,
-          label: user?.name,
-          fields: {
-            sessionId: args.sessionId,
-            role: user?.role ?? "viewer",
-          },
-          editableFields: ["role"],
-        };
-      },
-      async patchSession(args) {
-        await db.user.update({
-          where: { id: args.userId },
-          data: { role: String(args.patch.role ?? "viewer") },
-        });
-
-        const user = await db.user.findUnique({ where: { id: args.userId } });
-
-        return {
-          userId: args.userId,
-          email: user?.email,
-          label: user?.name,
-          fields: {
-            sessionId: args.sessionId,
-            role: user?.role ?? "viewer",
-          },
-          editableFields: ["role"],
-        };
-      },
-    }),
-  ],
-});
-
-export const authClient = createAuthClient({
-  plugins: [devtoolsClientPlugin()],
-});
-```
+Mount the panel anywhere in your React application:
 
 ```tsx
 "use client";
@@ -416,85 +38,188 @@ export const authClient = createAuthClient({
 import { BetterAuthDevtools } from "better-auth-devtools/react";
 
 export function Devtools() {
-  return (
-    <BetterAuthDevtools
-      enabled={true}
-      basePath="/api/auth"
-      templates={["admin", "viewer"]}
-      editableFields={[
-        { key: "role", label: "Role", type: "select", options: ["admin", "viewer"] },
-      ]}
-    />
-  );
+  return <BetterAuthDevtools />;
 }
 ```
 
-Use the lower-level API if you need to wire the Better Auth server plugin separately from your panel props. In Next.js App Router, keep the plugin config on the server and pass panel props into a client wrapper.
+That is the complete runtime setup. The panel discovers its templates and capabilities from the server; it does not require a client plugin, shared config, or server-generated props.
 
-## Schema
+### Create the plugin table
 
-Table name: `devtoolsUser`
+The plugin stores the IDs of users it creates so arbitrary application users cannot be impersonated. Apply its Better Auth schema after installation.
 
-| Field | Type | Key | Description |
-| --- | --- | --- | --- |
-| `id` | `string` | PK | Better Auth generated row identifier for the managed test-user record |
-| `userId` | `string` | - | Real Better Auth user ID that the managed test user points to |
-| `templateKey` | `string` | - | Template key used when the managed test user was created |
-| `label` | `string` | - | Display label shown in the panel |
-| `email` | `string` | - | Email shown for the managed test user record |
-| `createdAt` | `date` | - | Creation timestamp for the record |
-| `updatedAt` | `date` | - | Last update timestamp for the record |
+Built-in Kysely adapter:
 
-## Troubleshooting
+```bash
+npx auth@latest migrate
+```
 
-### Devtools endpoints return disabled or the panel does not show controls
+Prisma, Drizzle, and other ORM adapters:
 
-Cause:
-- `DEV_AUTH_ENABLED=true` is missing
-- app is running in production
+```bash
+npx auth@latest generate
+```
 
-Fix:
-- set `DEV_AUTH_ENABLED=true`
-- verify you are not in production
+Then apply the generated change with your normal ORM migration workflow. Re-run the command after plugin schema changes.
 
-### Switching into a managed user fails because the user is not found
+## Zero-config behavior
 
-Cause:
-- `createManagedUser` returned an ID for a user that was never actually created
+`devtools()`:
 
-Fix:
-- create a real host-app user and return that real ID
+- Enables itself automatically outside production.
+- Provides a default **Test User** template.
+- Creates a verified Better Auth user with a generated `@test.local` address.
+- Only permits switching to users recorded as DevTools-managed.
+- Shows the current Better Auth user and session.
+- Limits managed-user listing to the newest 100 records.
+- Protects write endpoints with Better Auth origin and CSRF middleware.
+- Rate-limits all DevTools endpoints.
+- Supports deleting managed users and their sessions/accounts through Better Auth.
 
-### Adapter or model errors appear when listing or creating managed users
+Set `DEV_AUTH_ENABLED=false` when you want an explicit development kill switch. Setting it to `true` never enables the plugin in production.
 
-Cause:
-- plugin schema has not been generated or applied for your adapter yet
+## Personas and editable fields
 
-Fix:
-- rerun the Better Auth CLI so the plugin schema is generated or migrated for your setup
+Most applications only need declarative templates:
 
-### Next.js client code fails when mounting the panel
+```ts
+import { devtools } from "better-auth-devtools";
 
-Cause:
-- a DB-backed or server-only module is being imported into a client component
+export const authDevtools = devtools({
+  templates: {
+    admin: {
+      label: "Admin",
+      user: { role: "admin" },
+    },
+    editor: {
+      label: "Editor",
+      user: { role: "editor" },
+    },
+    viewer: {
+      label: "Viewer",
+      user: { role: "viewer" },
+    },
+  },
+  editableFields: [
+    {
+      key: "role",
+      label: "Role",
+      type: "select",
+      options: ["admin", "editor", "viewer"],
+    },
+  ],
+});
+```
 
-Fix:
-- pass `panelProps` from a server layout into a client wrapper
+Template `user` values are passed to Better Auth's internal user adapter. This works with Better Auth additional fields and adapter mappings. Required custom fields without database defaults must be included in the template.
 
-## Demo
+Supported editable field types are `string`, `number`, `boolean`, and `select`. Without a custom callback, approved edits update the Better Auth user model.
+
+## Advanced hooks
+
+Use callbacks only when your application stores persona or session data outside the Better Auth user model:
+
+```ts
+const authDevtools = devtools({
+  templates: {
+    teamAdmin: { label: "Team Admin", user: { role: "admin" } },
+  },
+
+  async createManagedUser({ template, email }) {
+    const user = await createApplicationUser({
+      name: template.label,
+      email,
+      role: String(template.user?.role ?? "member"),
+    });
+
+    return { userId: user.id, email: user.email, label: user.name };
+  },
+
+  async getSessionView({ userId, sessionId }) {
+    const profile = await loadProfile(userId);
+
+    return {
+      userId,
+      label: profile.name,
+      email: profile.email,
+      fields: { role: profile.role, sessionId },
+      editableFields: ["role"],
+    };
+  },
+
+  async patchSession({ userId, sessionId, patch }) {
+    const profile = await updateProfile(userId, patch);
+
+    return {
+      userId,
+      label: profile.name,
+      email: profile.email,
+      fields: { role: profile.role, sessionId },
+      editableFields: ["role"],
+    };
+  },
+});
+```
+
+## Optional typed client actions
+
+The React panel calls the DevTools endpoints directly. If application code also needs typed actions, add the optional Better Auth client plugin:
+
+```ts
+import { createAuthClient } from "better-auth/react";
+import { devtoolsClientPlugin } from "better-auth-devtools/plugin";
+
+export const authClient = createAuthClient({
+  plugins: [devtoolsClientPlugin()],
+});
+```
+
+## Panel options
+
+```tsx
+<BetterAuthDevtools
+  basePath="/api/auth"
+  defaultOpen={false}
+  position="bottom-right"
+  triggerLabel="Auth DevTools"
+  reloadOnSessionChange
+/>
+```
+
+The panel hides itself if the server reports that DevTools is disabled or unavailable.
+
+## Security model
+
+This package can create users, issue sessions, update approved fields, and delete managed users. Treat it like a privileged local development tool.
+
+- Production is always disabled.
+- Session switching and deletion require a DevTools-managed user record.
+- Request bodies are runtime validated.
+- Writes use Better Auth origin and CSRF protection.
+- Raw server errors are logged server-side and are not exposed to the browser.
+- Do not expose a development server containing sensitive data to an untrusted network.
+
+## Requirements
+
+- Better Auth `>=1.6.11 <2`
+- React `>=18`
+- React DOM `>=18`
+- Node.js `>=20`
+
+The package is ESM-only.
+
+## Development
 
 ```bash
 pnpm install
-pnpm --dir apps/demo-app db:init
-pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-The repo includes a local demo app in [`apps/demo-app`](https://github.com/C-W-D-Harshit/better-auth-devtools/tree/main/apps/demo-app), but the README examples above are the public integration pattern to follow.
+The demo app imports the public `better-auth-devtools` and `better-auth-devtools/react` exports, so it exercises the same code shipped to npm.
 
-## Notes
+## License
 
-- Managed test users only. This is not arbitrary user impersonation.
-- Intended for local and trusted development environments.
-- Current public API:
-  - `better-auth-devtools/plugin`
-  - `better-auth-devtools/react`
+MIT

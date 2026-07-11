@@ -1,8 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import { createDevtoolsIntegration } from "./integration.js";
 import { createDevtoolsPanelProps, defineDevtoolsConfig } from "./panel.js";
+import { devtools } from "./server-plugin.js";
 
 describe("setup helpers", () => {
+  it("rejects invalid editable field configuration immediately", () => {
+    expect(() =>
+      devtools({
+        editableFields: [
+          { key: "role", label: "Role", type: "select", options: [] },
+        ],
+      })
+    ).toThrow('select field "role" requires options');
+  });
+
   it("derives client-safe panel props from config", () => {
     const config = defineDevtoolsConfig({
       templates: {
@@ -29,7 +40,7 @@ describe("setup helpers", () => {
         triggerLabel: "DevTools",
       })
     ).toEqual({
-      enabled: false,
+      enabled: true,
       basePath: "/custom/auth",
       defaultOpen: undefined,
       position: undefined,

@@ -1,8 +1,20 @@
 import type {
+  DevtoolsPanelFieldConfig,
   DevtoolsSessionPatch,
   DevtoolsSessionView,
   ManagedTestUserRecord,
 } from "./types.js";
+
+export interface DevtoolsPublicConfig {
+  enabled: true;
+  templates: Array<{ key: string; label: string }>;
+  editableFields: DevtoolsPanelFieldConfig[];
+  capabilities: {
+    createUsers: true;
+    deleteUsers: true;
+    editSession: boolean;
+  };
+}
 
 export type ListUsersResponse = ManagedTestUserRecord[];
 
@@ -12,6 +24,14 @@ export interface CreateUserRequest<TTemplateKey extends string = string> {
 
 export interface CreateUserResponse {
   user: ManagedTestUserRecord;
+}
+
+export interface DeleteUserRequest {
+  userId: string;
+}
+
+export interface DeleteUserResponse {
+  success: true;
 }
 
 export interface LoginRequest {
@@ -47,8 +67,6 @@ export interface UpdateSessionResponse<
 }
 
 export interface DevtoolsErrorResponse {
-  error: {
-    code: string;
-    message: string;
-  };
+  code: string;
+  message: string;
 }

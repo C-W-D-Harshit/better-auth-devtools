@@ -1,4 +1,4 @@
-export { devtoolsPlugin } from "./server-plugin.js";
+export { devtools, devtoolsPlugin } from "./server-plugin.js";
 export { devtoolsClientPlugin, devtoolsClientPluginFor } from "./client-plugin.js";
 export { ENDPOINTS, ROUTE_PREFIX } from "./endpoints.js";
 export { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
@@ -19,6 +19,7 @@ export type {
 
 export type {
   DevtoolsPluginConfig,
+  DevtoolsOptions,
   DevtoolsTemplateKey,
   InferDevtoolsTemplateKey,
   InferDevtoolsSessionFields,
@@ -42,8 +43,11 @@ export type { DevtoolsIntegration } from "./integration.js";
 
 export type {
   ListUsersResponse,
+  DevtoolsPublicConfig,
   CreateUserRequest,
   CreateUserResponse,
+  DeleteUserRequest,
+  DeleteUserResponse,
   LoginRequest,
   LoginResponse,
   SessionResponse,

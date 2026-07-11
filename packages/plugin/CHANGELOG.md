@@ -1,4 +1,22 @@
-# @better-auth-devtools/plugin
+# better-auth-devtools
+
+## 0.2.0-beta.0
+
+### Minor Changes
+
+- Make Better Auth DevTools beta-ready with a zero-config `devtools()` server plugin, automatic panel configuration discovery, default managed-user creation and session inspection, optional declarative personas and editing, hardened endpoints, managed-user deletion, consolidated package sources, real Better Auth integration tests, packed-consumer validation, and release quality gates.
+
+## 0.1.1
+
+### Patch Changes
+
+- 3b2bd28: Collapse the public npm surface to a single `better-auth-devtools` package with `./plugin` and `./react` subpath exports.
+- 03a82af: Include the package README in the published tarball so the npm page renders the project documentation and unofficial Better Auth disclaimer.
+- c3095d8: Update the published package README so npm shows the current unofficial Better Auth devtool positioning, installation flow, AI agent prompt, and minimal usage examples.
+- 74af11d: Reduce integration setup by adding `defineDevtoolsConfig`, `createDevtoolsPanelProps`, and `createDevtoolsIntegration`, so apps can configure server, client, and panel wiring from one shared source of truth.
+- b523d3b: Improve the public TypeScript API, document Next.js App Router integration more clearly, and refresh the landing-page content and responsiveness.
+- 3fa64ee: Split browser-safe setup helpers away from server integration wiring to avoid dragging server code into client bundles, and add concrete response types to the shipped client plugin actions.
+- d995b58: Fold the public API into a single installable package so users consume `better-auth-devtools/plugin` and `better-auth-devtools/react` from one dependency.
 
 ## 0.1.1-alpha.9
 
