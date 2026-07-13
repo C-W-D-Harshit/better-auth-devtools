@@ -1,9 +1,16 @@
 "use client"
 
-import React, { useState } from "react"
-import { motion } from "motion/react"
+import React, { useEffect, useRef, useState } from "react"
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  useMotionValue,
+  useMotionTemplate,
+  useSpring,
+} from "motion/react"
 import Link from "next/link"
-import { Bebas_Neue, Work_Sans } from "next/font/google"
+import Image from "next/image"
 import {
   Users,
   ArrowRightLeft,
@@ -11,203 +18,586 @@ import {
   Pencil,
   ShieldCheck,
   Lock,
-  Terminal,
   Copy,
   Check,
-  Diamond,
-  Hexagon,
-  Triangle,
-  ChevronRight,
+  ArrowUpRight,
+  Github,
+  Terminal,
 } from "lucide-react"
 
-import { Spotlight } from "@/components/ui/spotlight"
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid"
-import { Timeline } from "@/components/ui/timeline"
-import { Button as MovingBorderButton } from "@/components/ui/moving-border"
-import DecryptedText from "@/components/ui/decrypted-text"
+// ─── Motion + design tokens ──────────────────────────────────────────
 
-const bebasNeue = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
+const EASE_OUT = [0.23, 1, 0.32, 1] as const
 
-const workSans = Work_Sans({
-  subsets: ["latin"],
-  variable: "--font-work",
-})
+const GITHUB_URL = "https://github.com/C-W-D-Harshit/better-auth-devtools"
+const INSTALL = "pnpm add better-auth-devtools"
 
-// ─── Geometric decorative components ────────────────────────────────
+// ─── Primitives ──────────────────────────────────────────────────────
 
-function DiamondBullet({ className = "" }: { className?: string }) {
-  return (
-    <span
-      className={`inline-block h-2 w-2 rotate-45 bg-[#F59E0B] ${className}`}
-    />
-  )
-}
-
-function GeometricSeparator() {
-  return (
-    <div className="flex items-center justify-center gap-4 py-12">
-      <div className="h-px flex-1 bg-white/[0.06]" />
-      <DiamondBullet />
-      <div className="h-[2px] w-8 bg-[#F59E0B]" />
-      <DiamondBullet />
-      <div className="h-px flex-1 bg-white/[0.06]" />
-    </div>
-  )
-}
-
-function SkewedDivider() {
-  return (
-    <div className="relative h-20 w-full overflow-hidden">
-      <div className="absolute inset-0 -skew-y-2 bg-[#0D1117]" />
-      <div className="absolute inset-0 -skew-y-2 border-b-2 border-white/[0.04]" />
-    </div>
-  )
-}
-
-// ─── Feature header patterns ─────────────────────────────────────────
-
-function FeatureHeaderPattern({
-  color,
-  index,
+function Reveal({
+  children,
+  delay = 0,
+  y = 14,
+  scale = 1,
+  className = "",
 }: {
-  color: string
-  index: number
+  children: React.ReactNode
+  delay?: number
+  y?: number
+  scale?: number
+  className?: string
 }) {
-  const patterns = [
-    // Diagonal lines
-    <div key="p1" className="relative h-full w-full overflow-hidden">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute h-px origin-left rotate-45"
-          style={{
-            top: `${i * 14}%`,
-            left: 0,
-            right: 0,
-            backgroundColor: color,
-            opacity: 0.15,
-          }}
-        />
-      ))}
-      <div
-        className="absolute right-0 bottom-0 h-16 w-16 opacity-10"
-        style={{
-          background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-        }}
-      />
-    </div>,
-    // Grid dots
-    <div key="p2" className="relative h-full w-full overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `radial-gradient(${color} 1px, transparent 1px)`,
-          backgroundSize: "16px 16px",
-        }}
-      />
-    </div>,
-    // Corner accent
-    <div key="p3" className="relative h-full w-full overflow-hidden">
-      <div
-        className="absolute -top-4 -right-4 h-20 w-20 rotate-45 border-2 opacity-10"
-        style={{ borderColor: color }}
-      />
-      <div
-        className="absolute -bottom-2 -left-2 h-12 w-12 rotate-45 border-2 opacity-10"
-        style={{ borderColor: color }}
-      />
-    </div>,
-    // Horizontal bars
-    <div key="p4" className="relative h-full w-full overflow-hidden">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute h-[2px]"
-          style={{
-            top: `${20 + i * 15}%`,
-            left: "10%",
-            width: `${30 + i * 10}%`,
-            backgroundColor: color,
-            opacity: 0.08 + i * 0.03,
-          }}
-        />
-      ))}
-    </div>,
-    // Concentric squares
-    <div key="p5" className="relative h-full w-full overflow-hidden">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute border opacity-10"
-          style={{
-            borderColor: color,
-            top: `${20 + i * 10}%`,
-            right: `${10 + i * 10}%`,
-            width: `${40 - i * 10}px`,
-            height: `${40 - i * 10}px`,
-          }}
-        />
-      ))}
-    </div>,
-    // Cross pattern
-    <div key="p6" className="relative h-full w-full overflow-hidden">
-      <div
-        className="absolute top-1/2 left-1/2 h-px w-full -translate-x-1/2 opacity-10"
-        style={{ backgroundColor: color }}
-      />
-      <div
-        className="absolute top-1/2 left-1/2 h-full w-px -translate-y-1/2 opacity-10"
-        style={{ backgroundColor: color }}
-      />
-      <div
-        className="absolute top-4 right-4 h-3 w-3 rotate-45 opacity-20"
-        style={{ backgroundColor: color }}
-      />
-    </div>,
-  ]
-  return patterns[index % patterns.length]
+  const reduce = useReducedMotion()
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: reduce ? 0 : y,
+        scale: reduce ? 1 : scale,
+        filter: reduce ? "blur(0px)" : "blur(6px)",
+      }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: EASE_OUT, delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
 }
 
-// ─── Copy button hook ────────────────────────────────────────────────
+function EyebrowLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-mono text-[11px] font-medium tracking-[0.2em] text-amber-400/90 uppercase">
+      {children}
+    </span>
+  )
+}
 
-function useCopyToClipboard() {
+function useCopy() {
   const [copied, setCopied] = useState(false)
   const copy = (text: string) => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard?.writeText(text)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => setCopied(false), 1800)
   }
   return { copied, copy }
 }
 
-// ─── Features data ───────────────────────────────────────────────────
+function CopyPill({ command }: { command: string }) {
+  const { copied, copy } = useCopy()
+  return (
+    <button
+      type="button"
+      onClick={() => copy(command)}
+      className="group flex w-full min-w-0 items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3 transition-[transform,border-color,background-color] duration-150 ease-out hover:border-white/20 hover:bg-white/[0.04] active:scale-[0.98] sm:w-auto sm:gap-3 sm:px-4"
+    >
+      <span className="shrink-0 font-mono text-sm text-amber-400/70 select-none">$</span>
+      <code className="min-w-0 flex-1 truncate text-left font-mono text-[13px] text-neutral-200 sm:flex-none sm:text-sm">
+        {command}
+      </code>
+      <span className="relative ml-auto grid h-4 w-4 shrink-0 place-items-center sm:ml-1">
+        <Copy
+          className={`absolute h-4 w-4 text-neutral-500 transition-all duration-200 ease-out group-hover:text-neutral-300 ${
+            copied ? "scale-90 opacity-0 blur-[2px]" : "scale-100 opacity-100 blur-0"
+          }`}
+        />
+        <Check
+          className={`absolute h-4 w-4 text-amber-400 transition-all duration-200 ease-out ${
+            copied ? "scale-100 opacity-100 blur-0" : "scale-90 opacity-0 blur-[2px]"
+          }`}
+        />
+      </span>
+    </button>
+  )
+}
 
-const installCommand = "pnpm add better-auth-devtools"
+function PrimaryButton({
+  href,
+  children,
+}: {
+  href: string
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      className="group relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-lg bg-white px-5 text-sm font-medium text-neutral-950 transition-transform duration-150 ease-out active:scale-[0.98] sm:w-auto"
+    >
+      {/* sheen */}
+      <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
+      <span className="relative inline-flex items-center gap-2">{children}</span>
+    </Link>
+  )
+}
 
-const devtoolsSetupSnippet = `import { devtools } from "better-auth-devtools";
+// ─── Magnetic wrapper (pointer-follow, independent X/Y springs) ──────
 
-export const authDevtools = devtools({
-  templates: {
-    admin: { label: "Admin", user: { role: "admin" } },
-    editor: { label: "Editor", user: { role: "editor" } },
-    viewer: { label: "Viewer", user: { role: "viewer" } },
+function Magnetic({
+  children,
+  strength = 0.3,
+  className = "",
+}: {
+  children: React.ReactNode
+  strength?: number
+  className?: string
+}) {
+  const reduce = useReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const springX = useSpring(x, { stiffness: 200, damping: 15 })
+  const springY = useSpring(y, { stiffness: 200, damping: 15 })
+
+  if (reduce) return <div className={className}>{children}</div>
+
+  return (
+    <motion.div
+      ref={ref}
+      style={{ x: springX, y: springY }}
+      onPointerMove={(e) => {
+        if (e.pointerType === "touch") return
+        const rect = ref.current?.getBoundingClientRect()
+        if (!rect) return
+        x.set((e.clientX - (rect.left + rect.width / 2)) * strength)
+        y.set((e.clientY - (rect.top + rect.height / 2)) * strength)
+      }}
+      onPointerLeave={() => {
+        x.set(0)
+        y.set(0)
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ─── Cursor-spotlight card ───────────────────────────────────────────
+
+function SpotlightCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const mx = useMotionValue(0)
+  const my = useMotionValue(0)
+  const [hovering, setHovering] = useState(false)
+  const bg = useMotionTemplate`radial-gradient(240px circle at ${mx}px ${my}px, rgba(245,158,11,0.10), transparent 70%)`
+
+  return (
+    <div
+      ref={ref}
+      onPointerMove={(e) => {
+        const rect = ref.current?.getBoundingClientRect()
+        if (!rect) return
+        mx.set(e.clientX - rect.left)
+        my.set(e.clientY - rect.top)
+      }}
+      onPointerEnter={() => setHovering(true)}
+      onPointerLeave={() => setHovering(false)}
+      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.015] transition-colors duration-300 hover:border-white/15 ${className}`}
+    >
+      <motion.div
+        aria-hidden
+        style={{ background: bg }}
+        animate={{ opacity: hovering ? 1 : 0 }}
+        transition={{ duration: 0.25, ease: EASE_OUT }}
+        className="pointer-events-none absolute inset-0"
+      />
+      {/* top hairline highlight */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="relative">{children}</div>
+    </div>
+  )
+}
+
+// ─── The product mockup (live session switcher) ──────────────────────
+
+const MOCK_USERS = [
+  { initials: "AD", email: "admin@acme.test", role: "admin" },
+  { initials: "ED", email: "editor@acme.test", role: "editor" },
+  { initials: "VW", email: "viewer@acme.test", role: "viewer" },
+]
+
+function DevtoolsPanelMock() {
+  const reduce = useReducedMotion()
+  const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
+
+  useEffect(() => {
+    if (reduce || paused) return
+    const id = setInterval(
+      () => setActive((a) => (a + 1) % MOCK_USERS.length),
+      2600
+    )
+    return () => clearInterval(id)
+  }, [reduce, paused])
+
+  const cur = MOCK_USERS[active]
+
+  return (
+    <div
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b0e13] shadow-2xl shadow-black/60"
+    >
+      {/* Title bar */}
+      <div className="flex items-center justify-between border-b border-white/[0.07] bg-white/[0.02] px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex h-2 w-2">
+            {!reduce && (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400/60" />
+            )}
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+          </span>
+          <span className="font-mono text-[13px] font-medium tracking-tight text-neutral-200">
+            Auth DevTools
+          </span>
+        </div>
+        <span className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-neutral-500">
+          dev
+        </span>
+      </div>
+
+      {/* Current session — crossfades as the active user changes */}
+      <div className="border-b border-white/[0.07] p-4">
+        <p className="mb-2.5 font-mono text-[10px] tracking-[0.14em] text-neutral-500 uppercase">
+          Current session
+        </p>
+        <div className="relative flex items-center gap-3 overflow-hidden rounded-lg border border-amber-400/20 bg-amber-400/[0.05] p-3">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={cur.email}
+              initial={{ opacity: 0, filter: "blur(6px)", y: 4 }}
+              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+              exit={{ opacity: 0, filter: "blur(6px)", y: -4 }}
+              transition={{ duration: 0.32, ease: EASE_OUT }}
+              className="flex min-w-0 flex-1 items-center gap-3"
+            >
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-400/15 font-mono text-xs font-semibold text-amber-300">
+                {cur.initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-medium text-neutral-100">
+                  {cur.email}
+                </p>
+                <p className="font-mono text-[11px] text-neutral-500">
+                  role: {cur.role}
+                </p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <span className="shrink-0 rounded-full bg-amber-400/15 px-2 py-1 font-mono text-[10px] font-medium text-amber-300">
+            active
+          </span>
+        </div>
+      </div>
+
+      {/* Test users — click to switch, active highlight slides between rows */}
+      <div className="p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="font-mono text-[10px] tracking-[0.14em] text-neutral-500 uppercase">
+            Test users
+          </p>
+          <span className="font-mono text-[10px] text-neutral-600">
+            {MOCK_USERS.length}
+          </span>
+        </div>
+        <div className="space-y-1">
+          {MOCK_USERS.map((u, i) => {
+            const isActive = i === active
+            return (
+              <button
+                key={u.email}
+                type="button"
+                onClick={() => setActive(i)}
+                className="relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 hover:bg-white/[0.03]"
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="active-row"
+                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
+                    className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.04]"
+                  />
+                )}
+                <div className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.06] font-mono text-[11px] font-medium text-neutral-300">
+                  {u.initials}
+                </div>
+                <div className="relative min-w-0 flex-1">
+                  <p className="truncate text-[13px] text-neutral-200">
+                    {u.email}
+                  </p>
+                  <p className="font-mono text-[10px] text-neutral-600">
+                    {u.role}
+                  </p>
+                </div>
+                <span className="relative shrink-0">
+                  {isActive ? (
+                    <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-400">
+                      <Check className="h-3 w-3" />
+                      current
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 font-mono text-[10px] text-neutral-400 transition-colors group-hover:border-white/20">
+                      switch
+                      <ArrowRightLeft className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Feature visuals ─────────────────────────────────────────────────
+
+function ManagedUsersVisual() {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {["admin@acme.test", "editor@acme.test", "viewer@acme.test", "qa@acme.test"].map(
+        (e, i) => (
+          <div
+            key={e}
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pr-3 pl-1"
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-white/[0.06] font-mono text-[9px] text-neutral-300">
+              {e.slice(0, 2).toUpperCase()}
+            </span>
+            <span className="font-mono text-[11px] text-neutral-400">{e}</span>
+            {i === 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+function SwitchVisual() {
+  const reduce = useReducedMotion()
+  return (
+    <div className="flex items-center justify-center gap-3">
+      <div className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.03] font-mono text-[11px] text-neutral-400">
+        ED
+      </div>
+      <motion.div
+        animate={reduce ? undefined : { x: [0, 3, 0] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <ArrowRightLeft className="h-4 w-4 text-amber-400" />
+      </motion.div>
+      <div className="grid h-10 w-10 place-items-center rounded-lg border border-amber-400/30 bg-amber-400/10 font-mono text-[11px] text-amber-300">
+        AD
+      </div>
+    </div>
+  )
+}
+
+function InspectVisual() {
+  return (
+    <pre className="overflow-hidden rounded-lg border border-white/[0.07] bg-black/30 p-3 font-mono text-[10px] leading-relaxed">
+      <span className="text-neutral-600">{"{"}</span>
+      {"\n  "}
+      <span className="text-sky-300/80">&quot;user&quot;</span>
+      <span className="text-neutral-600">: {"{"}</span>
+      {"\n    "}
+      <span className="text-sky-300/80">&quot;role&quot;</span>
+      <span className="text-neutral-600">: </span>
+      <span className="text-amber-300">&quot;admin&quot;</span>
+      {"\n  "}
+      <span className="text-neutral-600">{"}"}</span>
+      {"\n"}
+      <span className="text-neutral-600">{"}"}</span>
+    </pre>
+  )
+}
+
+function PatchVisual() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex flex-1 items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+        <span className="font-mono text-[11px] text-neutral-500">role</span>
+        <span className="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 font-mono text-[11px] text-amber-300">
+          editor ▾
+        </span>
+      </div>
+      <div className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
+        <Pencil className="h-3.5 w-3.5 text-neutral-400" />
+      </div>
+    </div>
+  )
+}
+
+function PersonaVisual() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {["Admin", "Editor", "Viewer"].map((p, i) => (
+        <div
+          key={p}
+          className="flex items-center gap-2 rounded-md border border-white/[0.07] bg-white/[0.02] px-2.5 py-1.5"
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              i === 0 ? "bg-amber-400" : "bg-neutral-600"
+            }`}
+          />
+          <span className="font-mono text-[11px] text-neutral-400">{p}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SafetyVisual() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] px-3 py-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+        <span className="font-mono text-[11px] text-amber-300">development · on</span>
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 opacity-60">
+        <span className="h-1.5 w-1.5 rounded-full bg-neutral-600" />
+        <span className="font-mono text-[11px] text-neutral-500">production · off</span>
+      </div>
+    </div>
+  )
+}
+
+const features = [
+  {
+    icon: Users,
+    title: "Managed test users",
+    description:
+      "Spin up test accounts from templates you define. Keep real users out of your everyday auth checks.",
+    span: "md:col-span-2",
+    visual: <ManagedUsersVisual />,
   },
-  editableFields: [
-    {
-      key: "role",
-      label: "Role",
-      type: "select",
-      options: ["admin", "editor", "viewer"],
-    },
-  ],
-});`
+  {
+    icon: ArrowRightLeft,
+    title: "Instant session switching",
+    description:
+      "Jump into any managed user in one click. The app reloads against the new Better Auth session.",
+    span: "",
+    visual: <SwitchVisual />,
+  },
+  {
+    icon: Eye,
+    title: "Session inspection",
+    description:
+      "Read the exact session your app exposes — user fields plus approved metadata.",
+    span: "",
+    visual: <InspectVisual />,
+  },
+  {
+    icon: Pencil,
+    title: "Field patching",
+    description:
+      "Edit only the fields you explicitly allow, then refresh with the updated auth state.",
+    span: "md:col-span-2",
+    visual: <PatchVisual />,
+  },
+  {
+    icon: ShieldCheck,
+    title: "Repeatable personas",
+    description:
+      "Stable roles like Admin, Editor, and Viewer make auth-gated UI easy to verify — every time.",
+    span: "",
+    visual: <PersonaVisual />,
+  },
+  {
+    icon: Lock,
+    title: "Dev-only by design",
+    description:
+      "On in development, off in production, with an explicit kill switch you control.",
+    span: "md:col-span-2",
+    visual: <SafetyVisual />,
+  },
+]
 
-const serverSetupSnippet = `import { betterAuth } from "better-auth";
+// ─── Syntax-highlighted code block ───────────────────────────────────
+
+type Tok = { t: string; c: string }
+
+function tokenize(code: string): Tok[] {
+  const re =
+    /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(import|from|export|const|return|function|default|new|await|async)\b|([A-Za-z_$][\w$]*)(?=\s*\()|([{}()[\];,.<>/=]+)/g
+  const out: Tok[] = []
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(code)) !== null) {
+    if (m.index > last) out.push({ t: code.slice(last, m.index), c: "plain" })
+    const c = m[1]
+      ? "comment"
+      : m[2]
+        ? "string"
+        : m[3]
+          ? "keyword"
+          : m[4]
+            ? "fn"
+            : "punct"
+    out.push({ t: m[0], c })
+    last = re.lastIndex
+  }
+  if (last < code.length) out.push({ t: code.slice(last), c: "plain" })
+  return out
+}
+
+const TOKEN_CLASS: Record<string, string> = {
+  plain: "text-neutral-200",
+  comment: "text-neutral-600",
+  string: "text-amber-300",
+  keyword: "text-violet-300",
+  fn: "text-sky-300",
+  punct: "text-neutral-500",
+}
+
+function CodeBlock({ filename, code }: { filename: string; code: string }) {
+  const { copied, copy } = useCopy()
+  const tokens = tokenize(code)
+  return (
+    <div className="w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b0e13]">
+      <div className="flex items-center justify-between border-b border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
+          <span className="ml-2 font-mono text-[11px] text-neutral-500">
+            {filename}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => copy(code)}
+          className="grid h-6 w-6 place-items-center rounded-md text-neutral-500 transition-colors duration-150 hover:text-neutral-300 active:scale-90"
+          aria-label="Copy code"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-amber-400" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
+      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+        <code>
+          {tokens.map((tok, i) => (
+            <span key={i} className={TOKEN_CLASS[tok.c]}>
+              {tok.t}
+            </span>
+          ))}
+        </code>
+      </pre>
+    </div>
+  )
+}
+
+const serverSnippet = `import { betterAuth } from "better-auth";
 import { devtools } from "better-auth-devtools";
 
 export const auth = betterAuth({
@@ -215,7 +605,7 @@ export const auth = betterAuth({
   plugins: [devtools()],
 });`
 
-const clientSetupSnippet = `"use client";
+const clientSnippet = `"use client";
 
 import { BetterAuthDevtools } from "better-auth-devtools/react";
 
@@ -223,588 +613,340 @@ export function DevtoolsWrapper() {
   return <BetterAuthDevtools />;
 }`
 
-const features = [
-  {
-    num: "01",
-    title: "Managed Test Users",
-    description:
-      "Create managed test users from the templates you define. Keep real accounts out of your everyday auth checks.",
-    icon: <Users className="h-5 w-5 text-[#F59E0B]" />,
-    color: "#F59E0B",
-  },
-  {
-    num: "02",
-    title: "Instant Session Switching",
-    description:
-      "Switch into a managed test user in one click and reload the app against the new Better Auth session.",
-    icon: <ArrowRightLeft className="h-5 w-5 text-[#3B82F6]" />,
-    color: "#3B82F6",
-  },
-  {
-    num: "03",
-    title: "Session Inspection",
-    description:
-      "Inspect the current session view your app exposes, including user fields and any approved metadata.",
-    icon: <Eye className="h-5 w-5 text-[#10B981]" />,
-    color: "#10B981",
-  },
-  {
-    num: "04",
-    title: "Session Patching",
-    description:
-      "Patch only the fields you explicitly allow, then refresh the app with the updated auth state.",
-    icon: <Pencil className="h-5 w-5 text-[#F59E0B]" />,
-    color: "#F59E0B",
-  },
-  {
-    num: "05",
-    title: "Repeatable Auth Scenarios",
-    description:
-      "Define stable personas like Admin, Editor, and Viewer so auth-gated UI is easy to verify and easy to repeat.",
-    icon: <ShieldCheck className="h-5 w-5 text-[#3B82F6]" />,
-    color: "#3B82F6",
-  },
-  {
-    num: "06",
-    title: "Dev-Only Safety",
-    description:
-      "Enables itself in development, stays off in production, and supports an explicit development kill switch.",
-    icon: <Lock className="h-5 w-5 text-[#10B981]" />,
-    color: "#10B981",
-  },
+// ─── Scroll-aware nav ────────────────────────────────────────────────
+
+const NAV_LINKS = [
+  { id: "features", label: "Features" },
+  { id: "install", label: "Install" },
 ]
 
-// ─── Timeline data ──────────────────────────────────────────────────
+function Nav() {
+  const [scrolled, setScrolled] = useState(false)
+  const [activeSection, setActiveSection] = useState("")
 
-const timelineData = [
-  {
-    title: "Install",
-    content: (
-      <div>
-        <p
-          className="mb-4 text-sm text-neutral-400"
-          style={{ fontFamily: "var(--font-work)" }}
-        >
-          Install the package from npm.
-        </p>
-        <div className="overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]">
-          <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4">
-            <div className="h-2 w-2 rotate-45 bg-[#F59E0B]" />
-            <span className="font-mono text-xs text-neutral-500">terminal</span>
-          </div>
-          <pre className="overflow-x-auto p-3 font-mono text-xs text-white sm:p-4 sm:text-sm">{`$ ${installCommand}`}</pre>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Configure",
-    content: (
-      <div>
-        <p
-          className="mb-4 text-sm text-neutral-400"
-          style={{ fontFamily: "var(--font-work)" }}
-        >
-          Define your templates and host-app callbacks, then connect them to
-          your real user model. In Next.js App Router, keep database-backed
-          devtools code on the server and pass panel props into a client
-          wrapper.
-        </p>
-        <div className="overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]">
-          <div className="flex items-center gap-2 border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4">
-            <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
-            <span className="font-mono text-xs text-neutral-500">
-                auth.ts
-            </span>
-          </div>
-          <pre className="overflow-x-auto p-3 font-mono text-[10px] leading-relaxed text-white sm:p-4 sm:text-sm">
-            {devtoolsSetupSnippet}
-          </pre>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Develop",
-    content: (
-      <div>
-        <p
-          className="mb-4 text-sm text-neutral-400"
-          style={{ fontFamily: "var(--font-work)" }}
-        >
-          Run your app in development. The panel discovers its templates and
-          capabilities from the server automatically. Create managed test
-          users, switch sessions, inspect the current session, and patch
-          approved fields without shared client configuration.
-        </p>
-        <div className="grid gap-2 sm:gap-3 sm:grid-cols-3">
-          {[
-            "Create Test Users",
-            "Switch Sessions",
-            "Patch Approved Fields",
-          ].map((text) => (
-            <div
-              key={text}
-              className="flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] p-3"
-            >
-              <div className="h-2 w-2 rotate-45 bg-[#10B981]" />
-              <span className="text-xs text-neutral-300">{text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-]
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
-// ─── Main Page Component ─────────────────────────────────────────────
-
-export default function Page() {
-  const { copied: npmCopied, copy: copyNpm } = useCopyToClipboard()
-  const { copied: ctaCopied, copy: copyCta } = useCopyToClipboard()
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) setActiveSection(e.target.id)
+        })
+      },
+      { rootMargin: "-45% 0px -50% 0px" }
+    )
+    NAV_LINKS.forEach(({ id }) => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div
-      className={`${bebasNeue.variable} ${workSans.variable} min-h-screen overflow-x-hidden bg-[#0D1117] text-white`}
-      style={{ fontFamily: "var(--font-work)" }}
-    >
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
-        {/* ─── HERO SECTION ────────────────────────────────────────── */}
-        <section className="relative flex min-h-dvh flex-col justify-center py-12 md:min-h-screen md:pt-32 md:pb-24">
-          {/* Spotlight */}
-          <Spotlight
-            className="-top-40 left-0 md:-top-20 md:left-60"
-            fill="#F59E0B"
-          />
-
-          {/* Geometric decorative elements */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <Hexagon className="absolute top-20 right-10 h-40 w-40 text-[#F59E0B] opacity-[0.03]" />
-            <Triangle className="absolute bottom-40 left-10 h-32 w-32 text-[#3B82F6] opacity-[0.03]" />
-            <Diamond className="absolute top-1/2 right-1/4 h-24 w-24 text-[#10B981] opacity-[0.03]" />
-            {/* Geometric grid lines */}
-            <div className="absolute top-0 left-1/4 h-full w-px bg-white/[0.02]" />
-            <div className="absolute top-0 left-2/4 h-full w-px bg-white/[0.02]" />
-            <div className="absolute top-0 left-3/4 h-full w-px bg-white/[0.02]" />
-          </div>
-
-          <div className="relative z-10 mx-auto max-w-5xl text-center">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-5 inline-flex items-center gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 py-2 sm:mb-8"
-            >
-              <div className="h-2 w-2 rounded-full bg-[#F59E0B] shadow-[0_0_8px_#F59E0B]" />
-              <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
-                Beta Release
-              </span>
-            </motion.div>
-
-            {/* Main heading */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mb-4 sm:mb-6"
-              style={{ fontFamily: "var(--font-bebas)" }}
-            >
-              <span className="block text-6xl leading-none tracking-wider text-white sm:text-8xl md:text-9xl lg:text-[10rem]">
-                BETTER AUTH
-              </span>
-              <span className="block text-6xl leading-none tracking-wider text-[#F59E0B] sm:text-8xl md:text-9xl lg:text-[10rem]">
-                DEVTOOLS
-              </span>
-            </motion.h1>
-
-            {/* Subtitle with TextGenerateEffect */}
-            <div className="mx-auto max-w-2xl px-2 sm:px-0">
-              <TextGenerateEffect
-                words="Unofficial, development-only tooling for Better Auth. Create managed test users, switch sessions instantly, inspect current session state, and patch approved fields from a React panel."
-                className="!text-sm !leading-relaxed !font-normal !text-neutral-400 sm:!text-base md:!text-lg [&_div]:!text-sm [&_div]:!text-neutral-400 sm:[&_div]:!text-base md:[&_div]:!text-lg [&_span]:!text-neutral-400"
-                duration={0.4}
-              />
-            </div>
-
-            {/* CTA buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="mt-8 flex flex-col items-center gap-3 sm:mt-10 sm:flex-row sm:gap-4 sm:justify-center"
-            >
-              <Link
-                href="https://github.com/C-W-D-Harshit/better-auth-devtools"
-                target="_blank"
-                className="w-full sm:w-auto"
-              >
-                <MovingBorderButton
-                  borderRadius="0px"
-                  containerClassName="h-12 w-full sm:h-14 sm:w-52"
-                  borderClassName="h-20 w-20 bg-[radial-gradient(#F59E0B_40%,transparent_60%)] opacity-[0.8]"
-                  className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-sm font-semibold tracking-wider text-white uppercase"
-                >
-                  <span className="flex items-center gap-2">
-                    View on GitHub
-                    <ChevronRight className="h-4 w-4" />
-                  </span>
-                </MovingBorderButton>
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => copyNpm(installCommand)}
-                className="group flex h-12 w-full items-center justify-between gap-2 border-2 border-white/[0.06] bg-[#161B22] px-4 transition-colors hover:border-white/[0.12] sm:h-14 sm:w-auto sm:justify-center sm:gap-3 sm:px-6"
-              >
-                <Terminal className="h-4 w-4 shrink-0 text-[#10B981]" />
-                <code className="font-mono text-xs text-neutral-300 sm:text-sm">
-                  {installCommand}
-                </code>
-                {npmCopied ? (
-                  <Check className="h-4 w-4 text-[#10B981]" />
-                ) : (
-                  <Copy className="h-4 w-4 text-neutral-500 transition-colors group-hover:text-white" />
-                )}
-              </button>
-            </motion.div>
-          </div>
-        </section>
-
-        <GeometricSeparator />
-
-        {/* ─── FEATURES SECTION ────────────────────────────────────── */}
-        <section
-          id="features"
-          className="scroll-mt-24 px-2 py-12 md:px-0 md:py-20"
+    <header className="fixed inset-x-0 top-0 z-50">
+      <div className="mx-auto max-w-6xl px-5">
+        <nav
+          className={`mt-3 flex h-14 items-center justify-between rounded-xl border px-4 transition-[background-color,border-color,box-shadow] duration-300 ${
+            scrolled
+              ? "border-white/10 bg-[#0D1117]/80 shadow-lg shadow-black/20 backdrop-blur-xl"
+              : "border-white/[0.06] bg-[#0D1117]/50 backdrop-blur-md"
+          }`}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-12 text-center"
-          >
-            <div className="mb-4 flex items-center justify-center gap-3">
-              <div className="h-px w-12 bg-[#F59E0B]" />
-              <span className="font-mono text-xs tracking-widest text-[#F59E0B] uppercase">
-                Features
-              </span>
-              <div className="h-px w-12 bg-[#F59E0B]" />
-            </div>
-            <h2
-              className="text-4xl tracking-wider text-white md:text-6xl"
-              style={{ fontFamily: "var(--font-bebas)" }}
-            >
-              BUILT FOR AUTH TESTING
-            </h2>
-          </motion.div>
-
-          <BentoGrid className="gap-3 md:gap-0 md:auto-rows-[22rem] md:grid-cols-3">
-            {features.map((feature, i) => (
-              <BentoGridItem
-                key={feature.num}
-                className={`rounded-none border-2 border-white/[0.06] bg-[#161B22] p-0 shadow-none transition-colors hover:border-white/[0.1] hover:bg-[#1C2129] hover:shadow-none dark:border-white/[0.06] dark:bg-[#161B22] dark:shadow-none ${
-                  i === 0 || i === 3 ? "md:col-span-2" : ""
-                }`}
-                header={
-                  <div className="relative h-full min-h-[6rem] bg-[#0D1117]">
-                    <FeatureHeaderPattern color={feature.color} index={i} />
-                    <div className="absolute right-3 bottom-3 flex items-center gap-2">
-                      <span
-                        className="text-4xl tracking-wider opacity-20"
-                        style={{
-                          fontFamily: "var(--font-bebas)",
-                          color: feature.color,
-                        }}
-                      >
-                        {feature.num}
-                      </span>
-                    </div>
-                  </div>
-                }
-                icon={
-                  <div className="flex items-center gap-3 px-4 pt-2">
-                    <div className="flex h-8 w-8 items-center justify-center border-2 border-white/[0.06] bg-[#0D1117]">
-                      {feature.icon}
-                    </div>
-                  </div>
-                }
-                title={
-                  <div className="px-4">
-                    <DecryptedText
-                      text={feature.title}
-                      animateOn="view"
-                      speed={40}
-                      maxIterations={8}
-                      sequential
-                      className="text-sm font-semibold text-white"
-                      encryptedClassName="text-sm font-semibold text-neutral-600"
-                      parentClassName="text-sm font-semibold"
-                    />
-                  </div>
-                }
-                description={
-                  <p className="px-4 pb-4 text-xs leading-relaxed text-neutral-500">
-                    {feature.description}
-                  </p>
-                }
-              />
+          <Link href="#top" className="flex items-center gap-2">
+            <Image
+              src="/icon.svg"
+              alt="Better Auth DevTools"
+              width={24}
+              height={24}
+              className="h-6 w-6 rounded-md"
+            />
+            <span className="text-sm font-semibold tracking-tight text-neutral-100">
+              Better Auth DevTools
+            </span>
+          </Link>
+          <div className="flex items-center gap-1">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.id}
+                href={`#${l.id}`}
+                className="relative hidden rounded-lg px-3 py-2 text-sm text-neutral-400 transition-colors hover:text-neutral-100 sm:block"
+              >
+                {activeSection === l.id && (
+                  <motion.span
+                    layoutId="nav-active"
+                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
+                    className="absolute inset-0 rounded-lg bg-white/[0.06]"
+                  />
+                )}
+                <span
+                  className={`relative ${
+                    activeSection === l.id ? "text-neutral-100" : ""
+                  }`}
+                >
+                  {l.label}
+                </span>
+              </Link>
             ))}
-          </BentoGrid>
-        </section>
-
-        <GeometricSeparator />
-
-        {/* ─── HOW IT WORKS (Timeline) ─────────────────────────────── */}
-        <section id="how-it-works" className="scroll-mt-24 py-12 md:py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-4 text-center"
-          >
-            <div className="mb-4 flex items-center justify-center gap-3">
-              <div className="h-px w-12 bg-[#3B82F6]" />
-              <span className="font-mono text-xs tracking-widest text-[#3B82F6] uppercase">
-                Quick Start
-              </span>
-              <div className="h-px w-12 bg-[#3B82F6]" />
-            </div>
-            <h2
-              className="text-4xl tracking-wider text-white md:text-6xl"
-              style={{ fontFamily: "var(--font-bebas)" }}
+            <Link
+              href={GITHUB_URL}
+              target="_blank"
+              className="ml-1 inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 text-sm font-medium text-neutral-200 transition-[transform,border-color,background-color] duration-150 ease-out hover:border-white/20 hover:bg-white/[0.05] active:scale-[0.98]"
             >
-              SET IT UP FAST
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-400 md:text-base">
-              Add <code className="font-mono text-xs">devtools()</code> to your
-              Better Auth config and mount the panel. Customize personas only
-              when your application needs them.
-            </p>
-          </motion.div>
-
-          {/* Timeline wrapper with style overrides */}
-          <div className="[&_.bg-white]:!bg-[#0D1117] [&_.dark\:bg-black]:!bg-[#0D1117] [&_.dark\:bg-neutral-800]:!bg-[#F59E0B] [&_.dark\:bg-neutral-950]:!bg-[#0D1117] [&_.dark\:border-neutral-700]:!border-[#F59E0B] [&_.dark\:text-neutral-500]:!text-[#F59E0B] [&_.dark\:via-neutral-700]:!via-[#F59E0B]/20 [&_.from-purple-500]:!from-[#F59E0B] [&_.via-blue-500]:!via-[#F59E0B]/50 [&_h2]:!hidden [&_h2+p]:!hidden">
-            <Timeline data={timelineData} />
+              <Github className="h-4 w-4" />
+              <span className="hidden sm:inline">GitHub</span>
+            </Link>
           </div>
-        </section>
-
-        <GeometricSeparator />
-
-        {/* ─── CODE SECTION ────────────────────────────────────────── */}
-        <section id="code" className="scroll-mt-24 px-2 py-12 md:px-0 md:py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-12 text-center"
-          >
-            <div className="mb-4 flex items-center justify-center gap-3">
-              <div className="h-px w-12 bg-[#10B981]" />
-              <span className="font-mono text-xs tracking-widest text-[#10B981] uppercase">
-                Integration
-              </span>
-              <div className="h-px w-12 bg-[#10B981]" />
-            </div>
-            <h2
-              className="text-4xl tracking-wider text-white md:text-6xl"
-              style={{ fontFamily: "var(--font-bebas)" }}
-            >
-              WIRE IT INTO BETTER AUTH
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-400 md:text-base">
-              Two integration points: one server plugin and one zero-prop React
-              component. No client plugin or server-to-client configuration is
-              required for the panel.
-            </p>
-          </motion.div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Server Setup */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="min-w-0 overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]"
-            >
-              <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4 sm:py-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rotate-45 bg-[#F59E0B]" />
-                  <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
-                    Server Setup
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-neutral-600">
-                  auth.ts
-                </span>
-              </div>
-              <pre className="overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-white sm:p-5 sm:text-[13px]">
-                {serverSetupSnippet}
-              </pre>
-            </motion.div>
-
-            {/* Client Setup */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="min-w-0 overflow-hidden border-2 border-white/[0.06] bg-[#0D1117]"
-            >
-              <div className="flex items-center justify-between border-b-2 border-white/[0.06] bg-[#161B22] px-3 py-2 sm:px-4 sm:py-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rotate-45 bg-[#3B82F6]" />
-                  <span className="font-mono text-xs tracking-wider text-neutral-400 uppercase">
-                    Client Setup
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-neutral-600">
-                  client.tsx
-                </span>
-              </div>
-              <pre className="overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-white sm:p-5 sm:text-[13px]">
-                {clientSetupSnippet}
-              </pre>
-            </motion.div>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45 }}
-            className="mt-6 border-2 border-white/[0.06] bg-[#161B22] p-4"
-          >
-            <p className="text-sm leading-relaxed text-neutral-300">
-              <span className="font-semibold text-white">
-                Zero-config by default
-              </span>{" "}
-              using Better Auth&apos;s own adapter to create and manage test users.
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-              The plugin provides its own Better Auth schema. After adding it,
-              rerun <code className="font-mono text-xs">npx auth@latest migrate</code>{" "}
-              for built-in adapters, or{" "}
-              <code className="font-mono text-xs">npx auth@latest generate</code>{" "}
-              before your Prisma or Drizzle migration flow.
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-              Add templates and editable fields declaratively when you need
-              repeatable roles. Advanced callbacks remain available for custom
-              application data models.
-            </p>
-          </motion.div>
-        </section>
-
-        <SkewedDivider />
-
-        {/* ─── CTA SECTION ─────────────────────────────────────────── */}
-        <section className="relative px-2 py-20 md:px-0 md:py-32">
-          {/* Background decorative */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#F59E0B]/20 to-transparent" />
-            <Hexagon className="absolute -right-10 -bottom-10 h-60 w-60 text-[#F59E0B] opacity-[0.02]" />
-            <Triangle className="absolute -top-10 -left-10 h-40 w-40 text-[#3B82F6] opacity-[0.02]" />
-          </div>
-
-          <div className="relative z-10 mx-auto max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="border border-white/[0.06] bg-[#161B22]/70 px-4 py-10 backdrop-blur-sm sm:px-6 sm:py-12 md:px-12 md:py-14"
-            >
-              <div className="mb-5 flex items-center justify-center gap-3">
-                <div className="h-px w-10 bg-[#F59E0B]" />
-                <span className="font-mono text-[11px] tracking-[0.28em] text-[#F59E0B] uppercase">
-                  Start Testing
-                </span>
-                <div className="h-px w-10 bg-[#F59E0B]" />
-              </div>
-
-              <h2
-                className="mx-auto mb-5 max-w-3xl text-center text-3xl leading-tight tracking-wider text-balance text-white sm:text-5xl md:text-6xl"
-                style={{ fontFamily: "var(--font-bebas)" }}
-              >
-                READY TO TRY IT?
-              </h2>
-
-              <p className="mx-auto mb-10 max-w-2xl text-center text-sm leading-relaxed text-neutral-400 md:text-base">
-                Install the package, wire it into Better Auth, and use managed
-                test users for repeatable auth checks during development.
-              </p>
-
-              <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 md:flex-row md:items-stretch">
-                <button
-                  type="button"
-                  onClick={() => copyCta(installCommand)}
-                  className="group flex w-full items-center justify-between gap-3 border-2 border-white/[0.06] bg-[#0D1117] px-4 py-3 transition-colors hover:border-white/[0.12] sm:gap-4 sm:px-6 sm:py-4 md:max-w-[30rem]"
-                >
-                  <span className="shrink-0 text-[#10B981]">$</span>
-                  <code className="min-w-0 flex-1 overflow-hidden font-mono text-xs text-ellipsis whitespace-nowrap text-neutral-300 sm:text-sm">
-                    {installCommand}
-                  </code>
-                  {ctaCopied ? (
-                    <Check className="h-4 w-4 shrink-0 text-[#10B981]" />
-                  ) : (
-                    <Copy className="h-4 w-4 shrink-0 text-neutral-600 transition-colors group-hover:text-white" />
-                  )}
-                </button>
-
-                <Link
-                  href="https://github.com/C-W-D-Harshit/better-auth-devtools"
-                  target="_blank"
-                  className="w-full md:w-auto"
-                >
-                  <MovingBorderButton
-                    borderRadius="0px"
-                    containerClassName="h-14 w-full sm:h-16 md:w-64"
-                    borderClassName="h-20 w-20 bg-[radial-gradient(#F59E0B_40%,transparent_60%)] opacity-[0.8]"
-                    className="border-2 border-[#F59E0B]/20 bg-[#0D1117] text-sm font-bold tracking-widest text-white uppercase sm:text-base"
-                  >
-                    <span className="flex items-center gap-2">
-                      View on GitHub
-                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </span>
-                  </MovingBorderButton>
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ─── FOOTER ──────────────────────────────────────────────── */}
-        <footer className="border-t-2 border-white/[0.06] px-2 py-10 md:px-0">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-              <span
-                className="text-xl tracking-wider"
-                style={{ fontFamily: "var(--font-bebas)" }}
-              >
-                <span className="text-white">BETTER AUTH </span>
-                <span className="text-[#F59E0B]">DEVTOOLS</span>
-              </span>
-
-              <p className="text-xs text-neutral-500">
-                made with{" "}
-                <span className="text-red-500">&hearts;</span> by{" "}
-                <Link
-                  href="https://x.com/cwd_harshit"
-                  target="_blank"
-                  className="text-white underline decoration-white/30 underline-offset-4 transition-colors hover:text-[#F59E0B] hover:decoration-[#F59E0B]/50"
-                >
-                  Harshit
-                </Link>
-              </p>
-            </div>
-          </div>
-        </footer>
+        </nav>
       </div>
+    </header>
+  )
+}
+
+// ─── Page ────────────────────────────────────────────────────────────
+
+export default function Page() {
+  return (
+    <div id="top" className="min-h-screen overflow-x-hidden bg-[#0D1117] text-neutral-200 antialiased">
+      <Nav />
+
+      {/* Hero */}
+      <section className="relative overflow-hidden px-5 pt-36 pb-20 md:pt-44 md:pb-28">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+              backgroundSize: "64px 64px",
+              maskImage:
+                "radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent)",
+            }}
+          />
+          <div className="absolute top-[-15%] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[130px]" />
+        </div>
+
+        <div className="mx-auto max-w-4xl text-center">
+          <Reveal>
+            <Link
+              href={GITHUB_URL}
+              target="_blank"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-2 pl-3 text-xs text-neutral-300 transition-colors hover:border-white/20"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px] shadow-amber-400" />
+              <span>Beta now available for Better Auth</span>
+              <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link>
+          </Reveal>
+
+          <Reveal delay={0.06}>
+            <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl">
+              Test any user, any role.
+              <br />
+              One click.
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-400 md:text-lg">
+              Stop logging in and out to test roles and permissions. A
+              development-only panel for Better Auth that spawns managed test
+              users and switches sessions instantly, right inside your app.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.18}>
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Magnetic className="w-full sm:w-auto">
+                <PrimaryButton href={GITHUB_URL}>
+                  <Github className="h-4 w-4" />
+                  View on GitHub
+                </PrimaryButton>
+              </Magnetic>
+              <CopyPill command={INSTALL} />
+            </div>
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.26} y={28} scale={0.97} className="mx-auto mt-16 max-w-md md:mt-20">
+          <div className="relative">
+            <div className="pointer-events-none absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
+            <DevtoolsPanelMock />
+            <p className="mt-4 text-center font-mono text-[11px] text-neutral-600">
+              live preview · click a user to switch
+            </p>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="scroll-mt-24 px-5 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="max-w-2xl">
+            <EyebrowLabel>Features</EyebrowLabel>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+              Everything you need to test auth
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-neutral-400">
+              Built for the inner loop — the fast, repeatable checks you run
+              dozens of times a day while building auth-gated features.
+            </p>
+          </Reveal>
+
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            {features.map((f, i) => (
+              <Reveal key={f.title} delay={(i % 3) * 0.05} className={f.span}>
+                <SpotlightCard className="flex h-full flex-col p-6">
+                  <div className="mb-6 flex min-h-[68px] items-center">
+                    {f.visual}
+                  </div>
+                  <div className="mt-auto">
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.03] transition-[transform,background-color,border-color] duration-200 group-hover:scale-105 group-hover:border-amber-400/30 group-hover:bg-amber-400/[0.08]">
+                        <f.icon className="h-4 w-4 text-amber-400" />
+                      </div>
+                      <h3 className="text-[15px] font-medium text-neutral-100">
+                        {f.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-neutral-400">
+                      {f.description}
+                    </p>
+                  </div>
+                </SpotlightCard>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Install / integration */}
+      <section id="install" className="scroll-mt-24 px-5 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="max-w-2xl">
+            <EyebrowLabel>Install</EyebrowLabel>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+              Two integration points
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-neutral-400">
+              One server plugin and one zero-prop React component. No client
+              plugin, no server-to-client wiring.
+            </p>
+          </Reveal>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            <Reveal className="min-w-0">
+              <div className="flex items-center gap-2 pb-3">
+                <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
+                  1
+                </span>
+                <span className="text-sm font-medium text-neutral-200">
+                  Add the plugin
+                </span>
+              </div>
+              <CodeBlock filename="auth.ts" code={serverSnippet} />
+            </Reveal>
+            <Reveal delay={0.06} className="min-w-0">
+              <div className="flex items-center gap-2 pb-3">
+                <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
+                  2
+                </span>
+                <span className="text-sm font-medium text-neutral-200">
+                  Mount the panel
+                </span>
+              </div>
+              <CodeBlock filename="providers.tsx" code={clientSnippet} />
+            </Reveal>
+          </div>
+
+          <Reveal delay={0.1}>
+            <div className="mt-4 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
+                  <Terminal className="h-4 w-4 text-amber-400" />
+                </div>
+                <p className="text-sm leading-relaxed text-neutral-400">
+                  <span className="font-medium text-neutral-200">
+                    Zero-config by default.
+                  </span>{" "}
+                  Uses Better Auth&apos;s own adapter. After adding it, run{" "}
+                  <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[12px] text-neutral-300">
+                    npx auth@latest migrate
+                  </code>{" "}
+                  to apply the schema.
+                </p>
+              </div>
+              <div className="shrink-0">
+                <CopyPill command={INSTALL} />
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-5 py-20 md:py-28">
+        <div className="mx-auto max-w-4xl">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] px-6 py-16 text-center md:px-12 md:py-20">
+              <div className="pointer-events-none absolute inset-x-0 -top-1/2 h-full bg-amber-500/10 blur-[100px]" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+              <div className="relative">
+                <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-white text-balance md:text-5xl">
+                  Stop logging out to test as someone else
+                </h2>
+                <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-400">
+                  Install the package, add the plugin, and switch between managed
+                  test users in one click.
+                </p>
+                <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                  <Magnetic className="w-full sm:w-auto">
+                    <PrimaryButton href={GITHUB_URL}>
+                      <Github className="h-4 w-4" />
+                      View on GitHub
+                      <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </PrimaryButton>
+                  </Magnetic>
+                  <CopyPill command={INSTALL} />
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/[0.07] px-5 py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="flex items-center gap-2">
+            <Image
+              src="/icon.svg"
+              alt="Better Auth DevTools"
+              width={20}
+              height={20}
+              className="h-5 w-5 rounded-md"
+            />
+            <span className="text-sm font-medium text-neutral-300">
+              Better Auth DevTools
+            </span>
+          </div>
+          <p className="text-sm text-neutral-500">
+            Built by{" "}
+            <Link
+              href="https://x.com/cwd_harshit"
+              target="_blank"
+              className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-400 hover:decoration-amber-400/50"
+            >
+              Harshit
+            </Link>
+            . Unofficial, dev-only tooling.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
