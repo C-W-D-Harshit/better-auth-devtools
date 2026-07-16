@@ -9,6 +9,7 @@ export const dbFile = join(currentDir, "..", "demo.db");
 export const db = new Database(dbFile);
 
 export const devtoolsPlugin = devtools({
+  enabled: true,
   templates: {
     admin: {
       label: "Admin",

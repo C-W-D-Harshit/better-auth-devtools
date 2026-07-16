@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteTitle}`,
   },
   description:
-    "Better Auth DevTools (better auth dev tools) — the official dev tools for Better Auth. Create test users, switch sessions, inspect auth state, and patch session fields from a React panel.",
+    "Better Auth DevTools — unofficial, development-only tooling for Better Auth. Create test users, switch sessions, inspect auth state, and patch approved fields from a React panel.",
   applicationName: siteTitle,
   keywords: [
     "better auth devtools",

@@ -29,4 +29,5 @@ jobs:
       - run: pnpm build
       - run: pnpm package:check
       - run: pnpm package:smoke:min
-      - run: pnpm audit --prod
+      - run: pnpm schema:check
+      - run: pnpm package:audit

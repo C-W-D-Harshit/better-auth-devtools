@@ -7,6 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "test": "pnpm exec vitest run",
     "lint": "eslint --max-warnings=0",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"

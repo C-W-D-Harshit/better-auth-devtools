@@ -1,8 +1,8 @@
 {
   "name": "better-auth-devtools",
-  "version": "0.2.0-beta.0",
+  "version": "0.2.0",
   "private": false,
-  "description": "Zero-config Better Auth development tools for managed test users, session switching, inspection, and safe field editing.",
+  "description": "Development-only Better Auth tools for managed test users, session switching, inspection, and safe field editing.",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -24,8 +24,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true,
-    "tag": "beta"
+    "provenance": true
   },
   "exports": {
     ".": {
@@ -59,6 +58,14 @@
     "better-auth": ">=1.6.11 <2",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

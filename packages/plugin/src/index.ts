@@ -33,6 +33,8 @@ export type {
   CreateManagedUserArgs,
   GetSessionViewArgs,
   PatchSessionArgs,
+  DeleteManagedUserArgs,
+  DevtoolsRateLimitOptions,
 } from "./types.js";
 
 export type {

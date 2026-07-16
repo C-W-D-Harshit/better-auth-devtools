@@ -16,6 +16,7 @@ describe("setup helpers", () => {
 
   it("derives client-safe panel props from config", () => {
     const config = defineDevtoolsConfig({
+      enabled: true,
       templates: {
         admin: { label: "Admin" },
         viewer: { label: "Viewer" },

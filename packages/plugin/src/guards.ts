@@ -9,5 +9,9 @@ export function isDevtoolsEnabled(
     return false;
   }
 
-  return typeof configured === "function" ? configured() : (configured ?? true);
+  if (typeof configured === "function") {
+    return configured();
+  }
+
+  return configured ?? process.env.DEV_AUTH_ENABLED === "true";
 }

@@ -95,9 +95,12 @@ describe("BetterAuthDevtools", () => {
     render(<BetterAuthDevtools reloadOnSessionChange={false} />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Auth DevTools" }));
-    await user.type(await screen.findByLabelText("Credits"), "42");
+    const credits = await screen.findByLabelText("Credits");
+    expect((credits as HTMLInputElement).value).toBe("1");
+    await user.clear(credits);
+    await user.type(credits, "42");
     await user.click(screen.getByLabelText("Verified"));
-    await user.click(screen.getByRole("button", { name: "Save & Reload" }));
+    await user.click(screen.getByRole("button", { name: "Save Changes" }));
 
     await waitFor(() => {
       const updateCall = fetchMock.mock.calls.find(([input]) =>
@@ -108,6 +111,68 @@ describe("BetterAuthDevtools", () => {
         patch: { credits: 42, verified: true },
       });
     });
+  });
+
+  it("initializes editable values, permits empty strings, and supports Escape", async () => {
+    const fetchMock = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith(ENDPOINTS.CONFIG)) {
+          return json({
+            enabled: true,
+            templates: [],
+            editableFields: [{ key: "nickname", label: "Nickname", type: "string" }],
+            capabilities: {
+              createUsers: true,
+              deleteUsers: true,
+              editSession: true,
+            },
+          });
+        }
+        if (url.endsWith(ENDPOINTS.LIST_USERS)) return json([]);
+        if (url.endsWith(ENDPOINTS.SESSION)) {
+          return json({
+            session: { userId: "user-1", fields: { nickname: "Harshit" } },
+          });
+        }
+        if (url.endsWith(ENDPOINTS.UPDATE_SESSION)) {
+          return json({
+            session: { userId: "user-1", fields: { nickname: "" } },
+          });
+        }
+        throw new Error(`Unexpected request: ${url} ${init?.method ?? "GET"}`);
+      }
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<BetterAuthDevtools reloadOnSessionChange={false} />);
+    const user = userEvent.setup();
+    const trigger = await screen.findByRole("button", { name: "Auth DevTools" });
+    await user.click(trigger);
+
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("searchbox", { name: "Search managed users" })).toBeTruthy();
+    const nickname = await screen.findByLabelText("Nickname");
+    expect((nickname as HTMLInputElement).value).toBe("Harshit");
+    await user.clear(nickname);
+    await user.click(screen.getByRole("button", { name: "Save Changes" }));
+
+    await waitFor(() => {
+      const updateCall = fetchMock.mock.calls.find(([input]) =>
+        String(input).endsWith(ENDPOINTS.UPDATE_SESSION)
+      );
+      expect(JSON.parse(String(updateCall?.[1]?.body))).toEqual({
+        patch: { nickname: "" },
+      });
+    });
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "Auth DevTools" })
+      )
+    );
   });
 
   it("stays hidden when the server says DevTools is unavailable", async () => {
