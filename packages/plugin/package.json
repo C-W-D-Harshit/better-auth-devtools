@@ -1,6 +1,6 @@
 {
   "name": "better-auth-devtools",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": false,
   "description": "Development-only Better Auth tools for managed test users, session switching, inspection, and safe field editing.",
   "type": "module",

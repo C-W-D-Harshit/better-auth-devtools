@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security fixes are applied to the latest `0.2.x` stable release. Alpha and beta releases older than the latest stable version are unsupported.
+Security fixes are applied to the latest `1.x` stable release. Alpha and beta releases older than the latest stable version are unsupported.
 
 ## Reporting a vulnerability
 
