@@ -78,6 +78,18 @@ export interface PatchSessionArgs<
   patch: DevtoolsSessionPatch<TFields, TEditableKey>;
 }
 
+export interface DeleteManagedUserArgs {
+  userId: string;
+  managedUser: ManagedTestUserRecord;
+}
+
+export interface DevtoolsRateLimitOptions {
+  /** Maximum requests across all DevTools endpoints in one window. Defaults to 60. */
+  max?: number;
+  /** Window length in seconds. Defaults to 60. */
+  window?: number;
+}
+
 export interface DevtoolsPluginConfig<
   TTemplates extends Record<string, ManagedTestUserTemplate> = Record<
     string,
@@ -99,6 +111,8 @@ export interface DevtoolsPluginConfig<
     label?: string;
     extra?: Record<string, unknown>;
   }>;
+  /** Runs before Better Auth removes a managed user, its accounts, and sessions. */
+  beforeDeleteManagedUser?: (args: DeleteManagedUserArgs) => Promise<void>;
   /** Optional override for applications that need a custom session view. */
   getSessionView?: (args: GetSessionViewArgs) => Promise<
     DevtoolsSessionView<TFields, TEditableKey>
@@ -110,8 +124,13 @@ export interface DevtoolsPluginConfig<
   patchSession?: (
     args: PatchSessionArgs<TFields, TEditableKey>
   ) => Promise<DevtoolsSessionView<TFields, TEditableKey>>;
-  /** Explicit kill switch. Production is always disabled. */
+  /**
+   * Explicit development opt-in. `DEV_AUTH_ENABLED=true` is the environment
+   * alternative. Production is always disabled.
+   */
   enabled?: boolean | (() => boolean);
+  /** In-memory limiter enforced independently of Better Auth's global limiter. */
+  rateLimit?: false | DevtoolsRateLimitOptions;
 }
 
 export type DevtoolsOptions<

@@ -9,6 +9,7 @@ export const ErrorCode = {
   SESSION_CREATION_FAILED: "SESSION_CREATION_FAILED",
   INVALID_CONFIG: "INVALID_CONFIG",
   UNTRUSTED_ORIGIN: "UNTRUSTED_ORIGIN",
+  RATE_LIMITED: "RATE_LIMITED",
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

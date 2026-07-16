@@ -2,8 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import {
-  motion,
   AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m,
   useReducedMotion,
   useMotionValue,
   useMotionTemplate,
@@ -49,7 +51,7 @@ function Reveal({
 }) {
   const reduce = useReducedMotion()
   return (
-    <motion.div
+    <m.div
       initial={{
         opacity: 0,
         y: reduce ? 0 : y,
@@ -62,7 +64,7 @@ function Reveal({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -92,19 +94,25 @@ function CopyPill({ command }: { command: string }) {
       onClick={() => copy(command)}
       className="group flex w-full min-w-0 items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3 transition-[transform,border-color,background-color] duration-150 ease-out hover:border-white/20 hover:bg-white/[0.04] active:scale-[0.98] sm:w-auto sm:gap-3 sm:px-4"
     >
-      <span className="shrink-0 font-mono text-sm text-amber-400/70 select-none">$</span>
+      <span className="shrink-0 font-mono text-sm text-amber-400/70 select-none">
+        $
+      </span>
       <code className="min-w-0 flex-1 truncate text-left font-mono text-[13px] text-neutral-200 sm:flex-none sm:text-sm">
         {command}
       </code>
       <span className="relative ml-auto grid h-4 w-4 shrink-0 place-items-center sm:ml-1">
         <Copy
-          className={`absolute h-4 w-4 text-neutral-500 transition-all duration-200 ease-out group-hover:text-neutral-300 ${
-            copied ? "scale-90 opacity-0 blur-[2px]" : "scale-100 opacity-100 blur-0"
+          className={`absolute h-4 w-4 text-neutral-500 transition-[transform,opacity,filter,color] duration-200 ease-out group-hover:text-neutral-300 ${
+            copied
+              ? "scale-90 opacity-0 blur-[2px]"
+              : "blur-0 scale-100 opacity-100"
           }`}
         />
         <Check
-          className={`absolute h-4 w-4 text-amber-400 transition-all duration-200 ease-out ${
-            copied ? "scale-100 opacity-100 blur-0" : "scale-90 opacity-0 blur-[2px]"
+          className={`absolute h-4 w-4 text-amber-400 transition-[transform,opacity,filter,color] duration-200 ease-out ${
+            copied
+              ? "blur-0 scale-100 opacity-100"
+              : "scale-90 opacity-0 blur-[2px]"
           }`}
         />
       </span>
@@ -127,7 +135,9 @@ function PrimaryButton({
     >
       {/* sheen */}
       <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
-      <span className="relative inline-flex items-center gap-2">{children}</span>
+      <span className="relative inline-flex items-center gap-2">
+        {children}
+      </span>
     </Link>
   )
 }
@@ -153,7 +163,7 @@ function Magnetic({
   if (reduce) return <div className={className}>{children}</div>
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       style={{ x: springX, y: springY }}
       onPointerMove={(e) => {
@@ -170,7 +180,7 @@ function Magnetic({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -202,7 +212,7 @@ function SpotlightCard({
       onPointerLeave={() => setHovering(false)}
       className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.015] transition-colors duration-300 hover:border-white/15 ${className}`}
     >
-      <motion.div
+      <m.div
         aria-hidden
         style={{ background: bg }}
         animate={{ opacity: hovering ? 1 : 0 }}
@@ -271,7 +281,7 @@ function DevtoolsPanelMock() {
         </p>
         <div className="relative flex items-center gap-3 overflow-hidden rounded-lg border border-amber-400/20 bg-amber-400/[0.05] p-3">
           <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
+            <m.div
               key={cur.email}
               initial={{ opacity: 0, filter: "blur(6px)", y: 4 }}
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
@@ -290,7 +300,7 @@ function DevtoolsPanelMock() {
                   role: {cur.role}
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
           <span className="shrink-0 rounded-full bg-amber-400/15 px-2 py-1 font-mono text-[10px] font-medium text-amber-300">
             active
@@ -319,7 +329,7 @@ function DevtoolsPanelMock() {
                 className="relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 hover:bg-white/[0.03]"
               >
                 {isActive && (
-                  <motion.span
+                  <m.span
                     layoutId="active-row"
                     transition={{ type: "spring", duration: 0.4, bounce: 0 }}
                     className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.04]"
@@ -363,20 +373,25 @@ function DevtoolsPanelMock() {
 function ManagedUsersVisual() {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {["admin@acme.test", "editor@acme.test", "viewer@acme.test", "qa@acme.test"].map(
-        (e, i) => (
-          <div
-            key={e}
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pr-3 pl-1"
-          >
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-white/[0.06] font-mono text-[9px] text-neutral-300">
-              {e.slice(0, 2).toUpperCase()}
-            </span>
-            <span className="font-mono text-[11px] text-neutral-400">{e}</span>
-            {i === 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-          </div>
-        )
-      )}
+      {[
+        "admin@acme.test",
+        "editor@acme.test",
+        "viewer@acme.test",
+        "qa@acme.test",
+      ].map((e, i) => (
+        <div
+          key={e}
+          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pr-3 pl-1"
+        >
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-white/[0.06] font-mono text-[9px] text-neutral-300">
+            {e.slice(0, 2).toUpperCase()}
+          </span>
+          <span className="font-mono text-[11px] text-neutral-400">{e}</span>
+          {i === 0 && (
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          )}
+        </div>
+      ))}
     </div>
   )
 }
@@ -388,12 +403,12 @@ function SwitchVisual() {
       <div className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.03] font-mono text-[11px] text-neutral-400">
         ED
       </div>
-      <motion.div
+      <m.div
         animate={reduce ? undefined : { x: [0, 3, 0] }}
         transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
       >
         <ArrowRightLeft className="h-4 w-4 text-amber-400" />
-      </motion.div>
+      </m.div>
       <div className="grid h-10 w-10 place-items-center rounded-lg border border-amber-400/30 bg-amber-400/10 font-mono text-[11px] text-amber-300">
         AD
       </div>
@@ -461,11 +476,15 @@ function SafetyVisual() {
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] px-3 py-2">
         <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-        <span className="font-mono text-[11px] text-amber-300">development · on</span>
+        <span className="font-mono text-[11px] text-amber-300">
+          development · on
+        </span>
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 opacity-60">
         <span className="h-1.5 w-1.5 rounded-full bg-neutral-600" />
-        <span className="font-mono text-[11px] text-neutral-500">production · off</span>
+        <span className="font-mono text-[11px] text-neutral-500">
+          production · off
+        </span>
       </div>
     </div>
   )
@@ -602,7 +621,7 @@ import { devtools } from "better-auth-devtools";
 
 export const auth = betterAuth({
   database,
-  plugins: [devtools()],
+  plugins: [devtools({ enabled: true })],
 });`
 
 const clientSnippet = `"use client";
@@ -677,7 +696,7 @@ function Nav() {
                 className="relative hidden rounded-lg px-3 py-2 text-sm text-neutral-400 transition-colors hover:text-neutral-100 sm:block"
               >
                 {activeSection === l.id && (
-                  <motion.span
+                  <m.span
                     layoutId="nav-active"
                     transition={{ type: "spring", duration: 0.4, bounce: 0 }}
                     className="absolute inset-0 rounded-lg bg-white/[0.06]"
@@ -711,242 +730,252 @@ function Nav() {
 
 export default function Page() {
   return (
-    <div id="top" className="min-h-screen overflow-x-hidden bg-[#0D1117] text-neutral-200 antialiased">
-      <Nav />
+    <LazyMotion features={domAnimation}>
+      <div
+        id="top"
+        className="min-h-screen overflow-x-hidden bg-[#0D1117] text-neutral-200 antialiased"
+      >
+        <Nav />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-5 pt-36 pb-20 md:pt-44 md:pb-28">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-              backgroundSize: "64px 64px",
-              maskImage:
-                "radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent)",
-            }}
-          />
-          <div className="absolute top-[-15%] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[130px]" />
-        </div>
-
-        <div className="mx-auto max-w-4xl text-center">
-          <Reveal>
-            <Link
-              href={GITHUB_URL}
-              target="_blank"
-              className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-2 pl-3 text-xs text-neutral-300 transition-colors hover:border-white/20"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px] shadow-amber-400" />
-              <span>Beta now available for Better Auth</span>
-              <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
-          </Reveal>
-
-          <Reveal delay={0.06}>
-            <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl">
-              Test any user, any role.
-              <br />
-              One click.
-            </h1>
-          </Reveal>
-
-          <Reveal delay={0.12}>
-            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-400 md:text-lg">
-              Stop logging in and out to test roles and permissions. A
-              development-only panel for Better Auth that spawns managed test
-              users and switches sessions instantly, right inside your app.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.18}>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Magnetic className="w-full sm:w-auto">
-                <PrimaryButton href={GITHUB_URL}>
-                  <Github className="h-4 w-4" />
-                  View on GitHub
-                </PrimaryButton>
-              </Magnetic>
-              <CopyPill command={INSTALL} />
-            </div>
-          </Reveal>
-        </div>
-
-        <Reveal delay={0.26} y={28} scale={0.97} className="mx-auto mt-16 max-w-md md:mt-20">
-          <div className="relative">
-            <div className="pointer-events-none absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
-            <DevtoolsPanelMock />
-            <p className="mt-4 text-center font-mono text-[11px] text-neutral-600">
-              live preview · click a user to switch
-            </p>
+        {/* Hero */}
+        <section className="relative overflow-hidden px-5 pt-36 pb-20 md:pt-44 md:pb-28">
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+                backgroundSize: "64px 64px",
+                maskImage:
+                  "radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent)",
+              }}
+            />
+            <div className="absolute top-[-15%] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[130px]" />
           </div>
-        </Reveal>
-      </section>
 
-      {/* Features */}
-      <section id="features" className="scroll-mt-24 px-5 py-20 md:py-28">
-        <div className="mx-auto max-w-6xl">
-          <Reveal className="max-w-2xl">
-            <EyebrowLabel>Features</EyebrowLabel>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-              Everything you need to test auth
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-neutral-400">
-              Built for the inner loop — the fast, repeatable checks you run
-              dozens of times a day while building auth-gated features.
-            </p>
-          </Reveal>
-
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {features.map((f, i) => (
-              <Reveal key={f.title} delay={(i % 3) * 0.05} className={f.span}>
-                <SpotlightCard className="flex h-full flex-col p-6">
-                  <div className="mb-6 flex min-h-[68px] items-center">
-                    {f.visual}
-                  </div>
-                  <div className="mt-auto">
-                    <div className="mb-3 flex items-center gap-2.5">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.03] transition-[transform,background-color,border-color] duration-200 group-hover:scale-105 group-hover:border-amber-400/30 group-hover:bg-amber-400/[0.08]">
-                        <f.icon className="h-4 w-4 text-amber-400" />
-                      </div>
-                      <h3 className="text-[15px] font-medium text-neutral-100">
-                        {f.title}
-                      </h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-neutral-400">
-                      {f.description}
-                    </p>
-                  </div>
-                </SpotlightCard>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Install / integration */}
-      <section id="install" className="scroll-mt-24 px-5 py-20 md:py-28">
-        <div className="mx-auto max-w-6xl">
-          <Reveal className="max-w-2xl">
-            <EyebrowLabel>Install</EyebrowLabel>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-              Two integration points
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-neutral-400">
-              One server plugin and one zero-prop React component. No client
-              plugin, no server-to-client wiring.
-            </p>
-          </Reveal>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            <Reveal className="min-w-0">
-              <div className="flex items-center gap-2 pb-3">
-                <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
-                  1
-                </span>
-                <span className="text-sm font-medium text-neutral-200">
-                  Add the plugin
-                </span>
-              </div>
-              <CodeBlock filename="auth.ts" code={serverSnippet} />
+          <div className="mx-auto max-w-4xl text-center">
+            <Reveal>
+              <Link
+                href={GITHUB_URL}
+                target="_blank"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-2 pl-3 text-xs text-neutral-300 transition-colors hover:border-white/20"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px] shadow-amber-400" />
+                <span>Stable release ready for Better Auth</span>
+                <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
             </Reveal>
-            <Reveal delay={0.06} className="min-w-0">
-              <div className="flex items-center gap-2 pb-3">
-                <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
-                  2
-                </span>
-                <span className="text-sm font-medium text-neutral-200">
-                  Mount the panel
-                </span>
-              </div>
-              <CodeBlock filename="providers.tsx" code={clientSnippet} />
-            </Reveal>
-          </div>
 
-          <Reveal delay={0.1}>
-            <div className="mt-4 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
-                  <Terminal className="h-4 w-4 text-amber-400" />
-                </div>
-                <p className="text-sm leading-relaxed text-neutral-400">
-                  <span className="font-medium text-neutral-200">
-                    Zero-config by default.
-                  </span>{" "}
-                  Uses Better Auth&apos;s own adapter. After adding it, run{" "}
-                  <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[12px] text-neutral-300">
-                    npx auth@latest migrate
-                  </code>{" "}
-                  to apply the schema.
-                </p>
-              </div>
-              <div className="shrink-0">
+            <Reveal delay={0.06}>
+              <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl">
+                Test any user, any role.
+                <br />
+                One click.
+              </h1>
+            </Reveal>
+
+            <Reveal delay={0.12}>
+              <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-400 md:text-lg">
+                Stop logging in and out to test roles and permissions. A
+                development-only panel for Better Auth that spawns managed test
+                users and switches sessions instantly, right inside your app.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.18}>
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Magnetic className="w-full sm:w-auto">
+                  <PrimaryButton href={GITHUB_URL}>
+                    <Github className="h-4 w-4" />
+                    View on GitHub
+                  </PrimaryButton>
+                </Magnetic>
                 <CopyPill command={INSTALL} />
               </div>
+            </Reveal>
+          </div>
+
+          <Reveal
+            delay={0.26}
+            y={28}
+            scale={0.97}
+            className="mx-auto mt-16 max-w-md md:mt-20"
+          >
+            <div className="relative">
+              <div className="pointer-events-none absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
+              <DevtoolsPanelMock />
+              <p className="mt-4 text-center font-mono text-[11px] text-neutral-600">
+                live preview · click a user to switch
+              </p>
             </div>
           </Reveal>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA */}
-      <section className="px-5 py-20 md:py-28">
-        <div className="mx-auto max-w-4xl">
-          <Reveal>
-            <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] px-6 py-16 text-center md:px-12 md:py-20">
-              <div className="pointer-events-none absolute inset-x-0 -top-1/2 h-full bg-amber-500/10 blur-[100px]" />
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
-              <div className="relative">
-                <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-white text-balance md:text-5xl">
-                  Stop logging out to test as someone else
-                </h2>
-                <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-400">
-                  Install the package, add the plugin, and switch between managed
-                  test users in one click.
-                </p>
-                <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                  <Magnetic className="w-full sm:w-auto">
-                    <PrimaryButton href={GITHUB_URL}>
-                      <Github className="h-4 w-4" />
-                      View on GitHub
-                      <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </PrimaryButton>
-                  </Magnetic>
+        {/* Features */}
+        <section id="features" className="scroll-mt-24 px-5 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <Reveal className="max-w-2xl">
+              <EyebrowLabel>Features</EyebrowLabel>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+                Everything you need to test auth
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-neutral-400">
+                Built for the inner loop — the fast, repeatable checks you run
+                dozens of times a day while building auth-gated features.
+              </p>
+            </Reveal>
+
+            <div className="mt-12 grid gap-4 md:grid-cols-3">
+              {features.map((f, i) => (
+                <Reveal key={f.title} delay={(i % 3) * 0.05} className={f.span}>
+                  <SpotlightCard className="flex h-full flex-col p-6">
+                    <div className="mb-6 flex min-h-[68px] items-center">
+                      {f.visual}
+                    </div>
+                    <div className="mt-auto">
+                      <div className="mb-3 flex items-center gap-2.5">
+                        <div className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.03] transition-[transform,background-color,border-color] duration-200 group-hover:scale-105 group-hover:border-amber-400/30 group-hover:bg-amber-400/[0.08]">
+                          <f.icon className="h-4 w-4 text-amber-400" />
+                        </div>
+                        <h3 className="text-[15px] font-medium text-neutral-100">
+                          {f.title}
+                        </h3>
+                      </div>
+                      <p className="text-sm leading-relaxed text-neutral-400">
+                        {f.description}
+                      </p>
+                    </div>
+                  </SpotlightCard>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Install / integration */}
+        <section id="install" className="scroll-mt-24 px-5 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <Reveal className="max-w-2xl">
+              <EyebrowLabel>Install</EyebrowLabel>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+                Two integration points
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-neutral-400">
+                One server plugin and one zero-prop React component. No client
+                plugin, no server-to-client wiring.
+              </p>
+            </Reveal>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
+              <Reveal className="min-w-0">
+                <div className="flex items-center gap-2 pb-3">
+                  <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
+                    1
+                  </span>
+                  <span className="text-sm font-medium text-neutral-200">
+                    Add the plugin
+                  </span>
+                </div>
+                <CodeBlock filename="auth.ts" code={serverSnippet} />
+              </Reveal>
+              <Reveal delay={0.06} className="min-w-0">
+                <div className="flex items-center gap-2 pb-3">
+                  <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
+                    2
+                  </span>
+                  <span className="text-sm font-medium text-neutral-200">
+                    Mount the panel
+                  </span>
+                </div>
+                <CodeBlock filename="providers.tsx" code={clientSnippet} />
+              </Reveal>
+            </div>
+
+            <Reveal delay={0.1}>
+              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
+                    <Terminal className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <p className="text-sm leading-relaxed text-neutral-400">
+                    <span className="font-medium text-neutral-200">
+                      Explicitly enabled for development.
+                    </span>{" "}
+                    Production stays disabled. After adding it, run{" "}
+                    <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[12px] text-neutral-300">
+                      npx auth@latest migrate
+                    </code>{" "}
+                    to apply the schema.
+                  </p>
+                </div>
+                <div className="shrink-0">
                   <CopyPill command={INSTALL} />
                 </div>
               </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/[0.07] px-5 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/icon.svg"
-              alt="Better Auth DevTools"
-              width={20}
-              height={20}
-              className="h-5 w-5 rounded-md"
-            />
-            <span className="text-sm font-medium text-neutral-300">
-              Better Auth DevTools
-            </span>
+            </Reveal>
           </div>
-          <p className="text-sm text-neutral-500">
-            Built by{" "}
-            <Link
-              href="https://x.com/cwd_harshit"
-              target="_blank"
-              className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-400 hover:decoration-amber-400/50"
-            >
-              Harshit
-            </Link>
-            . Unofficial, dev-only tooling.
-          </p>
-        </div>
-      </footer>
-    </div>
+        </section>
+
+        {/* CTA */}
+        <section className="px-5 py-20 md:py-28">
+          <div className="mx-auto max-w-4xl">
+            <Reveal>
+              <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] px-6 py-16 text-center md:px-12 md:py-20">
+                <div className="pointer-events-none absolute inset-x-0 -top-1/2 h-full bg-amber-500/10 blur-[100px]" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+                <div className="relative">
+                  <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-balance text-white md:text-5xl">
+                    Stop logging out to test as someone else
+                  </h2>
+                  <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-400">
+                    Install the package, add the plugin, and switch between
+                    managed test users in one click.
+                  </p>
+                  <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <Magnetic className="w-full sm:w-auto">
+                      <PrimaryButton href={GITHUB_URL}>
+                        <Github className="h-4 w-4" />
+                        View on GitHub
+                        <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </PrimaryButton>
+                    </Magnetic>
+                    <CopyPill command={INSTALL} />
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="border-t border-white/[0.07] px-5 py-10">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/icon.svg"
+                alt="Better Auth DevTools"
+                width={20}
+                height={20}
+                className="h-5 w-5 rounded-md"
+              />
+              <span className="text-sm font-medium text-neutral-300">
+                Better Auth DevTools
+              </span>
+            </div>
+            <p className="text-sm text-neutral-500">
+              Built by{" "}
+              <Link
+                href="https://x.com/cwd_harshit"
+                target="_blank"
+                className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-400 hover:decoration-amber-400/50"
+              >
+                Harshit
+              </Link>
+              . Unofficial, dev-only tooling.
+            </p>
+          </div>
+        </footer>
+      </div>
+    </LazyMotion>
   )
 }

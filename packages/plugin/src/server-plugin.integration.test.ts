@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { betterAuth } from "better-auth";
 import { getMigrations } from "better-auth/db/migration";
 import { devtools } from "./server-plugin.js";
@@ -20,6 +20,7 @@ const auth = betterAuth({
   },
   plugins: [
     devtools({
+      enabled: true,
       templates: {
         admin: {
           label: "Admin",
@@ -41,10 +42,10 @@ const auth = betterAuth({
 
 async function call(
   path: string,
-  init: RequestInit & { cookie?: string } = {}
+  init: RequestInit & { cookie?: string; omitOrigin?: boolean } = {}
 ) {
   const headers = new Headers(init.headers);
-  if (!headers.has("origin")) headers.set("origin", origin);
+  if (!init.omitOrigin && !headers.has("origin")) headers.set("origin", origin);
   if (!headers.has("sec-fetch-site")) {
     headers.set("sec-fetch-site", "same-origin");
   }
@@ -66,6 +67,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => database.close());
+afterEach(() => vi.unstubAllEnvs());
 
 describe("devtools server plugin", () => {
   it("discovers configuration without client-side setup", async () => {
@@ -103,9 +105,13 @@ describe("devtools server plugin", () => {
     expect(loginResponse.status).toBe(200);
     const cookie = loginResponse.headers.get("set-cookie");
     expect(cookie).toContain("better-auth.session_token");
-    await expect(loginResponse.json()).resolves.toMatchObject({
+    const loginPayload = (await loginResponse.json()) as {
+      session: { fields: { role: string; session: Record<string, unknown> } };
+    };
+    expect(loginPayload).toMatchObject({
       session: { fields: { role: "admin" } },
     });
+    expect(loginPayload.session.fields.session).not.toHaveProperty("token");
 
     const updateResponse = await call(ENDPOINTS.UPDATE_SESSION, {
       method: "POST",
@@ -145,6 +151,14 @@ describe("devtools server plugin", () => {
       code: "INVALID_TEMPLATE",
     });
 
+    for (const template of ["constructor", "toString", "__proto__"]) {
+      const inheritedTemplate = await call(ENDPOINTS.CREATE_USER, {
+        method: "POST",
+        body: JSON.stringify({ template }),
+      });
+      expect(inheritedTemplate.status).toBe(400);
+    }
+
     const unmanagedLogin = await call(ENDPOINTS.LOGIN, {
       method: "POST",
       body: JSON.stringify({ userId: "not-managed" }),
@@ -175,5 +189,117 @@ describe("devtools server plugin", () => {
     });
 
     expect(response.status).toBe(403);
+  });
+
+  it("rejects writes without a browser origin", async () => {
+    const response = await call(ENDPOINTS.CREATE_USER, {
+      method: "POST",
+      omitOrigin: true,
+      headers: { "sec-fetch-site": "none" },
+      body: JSON.stringify({ template: "admin" }),
+    });
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "UNTRUSTED_ORIGIN",
+    });
+  });
+
+  it("cannot be enabled in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("DEV_AUTH_ENABLED", "true");
+
+    const response = await call(ENDPOINTS.CONFIG);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "FEATURE_DISABLED",
+    });
+  });
+
+  it("enforces its own development rate limit", async () => {
+    const limitedDatabase = new Database(":memory:");
+    const limitedAuth = betterAuth({
+      baseURL: `${origin}${basePath}`,
+      secret: "rate-limit-test-secret-that-is-long-enough",
+      database: limitedDatabase,
+      trustedOrigins: [origin],
+      plugins: [devtools({ enabled: true, rateLimit: { max: 2, window: 60 } })],
+    });
+    const migrations = await getMigrations(limitedAuth.options);
+    await migrations.runMigrations();
+
+    const request = () =>
+      limitedAuth.handler(
+        new Request(`${origin}${basePath}${ENDPOINTS.CONFIG}`, {
+          headers: { origin, "sec-fetch-site": "same-origin" },
+        })
+      );
+
+    expect((await request()).status).toBe(200);
+    expect((await request()).status).toBe(200);
+    const limited = await request();
+    expect(limited.status).toBe(429);
+    await expect(limited.json()).resolves.toMatchObject({ code: "RATE_LIMITED" });
+    limitedDatabase.close();
+  });
+
+  it("removes secondary-storage sessions when deleting a managed user", async () => {
+    const secondaryDatabase = new Database(":memory:");
+    const storage = new Map<string, string>();
+    const secondaryAuth = betterAuth({
+      baseURL: `${origin}${basePath}`,
+      secret: "secondary-storage-test-secret-that-is-long-enough",
+      database: secondaryDatabase,
+      trustedOrigins: [origin],
+      secondaryStorage: {
+        get: async (key) => storage.get(key) ?? null,
+        set: async (key, value) => {
+          storage.set(key, value);
+        },
+        delete: async (key) => {
+          storage.delete(key);
+        },
+      },
+      plugins: [devtools({ enabled: true })],
+    });
+    const migrations = await getMigrations(secondaryAuth.options);
+    await migrations.runMigrations();
+    const secondaryCall = async (
+      path: string,
+      init: RequestInit & { cookie?: string } = {}
+    ) => {
+      const headers = new Headers(init.headers);
+      headers.set("origin", origin);
+      headers.set("sec-fetch-site", "same-origin");
+      if (init.body) headers.set("content-type", "application/json");
+      if (init.cookie) headers.set("cookie", init.cookie);
+      return secondaryAuth.handler(
+        new Request(`${origin}${basePath}${path}`, { ...init, headers })
+      );
+    };
+
+    const created = (await (
+      await secondaryCall(ENDPOINTS.CREATE_USER, {
+        method: "POST",
+        body: JSON.stringify({ template: "user" }),
+      })
+    ).json()) as { user: { userId: string } };
+    const login = await secondaryCall(ENDPOINTS.LOGIN, {
+      method: "POST",
+      body: JSON.stringify({ userId: created.user.userId }),
+    });
+    const cookie = login.headers.get("set-cookie") ?? undefined;
+    expect(storage.size).toBeGreaterThan(0);
+
+    const deleted = await secondaryCall(ENDPOINTS.DELETE_USER, {
+      method: "POST",
+      body: JSON.stringify({ userId: created.user.userId }),
+    });
+    expect(deleted.status).toBe(200);
+
+    const session = await secondaryCall(ENDPOINTS.SESSION, { cookie });
+    await expect(session.json()).resolves.toEqual({ session: null });
+    secondaryDatabase.close();
   });
 });

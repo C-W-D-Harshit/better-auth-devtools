@@ -9,7 +9,7 @@ import {
 } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import * as z from "zod";
-import { ENDPOINTS, ROUTE_PREFIX } from "./endpoints.js";
+import { ENDPOINTS } from "./endpoints.js";
 import { ErrorCode } from "./errors.js";
 import { isDevtoolsEnabled } from "./guards.js";
 import type {
@@ -25,6 +25,20 @@ import { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
 const DEFAULT_TEMPLATES = {
   user: { label: "Test User" },
 } as const satisfies Record<string, ManagedTestUserTemplate>;
+
+const SENSITIVE_USER_KEYS = new Set([
+  "token",
+  "password",
+  "secret",
+  "authorization",
+  "cookie",
+  "apikey",
+  "privatekey",
+  "accesstoken",
+  "refreshtoken",
+  "idtoken",
+  "clientsecret",
+]);
 
 const createUserBody = z.object({ template: z.string().min(1) });
 const deleteUserBody = z.object({ userId: z.string().min(1) });
@@ -52,6 +66,7 @@ type HttpErrorStatus =
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"
+  | "TOO_MANY_REQUESTS"
   | "INTERNAL_SERVER_ERROR";
 
 function fail(
@@ -64,10 +79,14 @@ function fail(
 
 const trustedRequestMiddleware = createAuthMiddleware(async (ctx) => {
   const requestOrigin = ctx.request?.headers.get("origin");
-  if (
-    requestOrigin &&
-    !ctx.context.isTrustedOrigin(requestOrigin, { allowRelativePaths: false })
-  ) {
+  if (!requestOrigin) {
+    fail(
+      "FORBIDDEN",
+      ErrorCode.UNTRUSTED_ORIGIN,
+      "DevTools writes require a trusted browser origin."
+    );
+  }
+  if (!ctx.context.isTrustedOrigin(requestOrigin, { allowRelativePaths: false })) {
     fail(
       "FORBIDDEN",
       ErrorCode.UNTRUSTED_ORIGIN,
@@ -118,13 +137,33 @@ function defaultSessionView<
   session: Record<string, unknown>,
   editableFields: EditableFieldConfig<TEditableKey>[]
 ): DevtoolsSessionView<TFields, TEditableKey> {
+  const safeUser = Object.fromEntries(
+    Object.entries(user).filter(
+      ([key]) =>
+        !SENSITIVE_USER_KEYS.has(
+          key.replaceAll(/[^a-z0-9]/gi, "").toLowerCase()
+        )
+    )
+  );
+  const safeSession = Object.fromEntries(
+    [
+      "id",
+      "userId",
+      "expiresAt",
+      "createdAt",
+      "updatedAt",
+      "ipAddress",
+      "userAgent",
+    ].flatMap((key) => (key in session ? [[key, session[key]]] : []))
+  );
+
   return {
     userId: String(user.id),
     email: typeof user.email === "string" ? user.email : undefined,
     label: typeof user.name === "string" ? user.name : undefined,
     fields: ({
-      ...user,
-      session,
+      ...safeUser,
+      session: safeSession,
     } as unknown) as TFields,
     editableFields: editableFields.map((field) => field.key),
   };
@@ -156,6 +195,37 @@ export const devtools = <
 ) => {
   const templates = (config.templates ?? DEFAULT_TEMPLATES) as TTemplates;
   const editableFields = config.editableFields ?? [];
+  const configuredRateLimit = config.rateLimit === false ? null : config.rateLimit;
+  const rateLimitMax = configuredRateLimit?.max ?? 60;
+  const rateLimitWindowMs = (configuredRateLimit?.window ?? 60) * 1_000;
+  let rateLimitState = { count: 0, resetAt: 0 };
+
+  if (rateLimitMax < 1 || rateLimitWindowMs < 1_000) {
+    throw new Error(
+      "Better Auth DevTools rateLimit requires max >= 1 and window >= 1 second."
+    );
+  }
+
+  const devtoolsRequestMiddleware = createAuthMiddleware(async () => {
+    const guard = guardCheck(config.enabled);
+    if (!guard.enabled) {
+      fail("FORBIDDEN", guard.error.code, guard.error.message);
+    }
+
+    if (config.rateLimit === false) return;
+    const now = Date.now();
+    if (now >= rateLimitState.resetAt) {
+      rateLimitState = { count: 0, resetAt: now + rateLimitWindowMs };
+    }
+    rateLimitState.count += 1;
+    if (rateLimitState.count > rateLimitMax) {
+      fail(
+        "TOO_MANY_REQUESTS",
+        ErrorCode.RATE_LIMITED,
+        "Too many DevTools requests. Wait for the current rate-limit window."
+      );
+    }
+  });
   const editableKeys = new Set<string>();
   for (const field of editableFields) {
     if (editableKeys.has(field.key)) {
@@ -198,7 +268,7 @@ export const devtools = <
     endpoints: {
       getDevtoolsConfig: createAuthEndpoint(
         ENDPOINTS.CONFIG,
-        { method: "GET" },
+        { method: "GET", use: [devtoolsRequestMiddleware] },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
           if (!guard.enabled) {
@@ -228,7 +298,7 @@ export const devtools = <
 
       listDevtoolsUsers: createAuthEndpoint(
         ENDPOINTS.LIST_USERS,
-        { method: "GET" },
+        { method: "GET", use: [devtoolsRequestMiddleware] },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
           if (!guard.enabled) {
@@ -252,7 +322,12 @@ export const devtools = <
         {
           method: "POST",
           body: createUserBody,
-          use: [trustedRequestMiddleware, originCheckMiddleware, formCsrfMiddleware],
+          use: [
+            devtoolsRequestMiddleware,
+            trustedRequestMiddleware,
+            originCheckMiddleware,
+            formCsrfMiddleware,
+          ],
         },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
@@ -338,7 +413,12 @@ export const devtools = <
         {
           method: "POST",
           body: deleteUserBody,
-          use: [trustedRequestMiddleware, originCheckMiddleware, formCsrfMiddleware],
+          use: [
+            devtoolsRequestMiddleware,
+            trustedRequestMiddleware,
+            originCheckMiddleware,
+            formCsrfMiddleware,
+          ],
         },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
@@ -358,7 +438,15 @@ export const devtools = <
             );
           }
 
+          const managedUser = toManagedTestUserRecord(
+            managed as Record<string, unknown>
+          );
+          await config.beforeDeleteManagedUser?.({
+            userId: ctx.body.userId,
+            managedUser,
+          });
           await ctx.context.internalAdapter.deleteUser(ctx.body.userId);
+          await ctx.context.internalAdapter.deleteUserSessions(ctx.body.userId);
           await ctx.context.adapter.deleteMany({
             model: "devtoolsUser",
             where: [{ field: "userId", value: ctx.body.userId }],
@@ -373,7 +461,12 @@ export const devtools = <
         {
           method: "POST",
           body: loginBody,
-          use: [trustedRequestMiddleware, originCheckMiddleware, formCsrfMiddleware],
+          use: [
+            devtoolsRequestMiddleware,
+            trustedRequestMiddleware,
+            originCheckMiddleware,
+            formCsrfMiddleware,
+          ],
         },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
@@ -434,7 +527,7 @@ export const devtools = <
 
       getDevtoolsSession: createAuthEndpoint(
         ENDPOINTS.SESSION,
-        { method: "GET" },
+        { method: "GET", use: [devtoolsRequestMiddleware] },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
           if (!guard.enabled) {
@@ -478,7 +571,12 @@ export const devtools = <
         {
           method: "POST",
           body: updateSessionBody,
-          use: [trustedRequestMiddleware, originCheckMiddleware, formCsrfMiddleware],
+          use: [
+            devtoolsRequestMiddleware,
+            trustedRequestMiddleware,
+            originCheckMiddleware,
+            formCsrfMiddleware,
+          ],
         },
         async (ctx) => {
           const guard = guardCheck(config.enabled);
@@ -516,7 +614,9 @@ export const devtools = <
             }
           }
 
-          const current = await getSessionFromCtx(ctx);
+          const current = await getSessionFromCtx(ctx, {
+            disableCookieCache: true,
+          });
           if (!current) {
             fail(
               "UNAUTHORIZED",
@@ -565,13 +665,6 @@ export const devtools = <
       ),
     },
 
-    rateLimit: [
-      {
-        pathMatcher: (path) => path.startsWith(ROUTE_PREFIX),
-        max: 60,
-        window: 60,
-      },
-    ],
   } satisfies BetterAuthPlugin;
 };
 

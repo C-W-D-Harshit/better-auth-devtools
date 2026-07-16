@@ -7,7 +7,7 @@ import type {
 export function isValidTemplateKey<
   TTemplates extends Record<string, ManagedTestUserTemplate>,
 >(key: string, templates: TTemplates): key is keyof TTemplates & string {
-  return key in templates;
+  return Object.hasOwn(templates, key);
 }
 
 export function filterAllowedPatchKeys<

@@ -1,5 +1,15 @@
 # better-auth-devtools
 
+## 1.0.0
+
+### Minor Changes
+
+- 8b475f1: Introduce the streamlined `devtools()` server plugin, automatic panel configuration discovery, default managed-user creation and session inspection, optional declarative personas and editing, hardened endpoints, managed-user deletion, consolidated package sources, real Better Auth integration tests, packed-consumer validation, and release quality gates.
+
+### Patch Changes
+
+- Harden the stable release with explicit development opt-in, origin enforcement, independent rate limiting, session-token redaction, authoritative session edits, secondary-storage cleanup, safer template validation, accessible panel behavior, adapter schema checks, packed dependency auditing, and synchronized public documentation.
+
 ## 0.2.0-beta.0
 
 ### Minor Changes

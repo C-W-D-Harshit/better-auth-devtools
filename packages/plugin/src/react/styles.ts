@@ -18,16 +18,23 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: "12px",
     fontFamily: "inherit",
     boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+    touchAction: "manipulation",
   },
   panel: {
+    position: "static",
     width: "360px",
-    maxHeight: "520px",
+    maxWidth: "calc(100vw - 32px)",
+    maxHeight: "min(520px, calc(100vh - 32px))",
     overflowY: "auto" as const,
+    overscrollBehavior: "contain",
+    colorScheme: "dark",
     background: "#1a1a2e",
     color: "#e0e0e0",
     border: "1px solid #333",
     borderRadius: "12px",
     boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+    margin: 0,
+    padding: 0,
   },
   header: {
     display: "flex",
@@ -40,6 +47,7 @@ export const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
     fontSize: "14px",
     color: "#fff",
+    margin: 0,
   },
   closeButton: {
     background: "transparent",
@@ -49,6 +57,7 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: "16px",
     padding: "0 4px",
     fontFamily: "inherit",
+    touchAction: "manipulation",
   },
   section: {
     padding: "12px 16px",
@@ -59,11 +68,17 @@ export const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
     textTransform: "uppercase" as const,
     color: "#888",
-    marginBottom: "8px",
+    margin: "0 0 8px",
     letterSpacing: "0.5px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  sectionHeading: {
+    font: "inherit",
+    color: "inherit",
+    letterSpacing: "inherit",
+    margin: 0,
   },
   templateGrid: {
     display: "flex",
@@ -79,6 +94,7 @@ export const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     fontSize: "12px",
     fontFamily: "inherit",
+    touchAction: "manipulation",
   },
   searchInput: {
     width: "100%",
@@ -104,6 +120,8 @@ export const styles: Record<string, CSSProperties> = {
     padding: "6px 8px",
     background: "#2a2a3e",
     borderRadius: "6px",
+    contentVisibility: "auto",
+    containIntrinsicSize: "40px",
   },
   userInfo: {
     flex: 1,
@@ -132,6 +150,7 @@ export const styles: Record<string, CSSProperties> = {
     fontFamily: "inherit",
     marginLeft: "8px",
     flexShrink: 0,
+    touchAction: "manipulation",
   },
   deleteButton: {
     background: "transparent",
@@ -142,6 +161,7 @@ export const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     fontSize: "10px",
     fontFamily: "inherit",
+    touchAction: "manipulation",
   },
   sessionFields: {
     display: "flex",
@@ -197,6 +217,7 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: "12px",
     fontFamily: "inherit",
     marginTop: "4px",
+    touchAction: "manipulation",
   },
   refreshButton: {
     background: "transparent",
@@ -206,6 +227,7 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: "11px",
     fontFamily: "inherit",
     padding: "0",
+    touchAction: "manipulation",
   },
   errorBanner: {
     background: "#3a1a1a",
@@ -222,5 +244,16 @@ export const styles: Record<string, CSSProperties> = {
     color: "#666",
     fontSize: "12px",
     fontStyle: "italic" as const,
+  },
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: 0,
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    border: 0,
   },
 };

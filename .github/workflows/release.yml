@@ -47,8 +47,11 @@ jobs:
       - name: Validate package
         run: pnpm package:check
 
+      - name: Validate Prisma and Drizzle schemas
+        run: pnpm schema:check
+
       - name: Audit production dependencies
-        run: pnpm audit --prod
+        run: pnpm package:audit
 
       - name: Create release PR or publish
         uses: changesets/action@v1

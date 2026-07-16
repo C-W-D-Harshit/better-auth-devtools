@@ -26,6 +26,7 @@ Thank you for your interest in contributing to Better Auth DevTools! This guide 
 3. **Run the demo app** (useful for manual testing):
 
    ```bash
+   cp apps/demo-app/.env.example apps/demo-app/.env.local
    pnpm --dir apps/demo-app db:init
    pnpm dev
    ```
@@ -64,6 +65,8 @@ apps/
 | `pnpm typecheck` | Run TypeScript type checking |
 | `pnpm test` | Run tests across all packages |
 | `pnpm package:check` | Validate and install the packed npm artifact |
+| `pnpm package:audit` | Audit the packed production dependency graph |
+| `pnpm schema:check` | Generate and validate Prisma and Drizzle plugin schemas |
 | `pnpm check` | Run every required release gate |
 
 ### Making Changes
