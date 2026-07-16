@@ -1,5 +1,11 @@
 # better-auth-devtools
 
+## 1.0.1
+
+### Patch Changes
+
+- Document the complete plug-and-play role setup for Better Auth additional fields and Admin-plugin roles.
+
 ## 1.0.0
 
 ### Minor Changes

@@ -79,42 +79,66 @@ Then apply the generated change with your normal ORM migration workflow. Re-run 
 
 Set `DEV_AUTH_ENABLED=false` for an environment-level kill switch. Setting it to `true` never enables the plugin in production. Browser writes must include a trusted origin; origin-less and cross-origin writes are rejected.
 
-## Personas and editable fields
+## Role-based quick start
 
-Most applications only need declarative templates:
+If `role` belongs to Better Auth's user model, declare it with
+`user.additionalFields` and map each DevTools persona to a role. A column in
+your ORM schema alone is not enough; Better Auth must know about the field.
 
 ```ts
+import { betterAuth } from "better-auth";
 import { devtools } from "better-auth-devtools";
 
-export const authDevtools = devtools({
-  templates: {
-    admin: {
-      label: "Admin",
-      user: { role: "admin" },
-    },
-    editor: {
-      label: "Editor",
-      user: { role: "editor" },
-    },
-    viewer: {
-      label: "Viewer",
-      user: { role: "viewer" },
+export const auth = betterAuth({
+  database,
+  user: {
+    additionalFields: {
+      role: {
+        type: ["admin", "editor", "viewer"],
+        defaultValue: "viewer",
+        input: false,
+      },
     },
   },
-  editableFields: [
-    {
-      key: "role",
-      label: "Role",
-      type: "select",
-      options: ["admin", "editor", "viewer"],
-    },
+  plugins: [
+    devtools({
+      enabled: true,
+      templates: {
+        admin: { label: "Admin", user: { role: "admin" } },
+        editor: { label: "Editor", user: { role: "editor" } },
+        viewer: { label: "Viewer", user: { role: "viewer" } },
+      },
+      // Optional: omit this block if roles should not be edited in the panel.
+      editableFields: [
+        {
+          key: "role",
+          label: "Role",
+          type: "select",
+          options: ["admin", "editor", "viewer"],
+        },
+      ],
+    }),
   ],
 });
 ```
 
-Template `user` values are passed to Better Auth's internal user adapter. This works with Better Auth additional fields and adapter mappings. Required custom fields without database defaults must be included in the template.
+Mount `<BetterAuthDevtools />` as shown in the quick start, then run the schema
+command above. The panel discovers the templates and editable fields from the
+server automatically.
+
+If Better Auth's Admin plugin already provides `role`, keep `admin()` in the
+Better Auth plugin list and omit the `user.additionalFields.role` declaration;
+the same DevTools templates work without another mapping layer.
+
+Template `user` values are passed to Better Auth's internal user adapter. This
+works with Better Auth additional fields, plugin-owned fields, and adapter
+mappings. Required custom fields without database defaults must be included in
+the template.
 
 Supported editable field types are `string`, `number`, `boolean`, and `select`. Without a custom callback, approved edits update the Better Auth user model.
+
+If `role` lives in a separate application profile or membership table, use the
+advanced hooks below instead of `user.additionalFields`.
 
 ## Advanced hooks
 
