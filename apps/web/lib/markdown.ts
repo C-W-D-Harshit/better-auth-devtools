@@ -2,7 +2,7 @@ import { HOME_PAGE, SITE } from "./site-content"
 
 const MARKDOWN_MEDIA_TYPE = "text/markdown"
 
-function splitHeaderValues(value: string): string[] {
+function splitHeaderValues(value: string, delimiter = ","): string[] {
   const values: string[] = []
   let start = 0
   let quoted = false
@@ -26,7 +26,7 @@ function splitHeaderValues(value: string): string[] {
       continue
     }
 
-    if (character === "," && !quoted) {
+    if (character === delimiter && !quoted) {
       values.push(value.slice(start, index))
       start = index + 1
     }
@@ -37,7 +37,7 @@ function splitHeaderValues(value: string): string[] {
 }
 
 function qualityForMediaRange(value: string): number {
-  const parts = value.split(";")
+  const parts = splitHeaderValues(value, ";")
   let quality = 1
 
   for (const parameter of parts.slice(1)) {

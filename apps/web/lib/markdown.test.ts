@@ -14,6 +14,7 @@ describe("acceptsMarkdown", () => {
     "text/markdown, text/plain;q=0.9, */*;q=0.8",
     "TEXT/MARKDOWN; charset=utf-8; q=0.5",
     'text/markdown; profile="agent,compact"; q=0.7',
+    'text/markdown; profile="agent;q=0"',
   ])("accepts an explicit positive Markdown range: %s", (accept) => {
     expect(
       acceptsMarkdown(
