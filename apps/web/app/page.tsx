@@ -27,12 +27,14 @@ import {
   Terminal,
 } from "lucide-react"
 
+import { HOME_PAGE, SITE } from "@/lib/site-content"
+
 // ─── Motion + design tokens ──────────────────────────────────────────
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const
 
-const GITHUB_URL = "https://github.com/C-W-D-Harshit/better-auth-devtools"
-const INSTALL = "pnpm add better-auth-devtools"
+const GITHUB_URL = SITE.githubUrl
+const INSTALL = HOME_PAGE.installCommand
 
 // ─── Primitives ──────────────────────────────────────────────────────
 
@@ -490,56 +492,43 @@ function SafetyVisual() {
   )
 }
 
-const features = [
+const featurePresentation = [
   {
     icon: Users,
-    title: "Managed test users",
-    description:
-      "Spin up test accounts from templates you define. Keep real users out of your everyday auth checks.",
     span: "md:col-span-2",
     visual: <ManagedUsersVisual />,
   },
   {
     icon: ArrowRightLeft,
-    title: "Instant session switching",
-    description:
-      "Jump into any managed user in one click. The app reloads against the new Better Auth session.",
     span: "",
     visual: <SwitchVisual />,
   },
   {
     icon: Eye,
-    title: "Session inspection",
-    description:
-      "Read the exact session your app exposes — user fields plus approved metadata.",
     span: "",
     visual: <InspectVisual />,
   },
   {
     icon: Pencil,
-    title: "Field patching",
-    description:
-      "Edit only the fields you explicitly allow, then refresh with the updated auth state.",
     span: "md:col-span-2",
     visual: <PatchVisual />,
   },
   {
     icon: ShieldCheck,
-    title: "Repeatable personas",
-    description:
-      "Stable roles like Admin, Editor, and Viewer make auth-gated UI easy to verify — every time.",
     span: "",
     visual: <PersonaVisual />,
   },
   {
     icon: Lock,
-    title: "Dev-only by design",
-    description:
-      "On in development, off in production, with an explicit kill switch you control.",
     span: "md:col-span-2",
     visual: <SafetyVisual />,
   },
 ]
+
+const features = HOME_PAGE.features.items.map((feature, index) => ({
+  ...feature,
+  ...featurePresentation[index],
+}))
 
 // ─── Syntax-highlighted code block ───────────────────────────────────
 
@@ -615,22 +604,6 @@ function CodeBlock({ filename, code }: { filename: string; code: string }) {
     </div>
   )
 }
-
-const serverSnippet = `import { betterAuth } from "better-auth";
-import { devtools } from "better-auth-devtools";
-
-export const auth = betterAuth({
-  database,
-  plugins: [devtools({ enabled: true })],
-});`
-
-const clientSnippet = `"use client";
-
-import { BetterAuthDevtools } from "better-auth-devtools/react";
-
-export function DevtoolsWrapper() {
-  return <BetterAuthDevtools />;
-}`
 
 // ─── Scroll-aware nav ────────────────────────────────────────────────
 
@@ -761,24 +734,25 @@ export default function Page() {
                 className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-2 pl-3 text-xs text-neutral-300 transition-colors hover:border-white/20"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px] shadow-amber-400" />
-                <span>Stable release ready for Better Auth</span>
+                <span>{HOME_PAGE.releaseLabel}</span>
                 <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
             </Reveal>
 
             <Reveal delay={0.06}>
               <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl">
-                Test any user, any role.
-                <br />
-                One click.
+                {HOME_PAGE.headlineLines.map((line, index) => (
+                  <React.Fragment key={line}>
+                    {index > 0 ? <br /> : null}
+                    {line}
+                  </React.Fragment>
+                ))}
               </h1>
             </Reveal>
 
             <Reveal delay={0.12}>
               <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-400 md:text-lg">
-                Stop logging in and out to test roles and permissions. A
-                development-only panel for Better Auth that spawns managed test
-                users and switches sessions instantly, right inside your app.
+                {HOME_PAGE.description}
               </p>
             </Reveal>
 
@@ -817,11 +791,10 @@ export default function Page() {
             <Reveal className="max-w-2xl">
               <EyebrowLabel>Features</EyebrowLabel>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                Everything you need to test auth
+                {HOME_PAGE.features.title}
               </h2>
               <p className="mt-4 text-base leading-relaxed text-neutral-400">
-                Built for the inner loop — the fast, repeatable checks you run
-                dozens of times a day while building auth-gated features.
+                {HOME_PAGE.features.description}
               </p>
             </Reveal>
 
@@ -858,11 +831,10 @@ export default function Page() {
             <Reveal className="max-w-2xl">
               <EyebrowLabel>Install</EyebrowLabel>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                Two integration points
+                {HOME_PAGE.integration.title}
               </h2>
               <p className="mt-4 text-base leading-relaxed text-neutral-400">
-                One server plugin and one zero-prop React component. No client
-                plugin, no server-to-client wiring.
+                {HOME_PAGE.integration.description}
               </p>
             </Reveal>
 
@@ -873,10 +845,13 @@ export default function Page() {
                     1
                   </span>
                   <span className="text-sm font-medium text-neutral-200">
-                    Add the plugin
+                    {HOME_PAGE.integration.server.label}
                   </span>
                 </div>
-                <CodeBlock filename="auth.ts" code={serverSnippet} />
+                <CodeBlock
+                  filename={HOME_PAGE.integration.server.filename}
+                  code={HOME_PAGE.integration.server.code}
+                />
               </Reveal>
               <Reveal delay={0.06} className="min-w-0">
                 <div className="flex items-center gap-2 pb-3">
@@ -884,10 +859,13 @@ export default function Page() {
                     2
                   </span>
                   <span className="text-sm font-medium text-neutral-200">
-                    Mount the panel
+                    {HOME_PAGE.integration.client.label}
                   </span>
                 </div>
-                <CodeBlock filename="providers.tsx" code={clientSnippet} />
+                <CodeBlock
+                  filename={HOME_PAGE.integration.client.filename}
+                  code={HOME_PAGE.integration.client.code}
+                />
               </Reveal>
             </div>
 
@@ -899,13 +877,14 @@ export default function Page() {
                   </div>
                   <p className="text-sm leading-relaxed text-neutral-400">
                     <span className="font-medium text-neutral-200">
-                      Explicitly enabled for development.
+                      {HOME_PAGE.integration.note.lead}
                     </span>{" "}
-                    Production stays disabled. After adding it, run{" "}
+                    {HOME_PAGE.integration.note.safety}{" "}
+                    {HOME_PAGE.integration.note.migrationPrefix}{" "}
                     <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[12px] text-neutral-300">
-                      npx auth@latest migrate
+                      {HOME_PAGE.integration.note.migrationCommand}
                     </code>{" "}
-                    to apply the schema.
+                    {HOME_PAGE.integration.note.migrationSuffix}
                   </p>
                 </div>
                 <div className="shrink-0">
@@ -925,11 +904,10 @@ export default function Page() {
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
                 <div className="relative">
                   <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-balance text-white md:text-5xl">
-                    Stop logging out to test as someone else
+                    {HOME_PAGE.callToAction.title}
                   </h2>
                   <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-400">
-                    Install the package, add the plugin, and switch between
-                    managed test users in one click.
+                    {HOME_PAGE.callToAction.description}
                   </p>
                   <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
                     <Magnetic className="w-full sm:w-auto">

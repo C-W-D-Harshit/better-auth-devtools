@@ -1,4 +1,6 @@
-import type { MetadataRoute } from "next";
+import type { MetadataRoute } from "next"
+
+import { SITE } from "../lib/site-content"
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -8,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: "https://www.better-auth-devtools.com/sitemap.xml",
-  };
+    sitemap: new URL("/sitemap.xml", SITE.url).toString(),
+  }
 }
