@@ -1,13 +1,14 @@
-import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+import type { Metadata, Viewport } from "next"
+import { Geist_Mono, Inter } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { cn } from "@/lib/utils";
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { cn } from "@/lib/utils"
+import { HOME_PAGE, SITE } from "@/lib/site-content"
 
-const siteTitle = "Better Auth DevTools";
-const siteUrl = "https://www.better-auth-devtools.com";
+const siteTitle = SITE.name
+const siteUrl = SITE.url
 
 export const metadata: Metadata = {
   title: {
@@ -15,8 +16,7 @@ export const metadata: Metadata = {
       "Better Auth DevTools — Dev Tools for Debugging & Testing Better Auth",
     template: `%s | ${siteTitle}`,
   },
-  description:
-    "Better Auth DevTools — unofficial, development-only tooling for Better Auth. Create test users, switch sessions, inspect auth state, and patch approved fields from a React panel.",
+  description: SITE.description,
   applicationName: siteTitle,
   keywords: [
     "better auth devtools",
@@ -35,13 +35,16 @@ export const metadata: Metadata = {
     "React devtools panel",
     "Next.js auth devtools",
   ],
-  authors: [{ name: "Harshit", url: "https://github.com/C-W-D-Harshit" }],
-  creator: "Harshit",
-  publisher: "Harshit",
+  authors: [{ name: SITE.author.name, url: SITE.author.url }],
+  creator: SITE.author.name,
+  publisher: SITE.author.name,
   category: "developer tools",
   metadataBase: new URL(siteUrl),
   alternates: {
     canonical: "/",
+    types: {
+      "text/markdown": HOME_PAGE.markdownPath,
+    },
   },
   openGraph: {
     type: "website",
@@ -88,19 +91,19 @@ export const metadata: Metadata = {
     shortcut: "/icon.svg",
     apple: "/icon.svg",
   },
-};
+}
 
 export const viewport: Viewport = {
   themeColor: "#0D1117",
   colorScheme: "dark",
-};
+}
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-});
+})
 
 export default function RootLayout({
   children,

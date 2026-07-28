@@ -1,14 +1,14 @@
-import type { MetadataRoute } from "next";
+import type { MetadataRoute } from "next"
 
-const baseUrl = "https://www.better-auth-devtools.com";
+import { SITE } from "../lib/site-content"
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: baseUrl,
+      url: SITE.url,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
     },
-  ];
+  ]
 }
