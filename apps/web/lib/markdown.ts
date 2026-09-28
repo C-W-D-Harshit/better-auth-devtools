@@ -158,7 +158,21 @@ ${HOME_PAGE.integration.server.code}
 ${HOME_PAGE.integration.client.code}
 \`\`\`
 
-${HOME_PAGE.integration.note.lead} ${HOME_PAGE.integration.note.safety} ${HOME_PAGE.integration.note.migrationPrefix} \`${HOME_PAGE.integration.note.migrationCommand}\` ${HOME_PAGE.integration.note.migrationSuffix}
+### 3. ${HOME_PAGE.integration.layout.label}
+
+\`\`\`tsx
+${HOME_PAGE.integration.layout.code}
+\`\`\`
+
+With an existing compatible CLI, run \`pnpm exec auth migrate\` for the built-in Kysely adapter. For Prisma or Drizzle, run \`pnpm exec auth generate\`, then review and apply the project's ORM migration. If the CLI is absent, run a version matching the app's Better Auth version through your package manager. Use \`--config\` for a custom auth file. Start the app, create and switch to a managed test user, and confirm the host application's normal Better Auth session sees that user.
+
+## Install with your coding agent
+
+Guide: ${SITE.agentGuideUrl}
+
+\`\`\`text
+${HOME_PAGE.integration.agentPrompt}
+\`\`\`
 
 ## ${HOME_PAGE.callToAction.title}
 
@@ -182,6 +196,7 @@ Canonical website: ${SITE.url}
 
 - [Website overview](${websiteMarkdownUrl}): Product features, installation, integration examples, and production safety.
 - [Project documentation](${SITE.githubUrl}#readme): Full setup, security model, API options, and troubleshooting.
+- [Agent installation guide](${SITE.agentGuideUrl}): Package-specific setup and verification workflow.
 - [npm package](${SITE.npmUrl}): Published package and version information.
 
 Pages support explicit content negotiation with \`Accept: text/markdown\`.

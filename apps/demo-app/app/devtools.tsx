@@ -2,6 +2,6 @@
 
 import { BetterAuthDevtools } from "better-auth-devtools/react";
 
-export function DevtoolsWrapper() {
+export function Devtools() {
   return <BetterAuthDevtools />;
 }

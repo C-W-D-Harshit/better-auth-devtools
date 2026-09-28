@@ -1,49 +1,7 @@
-# Next.js template
+# Better Auth DevTools website
 
-This is a Next.js template with shadcn/ui.
+This Next.js app explains installation and links to the runnable demo. Run it from the repository root with `pnpm --dir apps/web exec next dev --port 3000`. The demo uses port 3100 through `pnpm demo`.
 
-## Adding components
+The homepage keeps its HTML and Markdown representations in `lib/site-content.ts` and `lib/markdown.ts`. The install snippets in `lib/install-snippets.ts` come from the root README. The public `/install-agent.md` file comes from the root agent guide. Run `pnpm docs:sync` after editing either source and `pnpm docs:check` to detect drift.
 
-To add components to your app, run the following command:
-
-```bash
-npx shadcn@latest add button
-```
-
-This will place the ui components in the `components` directory.
-
-## Markdown for AI agents
-
-The public homepage has two representations backed by the same structured
-content in `lib/site-content.ts`:
-
-- `/` returns the existing HTML page for browser requests.
-- `/` with `Accept: text/markdown` returns clean Markdown.
-- `/index.md` returns the same Markdown directly.
-- `/llms.txt` provides concise discovery links for agents.
-
-The web app currently has one public content page, so it is the only
-Markdown-enabled canonical page. Unsupported and missing `.md` paths return a
-Markdown 404 instead of exposing an unrelated route. API, framework asset, and
-discovery routes are excluded from negotiation.
-
-Manual verification:
-
-```bash
-curl -i http://localhost:3000/
-
-curl -i http://localhost:3000/ \
-  -H "Accept: text/markdown"
-
-curl -i http://localhost:3000/index.md
-
-curl -i http://localhost:3000/llms.txt
-```
-
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button"
-```
+The hero illustration is a simulation. The linked demo app mounts the actual published panel component against a local development database.

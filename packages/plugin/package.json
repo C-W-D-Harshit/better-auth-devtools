@@ -9,7 +9,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "AGENT_INSTALL.md"
   ],
   "license": "MIT",
   "author": "Harshit",

@@ -1,118 +1,38 @@
 # Contributing to Better Auth DevTools
 
-Thank you for your interest in contributing to Better Auth DevTools! This guide will help you get started.
+Use Node.js 20 or newer and pnpm 10.24.0. This repository has a package, a Next.js demo, and a Next.js website. The demo imports the public package exports used by consumers.
 
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) v20 or later
-- [pnpm](https://pnpm.io/) v10.24.0 or later (this project enforces a specific `packageManager`)
-- A basic understanding of [Better Auth](https://www.better-auth.com/), React, and TypeScript
-
-## Getting Started
-
-1. **Fork and clone** the repository:
-
-   ```bash
-   git clone https://github.com/<your-username>/better-auth-devtools.git
-   cd better-auth-devtools
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   pnpm install
-   ```
-
-3. **Run the demo app** (useful for manual testing):
-
-   ```bash
-   cp apps/demo-app/.env.example apps/demo-app/.env.local
-   pnpm --dir apps/demo-app db:init
-   pnpm dev
-   ```
-
-## Project Structure
-
-This is a [Turborepo](https://turbo.build/repo) monorepo with the following layout:
-
-```
-packages/
-  plugin/     # Published server, client, and React package
-apps/
-  demo-app/   # Reference integration / playground
-  web/        # Documentation site
-```
-
-## Development Workflow
-
-### Branching
-
-- Create a feature branch from `main`:
-
-  ```bash
-  git checkout -b feat/your-feature main
-  ```
-
-- Use descriptive branch prefixes: `feat/`, `fix/`, `docs/`, `refactor/`, `test/`.
-
-### Common Commands
-
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Start all packages and apps in dev mode |
-| `pnpm build` | Build all packages |
-| `pnpm lint` | Lint all packages |
-| `pnpm typecheck` | Run TypeScript type checking |
-| `pnpm test` | Run tests across all packages |
-| `pnpm package:check` | Validate and install the packed npm artifact |
-| `pnpm package:audit` | Audit the packed production dependency graph |
-| `pnpm schema:check` | Generate and validate Prisma and Drizzle plugin schemas |
-| `pnpm check` | Run every required release gate |
-
-### Making Changes
-
-1. Make your changes in the relevant package(s) under `packages/` or `apps/`.
-2. Run `pnpm typecheck` and `pnpm lint` to catch issues early.
-3. Run `pnpm test` to make sure existing tests pass.
-4. Add or update tests for any new functionality.
-
-### Changesets
-
-This project uses [Changesets](https://github.com/changesets/changesets) for versioning and changelogs.
-
-If your change affects the published package, add a changeset before opening your PR:
+## Local setup
 
 ```bash
-pnpm changeset
+pnpm install
+pnpm demo
 ```
 
-Follow the prompts to describe the change and select the appropriate semver bump. Commit the generated changeset file along with your code.
+`pnpm demo` builds the package, creates `apps/demo-app/.env.local` with a random development secret if the file is absent, applies missing Better Auth migrations to the local demo database, and starts the demo at <http://localhost:3100>. Repeat runs keep existing environment files and database data. If an existing `.env.local` lacks a valid secret, the command stops and asks you to fix that file rather than overwriting it.
 
-## Pull Requests
+Open the real panel, create Viewer and Admin users, then switch between them. The dashboard shows the app's own Better Auth session. Its server action denies Viewer and allows Admin. The website can run separately on port 3000 with `pnpm --dir apps/web exec next dev --port 3000`. The workspace `pnpm dev` scripts also use separate ports.
 
-1. Keep PRs focused — one feature or fix per PR.
-2. Write a clear title and description explaining **what** changed and **why**.
-3. Run `pnpm check` and ensure all CI checks pass.
-4. Link any related issues using `Closes #123` in the PR description.
-5. Be responsive to review feedback.
+Consumer installation instructions live in [README.md](README.md). The coding-agent guide is [AGENT_INSTALL.md](AGENT_INSTALL.md). Keep those separate from contributor setup.
 
-## Code Style
+## Checks
 
-- Write TypeScript. Avoid `any` types where possible.
-- Follow the existing code conventions in the repository.
-- Keep exports minimal — only expose what is part of the public API.
-- Do not add runtime dependencies without discussion.
+```bash
+pnpm docs:sync   # after editing the root README or agent guide
+pnpm docs:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm package:check
+pnpm schema:check
+pnpm package:audit
+```
 
-## Reporting Issues
+`pnpm docs:sync` copies the root README into the published package, copies the agent guide to the website, and extracts website install snippets. `pnpm docs:check` checks all three copies in CI. The website's Markdown representation uses the same snippet data as its HTML page.
 
-- Search existing issues before opening a new one.
-- Include steps to reproduce, expected behavior, and actual behavior.
-- Specify your Node.js version, pnpm version, and OS.
+The demo database and `.env.local` are ignored by Git. For an isolated run, set `DEMO_DB_FILE` to an absolute path in a temporary directory. Do not point the demo at a shared or production database.
 
-## Security
+If a package change affects the published release, add a Changeset with `pnpm changeset`. Keep pull requests focused and report which checks and browser flows you ran.
 
-This project is **development-only tooling** and must never be enabled in production. Follow [SECURITY.md](./SECURITY.md) for private vulnerability reporting.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the [MIT License](./LICENSE).
+Security issues should follow [SECURITY.md](SECURITY.md). Contributions are licensed under [MIT](LICENSE).

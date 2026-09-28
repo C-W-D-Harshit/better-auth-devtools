@@ -79,40 +79,48 @@ function EyebrowLabel({ children }: { children: React.ReactNode }) {
 }
 
 function useCopy() {
-  const [copied, setCopied] = useState(false)
-  const copy = (text: string) => {
-    navigator.clipboard?.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle")
+  const copy = async (text: string) => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable")
+      await navigator.clipboard.writeText(text)
+      setStatus("copied")
+    } catch {
+      setStatus("failed")
+    }
+    setTimeout(() => setStatus("idle"), 3000)
   }
-  return { copied, copy }
+  return { status, copy }
 }
 
-function CopyPill({ command }: { command: string }) {
-  const { copied, copy } = useCopy()
+function CopyPill({ command, label }: { command: string; label?: string }) {
+  const { status, copy } = useCopy()
   return (
     <button
       type="button"
-      onClick={() => copy(command)}
+      onClick={() => void copy(command)}
+      aria-label={label ?? `Copy ${command}`}
       className="group flex w-full min-w-0 items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3 transition-[transform,border-color,background-color] duration-150 ease-out hover:border-white/20 hover:bg-white/[0.04] active:scale-[0.98] sm:w-auto sm:gap-3 sm:px-4"
     >
       <span className="shrink-0 font-mono text-sm text-amber-400/70 select-none">
         $
       </span>
       <code className="min-w-0 flex-1 truncate text-left font-mono text-[13px] text-neutral-200 sm:flex-none sm:text-sm">
-        {command}
+        {label ?? command}
       </code>
+      <span className="sr-only" role="status">{status === "copied" ? "Copied to clipboard" : status === "failed" ? "Clipboard failed. Select and copy the text manually." : ""}</span>
+      {status === "failed" ? <span className="text-xs text-red-300">Copy failed</span> : null}
       <span className="relative ml-auto grid h-4 w-4 shrink-0 place-items-center sm:ml-1">
         <Copy
           className={`absolute h-4 w-4 text-neutral-500 transition-[transform,opacity,filter,color] duration-200 ease-out group-hover:text-neutral-300 ${
-            copied
+            status === "copied"
               ? "scale-90 opacity-0 blur-[2px]"
               : "blur-0 scale-100 opacity-100"
           }`}
         />
         <Check
           className={`absolute h-4 w-4 text-amber-400 transition-[transform,opacity,filter,color] duration-200 ease-out ${
-            copied
+            status === "copied"
               ? "blur-0 scale-100 opacity-100"
               : "scale-90 opacity-0 blur-[2px]"
           }`}
@@ -567,8 +575,8 @@ const TOKEN_CLASS: Record<string, string> = {
   punct: "text-neutral-500",
 }
 
-function CodeBlock({ filename, code }: { filename: string; code: string }) {
-  const { copied, copy } = useCopy()
+function CodeBlock({ filename, code, copyable = true }: { filename: string; code: string; copyable?: boolean }) {
+  const { status, copy } = useCopy()
   const tokens = tokenize(code)
   return (
     <div className="w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b0e13]">
@@ -579,18 +587,20 @@ function CodeBlock({ filename, code }: { filename: string; code: string }) {
             {filename}
           </span>
         </div>
-        <button
+        {copyable ? <button
           type="button"
-          onClick={() => copy(code)}
+          onClick={() => void copy(code)}
           className="grid h-6 w-6 place-items-center rounded-md text-neutral-500 transition-colors duration-150 hover:text-neutral-300 active:scale-90"
           aria-label="Copy code"
         >
-          {copied ? (
+          {status === "copied" ? (
             <Check className="h-3.5 w-3.5 text-amber-400" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
-        </button>
+        </button> : null}
+        <span className="sr-only" role="status">{status === "copied" ? "Code copied to clipboard" : status === "failed" ? "Clipboard failed. Select and copy the code manually." : ""}</span>
+        {status === "failed" ? <span className="text-xs text-red-300">Copy failed</span> : null}
       </div>
       <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
         <code>
@@ -777,9 +787,13 @@ export default function Page() {
           >
             <div className="relative">
               <div className="pointer-events-none absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
+              <p className="mb-3 text-center font-mono text-[11px] text-amber-300">Interactive illustration · no session changes</p>
               <DevtoolsPanelMock />
               <p className="mt-4 text-center font-mono text-[11px] text-neutral-600">
-                live preview · click a user to switch
+                Interactive illustration only. It does not use the package or change a session.
+              </p>
+              <p className="mt-2 text-center text-xs text-neutral-400">
+                <Link className="underline hover:text-white" href={`${GITHUB_URL}/tree/main/apps/demo-app`}>Run the demo with the actual panel</Link> using <code>pnpm demo</code>.
               </p>
             </div>
           </Reveal>
@@ -851,6 +865,7 @@ export default function Page() {
                 <CodeBlock
                   filename={HOME_PAGE.integration.server.filename}
                   code={HOME_PAGE.integration.server.code}
+                  copyable={false}
                 />
               </Reveal>
               <Reveal delay={0.06} className="min-w-0">
@@ -869,28 +884,35 @@ export default function Page() {
               </Reveal>
             </div>
 
+            <Reveal delay={0.08} className="mt-6 max-w-2xl">
+              <div className="flex items-center gap-2 pb-3">
+                <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">3</span>
+                <span className="text-sm font-medium text-neutral-200">{HOME_PAGE.integration.layout.label}</span>
+              </div>
+              <CodeBlock filename={HOME_PAGE.integration.layout.filename} code={HOME_PAGE.integration.layout.code} copyable={false} />
+            </Reveal>
+
             <Reveal delay={0.1}>
-              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 md:flex-row md:items-center md:justify-between">
+              <div className="mt-6 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-5">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
                     <Terminal className="h-4 w-4 text-amber-400" />
                   </div>
-                  <p className="text-sm leading-relaxed text-neutral-400">
-                    <span className="font-medium text-neutral-200">
-                      {HOME_PAGE.integration.note.lead}
-                    </span>{" "}
-                    {HOME_PAGE.integration.note.safety}{" "}
-                    {HOME_PAGE.integration.note.migrationPrefix}{" "}
-                    <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[12px] text-neutral-300">
-                      {HOME_PAGE.integration.note.migrationCommand}
-                    </code>{" "}
-                    {HOME_PAGE.integration.note.migrationSuffix}
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  <CopyPill command={INSTALL} />
+                  <div className="text-sm leading-relaxed text-neutral-400">
+                    <p>Run schema commands from the app workspace against its actual auth config and development database. With an existing compatible CLI, built-in Kysely uses <code>pnpm exec auth migrate</code>. Prisma or Drizzle use <code>pnpm exec auth generate</code>, followed by the reviewed ORM migration. If the CLI is absent, run a version matching the app&apos;s Better Auth version through your package manager. Add <code>--config path/to/auth.ts</code> if CLI discovery misses the file.</p>
+                    <p className="mt-2">Start the app. Create a managed test user, switch to it, and confirm the host app&apos;s normal Better Auth session shows that user. DevTools endpoints remain disabled in production.</p>
+                    <Link className="mt-2 inline-block text-amber-300 underline" href={`${GITHUB_URL}#manual-quick-start`}>Read the full manual quick start</Link>
+                  </div>
                 </div>
               </div>
+            </Reveal>
+
+            <Reveal delay={0.12} className="mt-12 max-w-3xl">
+              <h3 className="text-xl font-semibold text-white">Install with your coding agent</h3>
+              <p className="mt-2 text-sm text-neutral-400">Give this prompt to an agent working in your app repository. It points to the package-specific <Link className="underline" href={SITE.agentGuideUrl}>installation guide</Link>.</p>
+              <div className="mt-4"><CopyPill command={HOME_PAGE.integration.agentPrompt} label="Copy agent installation prompt" /></div>
+              <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/10 bg-black/20 p-4 text-sm leading-relaxed text-neutral-300">{HOME_PAGE.integration.agentPrompt}</p>
+              <p className="mt-2 text-xs text-neutral-500">The guide URL becomes public when this website change is deployed.</p>
             </Reveal>
           </div>
         </section>
