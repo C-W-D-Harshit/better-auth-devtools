@@ -1,4 +1,4 @@
-import { HOME_PAGE, SITE } from "./site-content"
+import { HOME_PAGE, REQUIREMENTS, SITE } from "./site-content"
 
 const MARKDOWN_MEDIA_TYPE = "text/markdown"
 
@@ -112,71 +112,97 @@ export function buildAbsoluteUrl(path: string, request: Request): string {
   return new URL(path, request.url).toString()
 }
 
+function fence(language: string, code: string): string {
+  return `\`\`\`${language}\n${code}\n\`\`\``
+}
+
 export function renderHomePageMarkdown(sourceUrl: string): string {
-  const featureSections = HOME_PAGE.features.items
+  const { install } = HOME_PAGE
+
+  const facts = HOME_PAGE.facts
+    .map((fact) => `- ${fact.label}: ${fact.value}`)
+    .join("\n")
+
+  const features = HOME_PAGE.features.items
     .map((feature) => `### ${feature.title}\n\n${feature.description}`)
+    .join("\n\n")
+
+  const steps = install.steps
+    .map((step, index) => {
+      const snippet =
+        step.kind === "install"
+          ? HOME_PAGE.installCommands
+              .map((item) => `- ${item.manager}: \`${item.command}\``)
+              .join("\n")
+          : fence(step.language, step.code)
+      return `### ${index + 1}. ${step.title}\n\n${step.description}\n\n${snippet}`
+    })
+    .join("\n\n")
+
+  const security = HOME_PAGE.security.items
+    .map((item) => `- ${item}`)
+    .join("\n")
+
+  const faq = HOME_PAGE.faq.items
+    .map((item) => `### ${item.question}\n\n${item.answer}`)
     .join("\n\n")
 
   return `# ${HOME_PAGE.title}
 
-${HOME_PAGE.description}
+> ${HOME_PAGE.headline}.
+
+${HOME_PAGE.summary}
+
+${SITE.description}
 
 Source: ${sourceUrl}
 
-- Package: [better-auth-devtools](${SITE.npmUrl})
+- Package: [${SITE.packageName}](${SITE.npmUrl}) (v${SITE.version})
 - Repository: [GitHub](${SITE.githubUrl})
+- Documentation: [README](${SITE.docsUrl})
+- Agent installation guide: [Install with a coding agent](${SITE.agentGuideUrl})
 
-## ${HOME_PAGE.headlineLines.join(" ")}
-
-${HOME_PAGE.releaseLabel}.
+${facts}
 
 ## ${HOME_PAGE.features.title}
 
 ${HOME_PAGE.features.description}
 
-${featureSections}
+${features}
 
-## ${HOME_PAGE.integration.title}
+## ${install.title}
 
-${HOME_PAGE.integration.description}
+${install.subtitle} ${install.description}
 
-Install:
+${steps}
 
-\`\`\`bash
-${HOME_PAGE.installCommand}
-\`\`\`
+### ${install.roles.title}
 
-### 1. ${HOME_PAGE.integration.server.label}
+${install.roles.description}
 
-\`\`\`ts
-${HOME_PAGE.integration.server.code}
-\`\`\`
+${fence(install.roles.language, install.roles.code)}
 
-### 2. ${HOME_PAGE.integration.client.label}
-
-\`\`\`tsx
-${HOME_PAGE.integration.client.code}
-\`\`\`
-
-### 3. ${HOME_PAGE.integration.layout.label}
-
-\`\`\`tsx
-${HOME_PAGE.integration.layout.code}
-\`\`\`
-
-With an existing compatible CLI, run \`pnpm exec auth migrate\` for the built-in Kysely adapter. For Prisma or Drizzle, run \`pnpm exec auth generate\`, then review and apply the project's ORM migration. If the CLI is absent, run a version matching the app's Better Auth version through your package manager. Use \`--config\` for a custom auth file. Start the app, create and switch to a managed test user, and confirm the host application's normal Better Auth session sees that user.
-
-## Install with your coding agent
+## Install with a coding agent
 
 Guide: ${SITE.agentGuideUrl}
 
-\`\`\`text
-${HOME_PAGE.integration.agentPrompt}
-\`\`\`
+${fence("text", install.agentPrompt)}
 
-## ${HOME_PAGE.callToAction.title}
+## ${HOME_PAGE.security.title}
 
-${HOME_PAGE.callToAction.description}
+${HOME_PAGE.security.description}
+
+${security}
+
+## ${HOME_PAGE.faq.title}
+
+${faq}
+
+## Requirements
+
+${Object.values(REQUIREMENTS)
+  .map((item) => `- ${item}`)
+  .join("\n")}
 `
 }
 
@@ -192,11 +218,22 @@ export function renderLlmsText(): string {
 
 Canonical website: ${SITE.url}
 
+## Quick start
+
+1. Install: \`${HOME_PAGE.installCommand}\`
+2. Add \`devtools({ enabled: true })\` from \`better-auth-devtools\` to the \`plugins\` array of \`betterAuth()\`.
+3. Create the plugin table with a CLI version matching your app's Better Auth version: \`pnpm exec auth migrate\` (or \`pnpm exec auth generate\` for Prisma and Drizzle, followed by your ORM migration).
+4. Render \`<BetterAuthDevtools />\` from \`better-auth-devtools/react\` in a client component.
+
+Keep the existing auth config and verify a managed user switch in the app's normal Better Auth session. Agent setup guide: ${SITE.agentGuideUrl}.
+
+The endpoints are always disabled when \`NODE_ENV=production\`.
+
 ## Important content
 
-- [Website overview](${websiteMarkdownUrl}): Product features, installation, integration examples, and production safety.
+- [Website overview](${websiteMarkdownUrl}): What the package does, the four setup steps, role testing, security model, and FAQ.
 - [Project documentation](${SITE.githubUrl}#readme): Full setup, security model, API options, and troubleshooting.
-- [Agent installation guide](${SITE.agentGuideUrl}): Package-specific setup and verification workflow.
+- [Agent installation guide](${SITE.agentGuideUrl}): Setup and session verification in an existing app.
 - [npm package](${SITE.npmUrl}): Published package and version information.
 
 Pages support explicit content negotiation with \`Accept: text/markdown\`.

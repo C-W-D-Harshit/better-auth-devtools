@@ -1,45 +1,37 @@
 import type { Metadata, Viewport } from "next"
-import { Geist_Mono, Inter } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { HOME_PAGE, SITE } from "@/lib/site-content"
 
-const siteTitle = SITE.name
-const siteUrl = SITE.url
-
 export const metadata: Metadata = {
   title: {
-    default:
-      "Better Auth DevTools — Dev Tools for Debugging & Testing Better Auth",
-    template: `%s | ${siteTitle}`,
+    default: SITE.title,
+    template: `%s | ${SITE.name}`,
   },
   description: SITE.description,
-  applicationName: siteTitle,
+  applicationName: SITE.name,
   keywords: [
     "better auth devtools",
-    "better auth dev tools",
-    "Better Auth",
-    "better auth debugging",
-    "better auth testing",
+    "better-auth-devtools",
+    "better auth",
+    "better auth plugin",
+    "better auth test users",
+    "better auth impersonate user",
+    "better auth switch user",
+    "better auth roles testing",
     "better auth session",
-    "better auth react",
     "auth devtools",
-    "auth dev tools",
-    "auth testing tools",
-    "managed test users",
-    "session switching",
-    "session inspection",
-    "React devtools panel",
-    "Next.js auth devtools",
+    "react auth devtools",
+    "next.js auth testing",
   ],
   authors: [{ name: SITE.author.name, url: SITE.author.url }],
   creator: SITE.author.name,
   publisher: SITE.author.name,
   category: "developer tools",
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE.url),
   alternates: {
     canonical: "/",
     types: {
@@ -50,30 +42,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    title: "Better Auth DevTools — Dev Tools for Better Auth",
-    description:
-      "Better Auth DevTools — create test users, switch sessions, inspect auth state, and patch session fields from a React panel. The dev tools built for Better Auth.",
-    siteName: siteTitle,
-    images: [
-      {
-        url: "/og.png",
-        width: 1200,
-        height: 630,
-        alt: "Better Auth DevTools — dev tools for debugging and testing Better Auth",
-      },
-    ],
+    title: SITE.title,
+    description: SITE.description,
+    siteName: SITE.name,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Better Auth DevTools — Dev Tools for Better Auth",
-    description:
-      "Better Auth DevTools — create test users, switch sessions, inspect auth state, and patch session fields. The dev tools built for Better Auth.",
-    images: [
-      {
-        url: "/og.png",
-        alt: "Better Auth DevTools — dev tools for debugging and testing Better Auth",
-      },
-    ],
+    title: SITE.title,
+    description: SITE.description,
+    creator: "@cwd_harshit",
   },
   robots: {
     index: true,
@@ -94,16 +71,12 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0D1117",
+  themeColor: "#09090b",
   colorScheme: "dark",
 }
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+const fontSans = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export default function RootLayout({
   children,
@@ -113,16 +86,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={cn(
-        "bg-[#0D1117] antialiased",
-        fontMono.variable,
-        "font-sans",
-        inter.variable
+        "dark scroll-smooth bg-[#09090b] font-sans antialiased",
+        fontSans.variable,
+        fontMono.variable
       )}
     >
-      <body className="bg-[#0D1117]">
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className="min-h-screen overflow-x-hidden bg-[#09090b] text-neutral-200 selection:bg-amber-300/30 selection:text-white">
+        {children}
         <Analytics />
       </body>
     </html>

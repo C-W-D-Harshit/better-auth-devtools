@@ -59,6 +59,7 @@ describe("Markdown proxy", () => {
       "/api/auth/session",
       "/_next/static/chunk.js",
       "/llms.txt",
+      "/opengraph-image",
       "/install-agent.md",
       "/robots.txt",
       "/sitemap.xml",
