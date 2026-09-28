@@ -1,5 +1,11 @@
 # better-auth-devtools
 
+## 1.0.2
+
+### Patch Changes
+
+- e3a7d38: Document the complete integration and include the coding-agent install guide in the published package.
+
 ## 1.0.1
 
 ### Patch Changes
