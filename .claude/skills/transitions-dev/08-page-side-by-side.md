@@ -9,7 +9,7 @@ Sliding between two full pages or screens that live side-by-side: list ↔ detai
 ```html
 <div class="t-page-slide" data-page="1">
   <section class="t-page" data-page-id="1">…</section>
-  <section class="t-page" data-page-id="2">…</section>
+  <section class="t-page" data-page-id="2" inert>…</section>
 </div>
 ```
 
@@ -95,6 +95,8 @@ The `@media (prefers-reduced-motion: reduce)` guard at the bottom of the snippet
 const slider = document.querySelector(".t-page-slide");
 function showPage(n) {
   slider.setAttribute("data-page", String(n));
+  slider.querySelectorAll(".t-page").forEach((page) => {
+    page.inert = page.getAttribute("data-page-id") !== String(n);
+  });
 }
 ```
-

@@ -7,7 +7,7 @@ Modal dialogs and full-overlay surfaces that scale up from center. Use when the 
 ## HTML usage
 
 ```html
-<div class="t-modal" role="dialog">…</div>
+<div class="t-modal" role="dialog" inert>…</div>
 ```
 
 State:
@@ -82,13 +82,14 @@ const closeMs = parseFloat(
 ) || 150;
 
 function openModal() {
+  modal.inert = false;
   modal.classList.remove("is-closing");
   modal.classList.add("is-open");
 }
 function closeModal() {
+  modal.inert = true;
   modal.classList.remove("is-open");
   modal.classList.add("is-closing");
   setTimeout(() => modal.classList.remove("is-closing"), closeMs);
 }
 ```
-

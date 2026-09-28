@@ -66,8 +66,8 @@ function ButtonLink({
   return (
     <a
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      target={href.startsWith("#") ? undefined : "_blank"}
+      rel={href.startsWith("#") ? undefined : "noopener noreferrer"}
       className={
         variant === "primary"
           ? "inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-neutral-950 transition-[background-color,scale] duration-(--duration-quick) ease-out hover:bg-neutral-200 active:scale-(--scale-medium)"

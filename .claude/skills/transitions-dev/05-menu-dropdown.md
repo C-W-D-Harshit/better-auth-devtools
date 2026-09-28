@@ -7,7 +7,7 @@ Contextual menus, dropdowns, popovers — anything that opens from a trigger and
 ## HTML usage
 
 ```html
-<div class="t-dropdown" data-origin="top-center">
+<div class="t-dropdown" data-origin="top-center" inert>
   <!-- your menu contents -->
 </div>
 ```
@@ -93,13 +93,14 @@ const closeMs = parseFloat(
 ) || 150;
 
 function openDropdown() {
+  dropdown.inert = false;
   dropdown.classList.remove("is-closing");
   dropdown.classList.add("is-open");
 }
 function closeDropdown() {
+  dropdown.inert = true;
   dropdown.classList.remove("is-open");
   dropdown.classList.add("is-closing");
   setTimeout(() => dropdown.classList.remove("is-closing"), closeMs);
 }
 ```
-

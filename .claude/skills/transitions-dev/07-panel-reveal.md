@@ -7,7 +7,7 @@ A panel that slides into view inside an existing container — e.g. detail panel
 ## HTML usage
 
 ```html
-<div class="t-panel-slide" data-open="false">
+<div class="t-panel-slide" data-open="false" inert>
   <!-- your panel contents -->
 </div>
 ```
@@ -77,5 +77,4 @@ The `@media (prefers-reduced-motion: reduce)` guard at the bottom of the snippet
 
 ## JavaScript orchestration
 
-None — pure CSS. Toggle the documented HTML attributes or class names from whatever already drives state in your app.
-
+CSS drives the animation. When your app sets `data-open="true"`, remove `inert` from the panel. When it closes, set `inert` so hidden controls leave keyboard navigation.

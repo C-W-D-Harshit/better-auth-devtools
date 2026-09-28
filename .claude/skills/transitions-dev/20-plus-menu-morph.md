@@ -10,7 +10,7 @@ Reach for this over **menu dropdown** when the trigger and the surface are the *
 
 ```html
 <div class="t-morph" data-open="false">
-  <div class="t-morph-menu"> … menu items … </div>
+  <div class="t-morph-menu" inert> … menu items … </div>
   <button class="t-morph-plus" aria-expanded="false">+</button>
 </div>
 ```
@@ -139,10 +139,13 @@ The `@media (prefers-reduced-motion: reduce)` guard at the bottom of the snippet
 // state to aria-expanded and close on outside click / Escape.
 const morph = document.querySelector(".t-morph");
 const plus = morph.querySelector(".t-morph-plus");
+const menu = morph.querySelector(".t-morph-menu");
 
 function setOpen(open) {
   morph.setAttribute("data-open", String(open));
   plus.setAttribute("aria-expanded", String(open));
+  menu.inert = !open;
+  plus.inert = open;
 }
 
 plus.addEventListener("click", (e) => {
@@ -164,4 +167,3 @@ The plus button must overlay the panel, pinned to a corner (`inset: auto 0 0 aut
 ### Open and close use different eases
 
 The bouncy `--morph-ease` only drives the open; the close falls back to the calm `--morph-close-ease`. Don't collapse them into one variable. Adjust the open `width` / `height` in the snippet to your real panel size — they're hardcoded, not derived from the content.
-

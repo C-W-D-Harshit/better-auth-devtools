@@ -16,7 +16,7 @@ Height animates via `grid-template-rows: 0fr ↔ 1fr`, so there's **no JS height
       <svg viewBox="0 0 16 16"><path d="M4 6.5L8 10.5L12 6.5"/></svg>
     </span>
   </button>
-  <div class="t-acc-panel"><div class="t-acc-panel-inner"> … </div></div>
+  <div class="t-acc-panel" inert><div class="t-acc-panel-inner"> … </div></div>
 </div>
 ```
 
@@ -106,11 +106,13 @@ The `@media (prefers-reduced-motion: reduce)` guard at the bottom of the snippet
 // Toggle data-open on the item; CSS owns the height + chevron morph.
 const acc = document.querySelector(".t-acc");
 const head = acc.querySelector(".t-acc-head");
+const panel = acc.querySelector(".t-acc-panel");
 
 head.addEventListener("click", () => {
   const open = acc.getAttribute("data-open") === "true";
   acc.setAttribute("data-open", String(!open));
   head.setAttribute("aria-expanded", String(!open));
+  panel.inert = open;
 });
 ```
 
@@ -121,4 +123,3 @@ The panel needs the two-element structure (`.t-acc-panel` grid track + `.t-acc-p
 ### Why the chevron flips instead of morphing its path
 
 The natural way to turn the "v" into a "^" is to morph the chevron's SVG `d` between two vertex sets — but CSS `d:` path interpolation is **Chromium-only**, so on mobile Safari and Firefox it snaps (or doesn't move at all). A vertical flip (`transform: scaleY(-1)`) reproduces the same motion — it passes through a flat horizontal line at the midpoint, exactly like the path morph — and animates in every browser. Two requirements make it land cleanly: the chevron path must be **symmetric about the centre of its viewBox** (so the flip maps the "v" onto the "^"), and the path needs `vector-effect: non-scaling-stroke` so the stroke width stays constant while the box is squashed mid-flip.
-
