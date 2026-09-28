@@ -160,6 +160,7 @@ Source: ${sourceUrl}
 - Package: [${SITE.packageName}](${SITE.npmUrl}) (v${SITE.version})
 - Repository: [GitHub](${SITE.githubUrl})
 - Documentation: [README](${SITE.docsUrl})
+- Agent installation guide: [Install with a coding agent](${SITE.agentGuideUrl})
 
 ${facts}
 
@@ -180,6 +181,12 @@ ${steps}
 ${install.roles.description}
 
 ${fence(install.roles.language, install.roles.code)}
+
+## Install with a coding agent
+
+Guide: ${SITE.agentGuideUrl}
+
+${fence("text", install.agentPrompt)}
 
 ## ${HOME_PAGE.security.title}
 
@@ -215,8 +222,10 @@ Canonical website: ${SITE.url}
 
 1. Install: \`${HOME_PAGE.installCommand}\`
 2. Add \`devtools({ enabled: true })\` from \`better-auth-devtools\` to the \`plugins\` array of \`betterAuth()\`.
-3. Create the plugin table: \`npx auth@latest migrate\` (or \`npx auth@latest generate\` for Prisma, Drizzle, and other ORMs).
+3. Create the plugin table with a CLI version matching your app's Better Auth version: \`pnpm exec auth migrate\` (or \`pnpm exec auth generate\` for Prisma and Drizzle, followed by your ORM migration).
 4. Render \`<BetterAuthDevtools />\` from \`better-auth-devtools/react\` in a client component.
+
+Keep the existing auth config and verify a managed user switch in the app's normal Better Auth session. Agent setup guide: ${SITE.agentGuideUrl}.
 
 The endpoints are always disabled when \`NODE_ENV=production\`.
 
@@ -224,6 +233,7 @@ The endpoints are always disabled when \`NODE_ENV=production\`.
 
 - [Website overview](${websiteMarkdownUrl}): What the package does, the four setup steps, role testing, security model, and FAQ.
 - [Project documentation](${SITE.githubUrl}#readme): Full setup, security model, API options, and troubleshooting.
+- [Agent installation guide](${SITE.agentGuideUrl}): Setup and session verification in an existing app.
 - [npm package](${SITE.npmUrl}): Published package and version information.
 
 Pages support explicit content negotiation with \`Accept: text/markdown\`.

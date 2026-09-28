@@ -71,6 +71,8 @@ describe("Markdown serializers", () => {
     expect(markdown).toContain("# Better Auth DevTools")
     expect(markdown).toContain("## What you can do from the panel")
     expect(markdown).toContain("## Questions and answers")
+    expect(markdown).toContain("## Install with a coding agent")
+    expect(markdown).toContain("/install-agent.md")
     expect(markdown).toContain("```ts")
     expect(markdown).toContain("Source: https://www.better-auth-devtools.com/")
     expect(markdown).not.toMatch(
@@ -83,5 +85,6 @@ describe("Markdown serializers", () => {
 
     expect(llmsText).toContain("https://www.better-auth-devtools.com/index.md")
     expect(llmsText).toContain("Accept: text/markdown")
+    expect(llmsText).toContain("/install-agent.md")
   })
 })

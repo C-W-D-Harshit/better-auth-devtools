@@ -224,6 +224,13 @@ function Install() {
           title={install.title}
           description={`${install.subtitle} ${install.description}`}
         />
+        <a
+          href={SITE.agentGuideUrl}
+          className="mt-5 inline-flex items-center gap-1 text-sm text-amber-200 underline decoration-amber-200/30 underline-offset-4 hover:decoration-amber-200"
+        >
+          Installing with a coding agent? Read the agent guide
+          <ArrowUpRight aria-hidden className="size-3.5" />
+        </a>
 
         <ol className="mt-14 space-y-12 md:space-y-16">
           {install.steps.map((step, index) => (

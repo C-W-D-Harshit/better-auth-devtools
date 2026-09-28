@@ -5,7 +5,11 @@ import { devtools } from "better-auth-devtools";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 
-export const dbFile = join(currentDir, "..", "demo.db");
+export const dbFile = process.env.DEMO_DB_FILE ?? (
+  process.env.NEXT_PHASE === "phase-production-build"
+    ? ":memory:"
+    : join(currentDir, "..", "demo.db")
+);
 export const db = new Database(dbFile);
 
 export const devtoolsPlugin = devtools({
@@ -47,6 +51,7 @@ export const authOptions = {
       role: {
         type: /** @type {"string"} */ ("string"),
         defaultValue: "viewer",
+        input: false,
       },
     },
   },

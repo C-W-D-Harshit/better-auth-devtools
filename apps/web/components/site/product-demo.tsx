@@ -159,7 +159,7 @@ function Panel({
   onSwitch: (id: string) => void
   onRoleChange: (role: Role) => void
 }) {
-  const current = users.find((u) => u.id === currentId)!
+  const current = users.find((u) => u.id === currentId) ?? users[0]
 
   return (
     <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#141416]/95 font-mono text-[12px] text-neutral-300 shadow-2xl shadow-black/60 backdrop-blur">
@@ -252,22 +252,29 @@ function Panel({
 export function ProductDemo() {
   const [users, setUsers] = useState(INITIAL_USERS)
   const [currentId, setCurrentId] = useState(INITIAL_USERS[0].id)
-  const current = users.find((u) => u.id === currentId)!
+  const current = users.find((u) => u.id === currentId) ?? users[0]
 
   const createUser = (role: Role) => {
-    const label = TEMPLATES.find((t) => t.role === role)!.label
+    const label = TEMPLATES.find((t) => t.role === role)?.label ?? role
     const user: DemoUser = {
       id: `${role}-${Date.now()}`,
       name: label,
       email: `${role}+${randomSuffix()}@test.local`,
       role,
     }
-    setUsers((prev) => [user, ...prev].slice(0, 6))
+    setUsers((prev) => {
+      const next = [user, ...prev]
+      const recent = next.slice(0, 6)
+      if (recent.some((entry) => entry.id === currentId)) return recent
+
+      const selected = prev.find((entry) => entry.id === currentId)
+      return selected ? [...next.slice(0, 5), selected] : recent
+    })
   }
 
   const changeRole = (role: Role) => {
     setUsers((prev) =>
-      prev.map((u) => (u.id === currentId ? { ...u, role } : u))
+      prev.map((u) => (u.id === current.id ? { ...u, role } : u))
     )
   }
 
@@ -292,7 +299,7 @@ export function ProductDemo() {
           <div className="bg-[radial-gradient(circle_at_top,rgba(252,211,77,0.06),transparent_70%)] p-4">
             <Panel
               users={users}
-              currentId={currentId}
+              currentId={current.id}
               onCreate={createUser}
               onSwitch={setCurrentId}
               onRoleChange={changeRole}

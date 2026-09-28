@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "db:init": "node scripts/bootstrap-db.mjs",
-    "dev": "next dev",
+    "dev": "next dev --port 3100",
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",

@@ -1,4 +1,5 @@
 import pluginPackage from "../../../packages/plugin/package.json"
+import { INSTALL_SNIPPETS } from "./install-snippets"
 
 function minimumVersion(range: string): string {
   return range.match(/>=\s*([\d.]+)/)?.[1] ?? range
@@ -22,6 +23,7 @@ export const SITE = {
   license: pluginPackage.license,
   githubUrl: GITHUB_URL,
   docsUrl: `${GITHUB_URL}#readme`,
+  agentGuideUrl: "https://www.better-auth-devtools.com/install-agent.md",
   changelogUrl: `${GITHUB_URL}/blob/main/packages/plugin/CHANGELOG.md`,
   issuesUrl: `${GITHUB_URL}/issues`,
   npmUrl: "https://www.npmjs.com/package/better-auth-devtools",
@@ -45,22 +47,6 @@ const INSTALL_COMMANDS = [
   { manager: "yarn", command: "yarn add better-auth-devtools" },
   { manager: "bun", command: "bun add better-auth-devtools" },
 ] as const
-
-const SERVER_CODE = `import { betterAuth } from "better-auth";
-import { devtools } from "better-auth-devtools";
-
-export const auth = betterAuth({
-  database,
-  plugins: [devtools({ enabled: true })],
-});`
-
-const CLIENT_CODE = `"use client";
-
-import { BetterAuthDevtools } from "better-auth-devtools/react";
-
-export function Devtools() {
-  return <BetterAuthDevtools />;
-}`
 
 const ROLES_CODE = `export const auth = betterAuth({
   database,
@@ -147,6 +133,7 @@ export const HOME_PAGE = {
     subtitle: "No client plugin, no props.",
     description:
       "One server plugin and one React component. The panel reads its templates and settings from the server.",
+    agentPrompt: INSTALL_SNIPPETS.agentPrompt,
     steps: [
       {
         title: "Install the package",
@@ -157,29 +144,29 @@ export const HOME_PAGE = {
       {
         title: "Add the plugin to your auth config",
         description:
-          "`enabled: true` is the development opt-in. You can set `DEV_AUTH_ENABLED=true` instead. Production stays off either way.",
+          "Add the plugin to your existing auth config. Keep its database, user fields, sessions, callbacks, routes, and other plugins. `enabled: true` opts in during development. Production stays off.",
         kind: "code",
-        filename: "auth.ts",
-        language: "ts",
-        code: SERVER_CODE,
+        filename: "auth.ts (merge these lines)",
+        language: "diff",
+        code: INSTALL_SNIPPETS.authDiff,
       },
       {
         title: "Create the plugin table",
         description:
-          "The plugin records which users it created, so it can never sign you in as a real user. With Prisma, Drizzle, or another ORM, run `npx auth@latest generate` and apply the migration as usual.",
+          "Use a CLI version matching your app's Better Auth version. With the built-in Kysely adapter, run `pnpm exec auth migrate`. With Prisma or Drizzle, run `pnpm exec auth generate`, then review and apply your ORM migration. Pass `--config` if your auth file is elsewhere.",
         kind: "code",
         filename: "Terminal",
         language: "bash",
-        code: "npx auth@latest migrate",
+        code: "pnpm exec auth migrate",
       },
       {
         title: "Mount the panel",
         description:
-          "Render it anywhere in your React tree, such as the root layout. It hides itself whenever DevTools is disabled on the server.",
+          "Render this client component once in your React tree, such as the root layout. It hides itself whenever DevTools is disabled on the server. Start the app and confirm a managed user switch in your normal Better Auth session.",
         kind: "code",
         filename: "devtools.tsx",
         language: "tsx",
-        code: CLIENT_CODE,
+        code: INSTALL_SNIPPETS.panel,
       },
     ],
     roles: {
@@ -215,7 +202,7 @@ export const HOME_PAGE = {
       {
         question: "How do I install Better Auth DevTools?",
         answer:
-          "Run `pnpm add better-auth-devtools`, add `devtools({ enabled: true })` to the `plugins` array of your Better Auth config, run `npx auth@latest migrate`, and render `<BetterAuthDevtools />` in your React app.",
+          "Run `pnpm add better-auth-devtools`, add `devtools({ enabled: true })` to your existing Better Auth config, create the plugin table with a CLI version matching your app, and render `<BetterAuthDevtools />` once in your React app.",
       },
       {
         question: "Is it safe to ship the code to production?",
@@ -231,7 +218,7 @@ export const HOME_PAGE = {
         question:
           "Does it work with Prisma, Drizzle, or other database adapters?",
         answer:
-          "Yes. The plugin goes through Better Auth's own adapter. With the built-in Kysely adapter, run `npx auth@latest migrate`. With Prisma, Drizzle, or another ORM, run `npx auth@latest generate` and apply the migration with your usual tooling.",
+          "Yes. The plugin goes through Better Auth's own adapter. With the built-in Kysely adapter, run `pnpm exec auth migrate`. With Prisma, Drizzle, or another ORM, run `pnpm exec auth generate` and apply the migration with your usual tooling. Match the CLI version to your app's Better Auth version.",
       },
       {
         question: "Which frameworks does it support?",

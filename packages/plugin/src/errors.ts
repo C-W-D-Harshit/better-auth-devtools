@@ -10,6 +10,7 @@ export const ErrorCode = {
   INVALID_CONFIG: "INVALID_CONFIG",
   UNTRUSTED_ORIGIN: "UNTRUSTED_ORIGIN",
   RATE_LIMITED: "RATE_LIMITED",
+  MIGRATION_REQUIRED: "MIGRATION_REQUIRED",
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
