@@ -1,26 +1,26 @@
 # Better Auth DevTools
 
-Unofficial, development-only tools for Better Auth. A floating React panel creates managed test users, switches the browser session to one of them, and shows the current session. You can opt in to editing specific user fields. The server endpoints stay disabled when `NODE_ENV=production`.
+Better Auth DevTools adds a floating React panel to your app. Use it to create test users, switch the browser to their sessions, and inspect the current session. You can also choose which user fields the panel may edit. This is an unofficial development tool; its server endpoints are disabled when `NODE_ENV=production`.
 
-The panel switches only to users it created and recorded. It does not impersonate arbitrary application users.
+The panel can switch only to users it created and recorded.
 
 ## Manual quick start
 
-You need an existing Better Auth application with a persistent database, Node.js 20 or newer, Better Auth `>=1.6.11 <2`, React 18 or newer, and React DOM 18 or newer. Keep your existing auth routes and database adapter. The package is ESM-only.
+Start with an existing Better Auth app and a persistent database. You need Node.js 20+, Better Auth `>=1.6.11 <2`, and React and React DOM 18+. The package is ESM-only.
 
 ### 1. Install in the app workspace
 
-Run the command from the workspace that owns your Better Auth app, using its package manager:
+From your app workspace, run:
 
 ```bash
 pnpm add better-auth-devtools
 ```
 
-For npm, Yarn, or Bun, use the equivalent `install`/`add` command. Better Auth, React, and React DOM are peers; leave their existing installed versions alone if they meet the ranges above.
+Use the equivalent command for npm, Yarn, or Bun. Better Auth, React, and React DOM are peer dependencies. Keep your installed versions if they meet the requirements above.
 
 ### 2. Extend the existing Better Auth instance
 
-In your existing server-only auth configuration, such as `src/lib/auth.ts` in a Next.js App Router app, import `devtools` and append it to the existing `plugins` array:
+Add `devtools` to your existing server auth configuration. In a Next.js App Router app, this might be `src/lib/auth.ts`:
 
 ```diff
  import { betterAuth } from "better-auth";
@@ -33,21 +33,21 @@ In your existing server-only auth configuration, such as `src/lib/auth.ts` in a 
  });
 ```
 
-If there is no plugin array, add `plugins: [devtools({ enabled: true })]` to the existing options. Do not create a second auth instance. Keep database and auth configuration imports on the server; the panel is a separate client component. `enabled: true` opts in outside production. `DEV_AUTH_ENABLED=false` is an environment kill switch.
+If you have no `plugins` array, add `plugins: [devtools({ enabled: true })]` to the existing options. Keep your current auth instance and configuration. Database and auth imports stay on the server; the panel is a separate client component. `enabled: true` enables DevTools outside production, and `DEV_AUTH_ENABLED=false` disables it through the environment.
 
 ### 3. Apply the plugin schema
 
-DevTools stores a record for each managed user. From the **app workspace**, run Better Auth's schema command against the same auth configuration and target database that the app uses:
+DevTools stores a record for each test user it creates. Run the schema command from your app workspace, using the app's auth configuration and target database:
 
 | Your existing adapter | Schema workflow |
 | --- | --- |
-| Built-in Kysely adapter | `pnpm exec auth migrate` applies the Better Auth schema change. |
-| Prisma | `pnpm exec auth generate`, review the generated Prisma model changes, then run your project's Prisma migration workflow. |
-| Drizzle | `pnpm exec auth generate`, review the generated Drizzle schema changes, then run your project's Drizzle migration workflow. |
+| Built-in Kysely | `pnpm exec auth migrate` applies the schema change. |
+| Prisma | Run `pnpm exec auth generate`, review the model changes, then run your Prisma migration. |
+| Drizzle | Run `pnpm exec auth generate`, review the schema changes, then run your Drizzle migration. |
 
-These commands assume the app already has the `auth` CLI installed. If it does not, run a CLI version that matches your installed Better Auth version through the package manager. For Better Auth 1.6.23, use `pnpm dlx auth@1.6.23 migrate` or `pnpm dlx auth@1.6.23 generate` instead. Do not upgrade the app's Better Auth peer just to run the CLI. For other package managers, use their equivalent of `exec` or `dlx`. If the auth config is outside Better Auth CLI's discovery paths, add `--config path/to/your/auth.ts`. Confirm the target environment before applying migrations. Preserve existing tables, models, and data. Re-run generation/migration when plugin schema changes.
+These commands assume `auth` is installed in the app. Otherwise, run a CLI version that matches your Better Auth version. For Better Auth 1.6.23, use `pnpm dlx auth@1.6.23 migrate` or `pnpm dlx auth@1.6.23 generate`. Other package managers have equivalents of `exec` and `dlx`. Add `--config path/to/your/auth.ts` if the CLI cannot find your auth config. Check the target database before migrating. Keep existing tables and data, and repeat this step when the plugin schema changes.
 
-A custom required user field with no database default must have a value in every DevTools template that creates a user. See the role example below. An ORM column alone does not register the field with Better Auth.
+If a required user field has no database default, give it a value in every relevant DevTools template. An ORM column alone does not register the field with Better Auth. The role example below shows how to configure one.
 
 ### 4. Mount the panel once
 
@@ -63,7 +63,7 @@ export function Devtools() {
 }
 ```
 
-Render it once in `src/app/layout.tsx`, alongside your existing providers and children:
+Render it once in `src/app/layout.tsx`:
 
 ```tsx
 import type { ReactNode } from "react";
@@ -81,7 +81,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-Merge the `<Devtools />` line into your actual root layout. Keep its existing metadata, providers, and markup. No server-only auth or database module belongs in `devtools.tsx`. The panel discovers templates from the server. It needs no client plugin, provider, shared config module, or server-generated props.
+Add `<Devtools />` to your existing layout without replacing its providers, metadata, or markup. Keep server auth and database modules out of `devtools.tsx`. The panel loads templates from the server; it needs no client plugin or extra props.
 
 In another React app that already uses Better Auth, mount the same component once at its application root:
 
@@ -99,27 +99,27 @@ export function App({ children }: { children: ReactNode }) {
 }
 ```
 
-Render your existing app as `App`'s children. This is a React mounting pattern, not a claim that every framework's Better Auth route setup is supported here.
+Render your existing app as `App`'s children. Check your framework's Better Auth route setup separately.
 
-If your Better Auth route uses a custom base path, pass the same path to the panel, for example `<BetterAuthDevtools basePath="/auth" />`. Use the path where Better Auth serves its endpoints, with no trailing slash. Keep the server's `basePath`, route handler, and client `baseURL` aligned.
+If Better Auth serves endpoints at a custom path, pass it to the panel: `<BetterAuthDevtools basePath="/auth" />`. Omit the trailing slash. The server `basePath`, route handler, and client `baseURL` must agree.
 
 ### 5. Check the first switch
 
-Start the app. Open the panel, choose **Create Test User**, then choose **Switch** on the new managed user. The app should reload and its normal Better Auth session should show that test user's email. Check the same session through an existing authenticated screen or `auth.api.getSession`; the DevTools session display alone is not proof that the host app sees the switch. If you need a role-based check, use the small [demo](https://github.com/C-W-D-Harshit/better-auth-devtools/tree/main/apps/demo-app) after [local setup](https://github.com/C-W-D-Harshit/better-auth-devtools/blob/main/CONTRIBUTING.md).
+Start the app. In the panel, choose **Create Test User**, then **Switch** on that user. The app should reload with the test user's email in its normal Better Auth session. Check an existing authenticated screen or call `auth.api.getSession`; the panel's own session display does not confirm that your app sees the switch. For a role check, run the [demo](https://github.com/C-W-D-Harshit/better-auth-devtools/tree/main/apps/demo-app) using the [local setup guide](https://github.com/C-W-D-Harshit/better-auth-devtools/blob/main/CONTRIBUTING.md).
 
 ## Install with your coding agent
 
-Give your agent this prompt in the app repository:
+In your app repository, give your agent this prompt:
 
 ```text
-Integrate Better Auth DevTools into this existing application and verify a working session switch. Follow https://www.better-auth-devtools.com/install-agent.md. Read the repository instructions and current Better Auth code first. Preserve existing auth behavior and use the app's package manager, adapter migration workflow, and auth base path. Mount the real panel once. Verify that the application's normal session sees a DevTools-managed user after switching. Report changed files, checks, and any steps you could not complete.
+Install Better Auth DevTools in this app and verify a session switch. Follow https://www.better-auth-devtools.com/install-agent.md. Read the repo instructions and existing Better Auth setup first. Keep the current auth behavior, package manager, migration workflow, and auth base path. Mount the panel once. After switching to a test user, confirm the app's normal session sees that user. Report the files changed, checks run, and any unfinished steps.
 ```
 
-The [agent installation guide](https://www.better-auth-devtools.com/install-agent.md) is served as Markdown by this project's website. Its publication at that URL must be checked after deployment; until then use [AGENT_INSTALL.md](AGENT_INSTALL.md) in this repository.
+The website is set up to serve the [agent installation guide](https://www.better-auth-devtools.com/install-agent.md) as Markdown. Check the live URL after deployment. Until then, use [AGENT_INSTALL.md](AGENT_INSTALL.md) in this repository.
 
 ## Role-based personas
 
-Add role fields only when your app uses them. If `role` is a Better Auth additional user field, make ordinary signup and update input non-writable. In your **existing** `betterAuth({ ... })` options, merge these entries with the current `user` and `plugins` options:
+If your app uses roles, add them to the existing `betterAuth({ ... })` options. For a Better Auth additional field, set `input: false` so ordinary signup and update requests cannot choose a role:
 
 ```ts
 user: {
@@ -143,15 +143,15 @@ plugins: [
 ],
 ```
 
-This fragment belongs in the existing server config, with `import { devtools } from "better-auth-devtools";`. The `input: false` boundary prevents ordinary user input from selecting a privileged role. DevTools deliberately creates the configured persona through Better Auth's internal adapter. If Better Auth's Admin plugin already owns `role`, retain it and use that field instead of declaring a duplicate. Required custom fields without database defaults must be supplied by each template. If a role lives in a separate application table, use the callbacks below.
+Import `devtools` from `better-auth-devtools` in the same server config. DevTools creates these configured users through Better Auth's internal adapter. If the Admin plugin already owns `role`, keep it and skip the duplicate field declaration. Give each template values for required fields without database defaults. If roles live in an application table, use the callbacks below.
 
-To allow editing a field in the panel, explicitly add `editableFields` to the same `devtools({ enabled: true, ... })` call. Supported types are `string`, `number`, `boolean`, and `select`; without a callback, approved edits update the Better Auth user model.
+To edit a field in the panel, add it to `editableFields` in the same `devtools()` call. Supported types are `string`, `number`, `boolean`, and `select`. Without a callback, edits update the Better Auth user model.
 
 ## Advanced configuration
 
-The default template creates a verified `@test.local` user. The panel can list the newest 100 managed users, inspect the current Better Auth user and session, and delete managed users. It redacts raw session tokens and secret-like fields from the default view. Writes require a trusted browser origin and Better Auth's origin and CSRF checks. An internal in-memory rate limit also applies.
+The default template creates a verified user with a `@test.local` email address. The panel lists up to 100 recent managed users, shows the current Better Auth user and session, and can delete managed users. The default session view hides raw tokens and secret-like fields. Writes require a trusted browser origin and pass through Better Auth's origin and CSRF checks. DevTools also limits request rates in memory.
 
-For application data outside the Better Auth user model, use callbacks in the same `devtools({ enabled: true, ... })` configuration:
+If user or session data lives outside Better Auth's user model, add callbacks to the same `devtools()` configuration:
 
 | Callback | Use |
 | --- | --- |
@@ -160,11 +160,11 @@ For application data outside the Better Auth user model, use callbacks in the sa
 | `getSessionView({ userId, sessionId })` | Return `{ userId, email?, label?, fields, editableFields? }` for application-owned session data. |
 | `patchSession({ userId, sessionId, patch })` | Validate allowed edits, update application data, and return the updated session view. |
 
-Use these with your existing application services. A custom `patchSession` should enforce the same allowlist as `editableFields`. See the exported TypeScript types for callback argument and return types. Keep authorization in application server routes.
+Call your existing application services from these callbacks. In `patchSession`, enforce the `editableFields` allowlist. The exported TypeScript types define callback arguments and return values. Keep authorization checks in your server routes.
 
 ### Optional typed client actions
 
-The panel does not need a client plugin. If your own client code needs typed DevTools actions, use:
+The panel does not need a client plugin. If your app code needs typed DevTools actions, add one:
 
 ```ts
 import { createAuthClient } from "better-auth/react";
@@ -175,7 +175,7 @@ export const authClient = createAuthClient({
 });
 ```
 
-Merge that plugin with any existing client plugins instead of replacing your client configuration.
+Keep any existing client plugins.
 
 ### Panel options
 
@@ -197,19 +197,19 @@ export function Devtools() {
 }
 ```
 
-The panel hides itself when the server reports DevTools as disabled or unavailable. `reloadOnSessionChange` is the default and reloads the page after a successful switch or edit. It does not promise immediate consistency for every application cache.
+The panel hides when DevTools is disabled or unavailable on the server. `reloadOnSessionChange` defaults to `true` and reloads the page after a switch or edit. Application caches may still need their own refresh.
 
 ## Troubleshooting
 
-- Panel missing: confirm the development opt-in, the auth base path, the panel mount, and the schema migration. Check the server response to the DevTools config endpoint.
+- Panel missing: check the development opt-in, auth base path, panel mount, and schema migration. Inspect the response from the DevTools config endpoint.
 - `403 UNTRUSTED_ORIGIN`: use an origin in Better Auth's `trustedOrigins`.
 - `429 RATE_LIMITED`: wait for the current 60-second window or adjust the development `rateLimit` option.
 - ORM model missing: generate again from the correct auth config, then apply the ORM migration.
-- Host session unchanged after Switch: check the auth base path, cookies, and the application's normal Better Auth session read. Report this as a package integration failure if the panel reports success but the session remains unchanged.
+- Host session unchanged after Switch: check the auth base path, cookies, and the app's normal Better Auth session read. If the panel reports success while the session stays unchanged, report a package integration failure.
 
 ## Development
 
-Contributors should use [CONTRIBUTING.md](https://github.com/C-W-D-Harshit/better-auth-devtools/blob/main/CONTRIBUTING.md). The demo imports the public `better-auth-devtools` and `better-auth-devtools/react` exports.
+See [CONTRIBUTING.md](https://github.com/C-W-D-Harshit/better-auth-devtools/blob/main/CONTRIBUTING.md) to work on this package. The demo uses the same `better-auth-devtools` and `better-auth-devtools/react` exports published to npm.
 
 ## License
 
