@@ -79,9 +79,11 @@ export const HOME_PAGE = {
   path: "/",
   markdownPath: "/index.md",
   title: "Better Auth DevTools",
-  headline: "The missing devtools for Better Auth",
+  headline: "Switch users without signing out",
+  headlineLead: "Switch users",
+  headlineTail: "without signing out",
   summary:
-    "Create test users, switch sessions, and edit roles from a panel inside your app.",
+    "A dev-only panel in the corner of your app. Create test users, switch to any of them in one click, and change their role on the spot.",
   releaseLabel: `v${pluginPackage.version} on npm`,
   installCommand: INSTALL_COMMANDS[0].command,
   installCommands: INSTALL_COMMANDS,
@@ -91,15 +93,50 @@ export const HOME_PAGE = {
     { label: "License", value: `${pluginPackage.license}, free` },
     { label: "In production", value: "Always off" },
   ],
+  comparison: {
+    title: "Two ways to check the Viewer screen",
+    before: {
+      label: "Without DevTools",
+      title: "Five steps, every time",
+      items: [
+        "Sign out of your own account",
+        "Dig up the password for a test account",
+        "Sign in as that account",
+        "Find your way back to the page",
+        "Repeat for the next role",
+      ],
+    },
+    after: {
+      label: "With DevTools",
+      title: "One click",
+      items: [
+        "Pick a template to create a verified test user",
+        "Click Switch to get a real Better Auth session",
+        "The page reloads as that user",
+        "Change the role in place to compare screens",
+      ],
+    },
+  },
+  flow: {
+    title: "One server plugin, one React component",
+    description:
+      "The panel calls the plugin's endpoints under your Better Auth base path. The plugin reads and writes through Better Auth's adapter, so it uses the database you already have.",
+    nodes: [
+      { label: "Your React app", detail: "<BetterAuthDevtools />" },
+      { label: "Better Auth", detail: "devtools() plugin" },
+      { label: "Your database", detail: "via your adapter" },
+    ],
+    hops: ["fetch /api/auth/*", "adapter"],
+  },
   features: {
     title: "What you can do from the panel",
     description:
-      "Testing an admin screen usually means signing out, signing in as another account, and loading the page again. DevTools turns that into one click from a small panel in the corner of your app.",
+      "The panel floats in the corner of your app and renders only when the server says DevTools is on.",
     items: [
       {
         title: "Create test users",
         description:
-          "Pick a template, like Admin or Viewer, and the plugin creates a verified Better Auth user for it. Real accounts stay out of your testing.",
+          "Pick a template, like Admin or Viewer, and the plugin creates a verified Better Auth user for it. You stop borrowing real accounts to test with.",
       },
       {
         title: "Switch sessions in one click",
@@ -109,17 +146,17 @@ export const HOME_PAGE = {
       {
         title: "Inspect the current session",
         description:
-          "See the user and session your app receives. The session token and secret-looking fields are redacted.",
+          "See the user and session your app receives. The plugin redacts the session token and anything that looks like a secret before it reaches the browser.",
       },
       {
         title: "Edit approved fields",
         description:
-          "Change a role, plan, or flag on the signed-in user. Only fields you list in `editableFields` can be edited.",
+          "Change a role, plan, or flag on the signed-in user. The panel only edits fields you list in `editableFields`.",
       },
       {
         title: "Share personas with your team",
         description:
-          "Templates live in your auth config, so every developer gets the same Admin, Editor, and Viewer users.",
+          "Templates live in your auth config and get committed with it. Everyone on the team creates the same Admin, Editor, and Viewer users.",
       },
       {
         title: "Off in production",
@@ -132,7 +169,7 @@ export const HOME_PAGE = {
     title: "Set up in four steps",
     subtitle: "No client plugin, no props.",
     description:
-      "One server plugin and one React component. The panel reads its templates and settings from the server.",
+      "The panel reads its templates and settings from the server, so the client needs no setup.",
     agentPrompt: INSTALL_SNIPPETS.agentPrompt,
     steps: [
       {
@@ -162,7 +199,7 @@ export const HOME_PAGE = {
       {
         title: "Mount the panel",
         description:
-          "Render this client component once in your React tree, such as the root layout. It hides itself whenever DevTools is disabled on the server. Start the app and confirm a managed user switch in your normal Better Auth session.",
+          "Render this client component once in your React tree, such as the root layout. It hides itself when DevTools is off on the server. Start the app, switch to a test user, and check that your app's normal Better Auth session shows that user.",
         kind: "code",
         filename: "devtools.tsx",
         language: "tsx",
@@ -179,15 +216,15 @@ export const HOME_PAGE = {
     },
   },
   security: {
-    title: "Safe by default",
+    title: "Off unless you turn it on",
     description:
-      "The plugin can create users and issue sessions, so it ships locked down like any privileged dev tool.",
+      "The plugin creates users and issues real sessions. These checks keep it away from production and away from your real users.",
     items: [
       "Disabled whenever `NODE_ENV` is `production`. No option turns it back on.",
       "Needs `enabled: true` or `DEV_AUTH_ENABLED=true` in development.",
-      "Only switches to users the plugin created. Your real users cannot be impersonated.",
+      "Only switches to users the plugin created. It can't sign you in as a real user.",
       "Write requests need a trusted origin and pass Better Auth's CSRF checks.",
-      "Rate limited to 60 requests a minute, even when Better Auth's own limiter is off.",
+      "Allows 60 requests a minute, even when Better Auth's own rate limiter is off.",
       "Never sends the raw session token to the browser.",
     ],
   },
@@ -240,8 +277,8 @@ export const HOME_PAGE = {
     ],
   },
   callToAction: {
-    title: "Stop signing out to test another role",
+    title: "Four steps, then you're switching users",
     description:
-      "Install the package, add the plugin, and switch users from the corner of your app.",
+      "Install the package, add the plugin, create its table, and mount the panel.",
   },
 } as const

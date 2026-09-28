@@ -6,7 +6,8 @@ import { GithubIcon } from "./icons"
 
 const LINKS = [
   { href: "#features", label: "Features" },
-  { href: "#install", label: "Install", mobile: true },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#security", label: "Security" },
   { href: "#faq", label: "FAQ" },
   { href: SITE.docsUrl, label: "Docs", external: true },
 ]
@@ -17,7 +18,7 @@ export function Header() {
       data-material
       className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#09090b]/70 backdrop-blur-xl backdrop-saturate-150"
     >
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5">
         <Link
           href="/"
           className="flex min-w-0 items-center gap-2.5 text-sm font-semibold tracking-tight whitespace-nowrap text-neutral-100"
@@ -40,7 +41,7 @@ export function Header() {
               {...(link.external
                 ? { target: "_blank", rel: "noopener noreferrer" }
                 : {})}
-              className={`${link.mobile ? "block" : "hidden sm:block"} rounded-md px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-100`}
+              className="hidden rounded-md px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:text-neutral-100 md:block"
             >
               {link.label}
             </a>
@@ -50,10 +51,15 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Better Auth DevTools on GitHub"
-            className="ml-2 inline-flex h-8 items-center gap-2 rounded-md border border-white/10 px-3 text-sm text-neutral-200 transition-[background-color,border-color,scale] duration-(--duration-quick) ease-out hover:border-white/20 hover:bg-white/[0.04] active:scale-(--scale-medium)"
+            className="ml-2 grid size-8 place-items-center rounded-md text-neutral-400 transition-[background-color,color,scale] duration-(--duration-quick) ease-out hover:bg-white/[0.06] hover:text-neutral-100 active:scale-(--scale-medium)"
           >
             <GithubIcon className="size-4" />
-            <span className="hidden sm:inline">GitHub</span>
+          </a>
+          <a
+            href="#install"
+            className="ml-1 inline-flex h-8 items-center rounded-md bg-amber-300 px-3 text-sm font-medium text-neutral-950 transition-[background-color,scale] duration-(--duration-quick) ease-out hover:bg-amber-200 active:scale-(--scale-medium)"
+          >
+            Install
           </a>
         </nav>
       </div>
