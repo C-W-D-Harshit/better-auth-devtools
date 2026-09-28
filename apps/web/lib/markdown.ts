@@ -1,4 +1,4 @@
-import { HOME_PAGE, SITE } from "./site-content"
+import { HOME_PAGE, REQUIREMENTS, SITE } from "./site-content"
 
 const MARKDOWN_MEDIA_TYPE = "text/markdown"
 
@@ -112,57 +112,90 @@ export function buildAbsoluteUrl(path: string, request: Request): string {
   return new URL(path, request.url).toString()
 }
 
+function fence(language: string, code: string): string {
+  return `\`\`\`${language}\n${code}\n\`\`\``
+}
+
 export function renderHomePageMarkdown(sourceUrl: string): string {
-  const featureSections = HOME_PAGE.features.items
+  const { install } = HOME_PAGE
+
+  const facts = HOME_PAGE.facts
+    .map((fact) => `- ${fact.label}: ${fact.value}`)
+    .join("\n")
+
+  const features = HOME_PAGE.features.items
     .map((feature) => `### ${feature.title}\n\n${feature.description}`)
+    .join("\n\n")
+
+  const steps = install.steps
+    .map((step, index) => {
+      const snippet =
+        step.kind === "install"
+          ? HOME_PAGE.installCommands
+              .map((item) => `- ${item.manager}: \`${item.command}\``)
+              .join("\n")
+          : fence(step.language, step.code)
+      return `### ${index + 1}. ${step.title}\n\n${step.description}\n\n${snippet}`
+    })
+    .join("\n\n")
+
+  const security = HOME_PAGE.security.items
+    .map((item) => `- ${item}`)
+    .join("\n")
+
+  const faq = HOME_PAGE.faq.items
+    .map((item) => `### ${item.question}\n\n${item.answer}`)
     .join("\n\n")
 
   return `# ${HOME_PAGE.title}
 
-${HOME_PAGE.description}
+> ${HOME_PAGE.headline}.
+
+${HOME_PAGE.summary}
+
+${SITE.description}
 
 Source: ${sourceUrl}
 
-- Package: [better-auth-devtools](${SITE.npmUrl})
+- Package: [${SITE.packageName}](${SITE.npmUrl}) (v${SITE.version})
 - Repository: [GitHub](${SITE.githubUrl})
+- Documentation: [README](${SITE.docsUrl})
 
-## ${HOME_PAGE.headlineLines.join(" ")}
-
-${HOME_PAGE.releaseLabel}.
+${facts}
 
 ## ${HOME_PAGE.features.title}
 
 ${HOME_PAGE.features.description}
 
-${featureSections}
+${features}
 
-## ${HOME_PAGE.integration.title}
+## ${install.title}
 
-${HOME_PAGE.integration.description}
+${install.subtitle} ${install.description}
 
-Install:
+${steps}
 
-\`\`\`bash
-${HOME_PAGE.installCommand}
-\`\`\`
+### ${install.roles.title}
 
-### 1. ${HOME_PAGE.integration.server.label}
+${install.roles.description}
 
-\`\`\`ts
-${HOME_PAGE.integration.server.code}
-\`\`\`
+${fence(install.roles.language, install.roles.code)}
 
-### 2. ${HOME_PAGE.integration.client.label}
+## ${HOME_PAGE.security.title}
 
-\`\`\`tsx
-${HOME_PAGE.integration.client.code}
-\`\`\`
+${HOME_PAGE.security.description}
 
-${HOME_PAGE.integration.note.lead} ${HOME_PAGE.integration.note.safety} ${HOME_PAGE.integration.note.migrationPrefix} \`${HOME_PAGE.integration.note.migrationCommand}\` ${HOME_PAGE.integration.note.migrationSuffix}
+${security}
 
-## ${HOME_PAGE.callToAction.title}
+## ${HOME_PAGE.faq.title}
 
-${HOME_PAGE.callToAction.description}
+${faq}
+
+## Requirements
+
+${Object.values(REQUIREMENTS)
+  .map((item) => `- ${item}`)
+  .join("\n")}
 `
 }
 
@@ -178,9 +211,18 @@ export function renderLlmsText(): string {
 
 Canonical website: ${SITE.url}
 
+## Quick start
+
+1. Install: \`${HOME_PAGE.installCommand}\`
+2. Add \`devtools({ enabled: true })\` from \`better-auth-devtools\` to the \`plugins\` array of \`betterAuth()\`.
+3. Create the plugin table: \`npx auth@latest migrate\` (or \`npx auth@latest generate\` for Prisma, Drizzle, and other ORMs).
+4. Render \`<BetterAuthDevtools />\` from \`better-auth-devtools/react\` in a client component.
+
+The endpoints are always disabled when \`NODE_ENV=production\`.
+
 ## Important content
 
-- [Website overview](${websiteMarkdownUrl}): Product features, installation, integration examples, and production safety.
+- [Website overview](${websiteMarkdownUrl}): What the package does, the four setup steps, role testing, security model, and FAQ.
 - [Project documentation](${SITE.githubUrl}#readme): Full setup, security model, API options, and troubleshooting.
 - [npm package](${SITE.npmUrl}): Published package and version information.
 

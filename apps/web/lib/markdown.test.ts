@@ -69,7 +69,8 @@ describe("Markdown serializers", () => {
     )
 
     expect(markdown).toContain("# Better Auth DevTools")
-    expect(markdown).toContain("## Everything you need to test auth")
+    expect(markdown).toContain("## What you can do from the panel")
+    expect(markdown).toContain("## Questions and answers")
     expect(markdown).toContain("```ts")
     expect(markdown).toContain("Source: https://www.better-auth-devtools.com/")
     expect(markdown).not.toMatch(

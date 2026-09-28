@@ -41,6 +41,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api(?:/|$)|_next(?:/|$)|agent-markdown(?:/|$)|favicon\\.ico$|icon\\.svg$|og\\.png$|llms\\.txt$|robots\\.txt$|sitemap\\.xml$).*)",
+    "/((?!api(?:/|$)|_next(?:/|$)|agent-markdown(?:/|$)|favicon\\.ico$|icon\\.svg$|opengraph-image(?:/|$)|llms\\.txt$|robots\\.txt$|sitemap\\.xml$).*)",
   ],
 }

@@ -1,959 +1,471 @@
-"use client"
-
-import React, { useEffect, useRef, useState } from "react"
-import {
-  AnimatePresence,
-  domAnimation,
-  LazyMotion,
-  m,
-  useReducedMotion,
-  useMotionValue,
-  useMotionTemplate,
-  useSpring,
-} from "motion/react"
-import Link from "next/link"
 import Image from "next/image"
 import {
-  Users,
   ArrowRightLeft,
-  Eye,
-  Pencil,
-  ShieldCheck,
-  Lock,
-  Copy,
-  Check,
   ArrowUpRight,
-  Github,
-  Terminal,
+  BookOpen,
+  Eye,
+  Lock,
+  PencilLine,
+  UserPlus,
+  Users,
 } from "lucide-react"
 
+import { CodeBlock } from "@/components/site/code-block"
+import { Faq } from "@/components/site/faq"
+import { Header } from "@/components/site/header"
+import { GithubIcon, NpmIcon } from "@/components/site/icons"
+import { InstallCommand } from "@/components/site/install-command"
+import { ProductDemo } from "@/components/site/product-demo"
+import { RichText } from "@/components/site/rich-text"
+import { Spotlight } from "@/components/ui/spotlight"
 import { HOME_PAGE, SITE } from "@/lib/site-content"
+import { buildStructuredData, serializeJsonLd } from "@/lib/structured-data"
 
-// ─── Motion + design tokens ──────────────────────────────────────────
+const FEATURE_ICONS = [UserPlus, ArrowRightLeft, Eye, PencilLine, Users, Lock]
 
-const EASE_OUT = [0.23, 1, 0.32, 1] as const
-
-const GITHUB_URL = SITE.githubUrl
-const INSTALL = HOME_PAGE.installCommand
-
-// ─── Primitives ──────────────────────────────────────────────────────
-
-function Reveal({
-  children,
-  delay = 0,
-  y = 14,
-  scale = 1,
-  className = "",
+function SectionHeading({
+  id,
+  eyebrow,
+  title,
+  description,
 }: {
-  children: React.ReactNode
-  delay?: number
-  y?: number
-  scale?: number
-  className?: string
+  id: string
+  eyebrow: string
+  title: string
+  description?: string
 }) {
-  const reduce = useReducedMotion()
   return (
-    <m.div
-      initial={{
-        opacity: 0,
-        y: reduce ? 0 : y,
-        scale: reduce ? 1 : scale,
-        filter: reduce ? "blur(0px)" : "blur(6px)",
-      }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, ease: EASE_OUT, delay }}
-      className={className}
-    >
-      {children}
-    </m.div>
+    <div className="max-w-2xl">
+      <p className="font-mono text-xs tracking-[0.08em] text-amber-300/80 uppercase">
+        {eyebrow}
+      </p>
+      <h2
+        id={id}
+        className="mt-3 text-3xl leading-tight font-semibold tracking-[-0.025em] text-balance text-white md:text-4xl"
+      >
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-4 text-base leading-7 text-pretty text-neutral-400">
+          {description}
+        </p>
+      ) : null}
+    </div>
   )
 }
 
-function EyebrowLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="font-mono text-[11px] font-medium tracking-[0.2em] text-amber-400/90 uppercase">
-      {children}
-    </span>
-  )
-}
-
-function useCopy() {
-  const [copied, setCopied] = useState(false)
-  const copy = (text: string) => {
-    navigator.clipboard?.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
-  }
-  return { copied, copy }
-}
-
-function CopyPill({ command }: { command: string }) {
-  const { copied, copy } = useCopy()
-  return (
-    <button
-      type="button"
-      onClick={() => copy(command)}
-      className="group flex w-full min-w-0 items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3 transition-[transform,border-color,background-color] duration-150 ease-out hover:border-white/20 hover:bg-white/[0.04] active:scale-[0.98] sm:w-auto sm:gap-3 sm:px-4"
-    >
-      <span className="shrink-0 font-mono text-sm text-amber-400/70 select-none">
-        $
-      </span>
-      <code className="min-w-0 flex-1 truncate text-left font-mono text-[13px] text-neutral-200 sm:flex-none sm:text-sm">
-        {command}
-      </code>
-      <span className="relative ml-auto grid h-4 w-4 shrink-0 place-items-center sm:ml-1">
-        <Copy
-          className={`absolute h-4 w-4 text-neutral-500 transition-[transform,opacity,filter,color] duration-200 ease-out group-hover:text-neutral-300 ${
-            copied
-              ? "scale-90 opacity-0 blur-[2px]"
-              : "blur-0 scale-100 opacity-100"
-          }`}
-        />
-        <Check
-          className={`absolute h-4 w-4 text-amber-400 transition-[transform,opacity,filter,color] duration-200 ease-out ${
-            copied
-              ? "blur-0 scale-100 opacity-100"
-              : "scale-90 opacity-0 blur-[2px]"
-          }`}
-        />
-      </span>
-    </button>
-  )
-}
-
-function PrimaryButton({
+function ButtonLink({
   href,
   children,
+  variant = "primary",
 }: {
   href: string
   children: React.ReactNode
+  variant?: "primary" | "secondary"
 }) {
   return (
-    <Link
+    <a
       href={href}
       target="_blank"
-      className="group relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-lg bg-white px-5 text-sm font-medium text-neutral-950 transition-transform duration-150 ease-out active:scale-[0.98] sm:w-auto"
-    >
-      {/* sheen */}
-      <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
-      <span className="relative inline-flex items-center gap-2">
-        {children}
-      </span>
-    </Link>
-  )
-}
-
-// ─── Magnetic wrapper (pointer-follow, independent X/Y springs) ──────
-
-function Magnetic({
-  children,
-  strength = 0.3,
-  className = "",
-}: {
-  children: React.ReactNode
-  strength?: number
-  className?: string
-}) {
-  const reduce = useReducedMotion()
-  const ref = useRef<HTMLDivElement>(null)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const springX = useSpring(x, { stiffness: 200, damping: 15 })
-  const springY = useSpring(y, { stiffness: 200, damping: 15 })
-
-  if (reduce) return <div className={className}>{children}</div>
-
-  return (
-    <m.div
-      ref={ref}
-      style={{ x: springX, y: springY }}
-      onPointerMove={(e) => {
-        if (e.pointerType === "touch") return
-        const rect = ref.current?.getBoundingClientRect()
-        if (!rect) return
-        x.set((e.clientX - (rect.left + rect.width / 2)) * strength)
-        y.set((e.clientY - (rect.top + rect.height / 2)) * strength)
-      }}
-      onPointerLeave={() => {
-        x.set(0)
-        y.set(0)
-      }}
-      className={className}
+      rel="noopener noreferrer"
+      className={
+        variant === "primary"
+          ? "inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-neutral-950 transition-[background-color,scale] duration-(--duration-quick) ease-out hover:bg-neutral-200 active:scale-(--scale-medium)"
+          : "inline-flex h-10 items-center gap-2 rounded-lg border border-white/10 px-4 text-sm font-medium text-neutral-200 transition-[background-color,border-color,scale] duration-(--duration-quick) ease-out hover:border-white/20 hover:bg-white/[0.04] active:scale-(--scale-medium)"
+      }
     >
       {children}
-    </m.div>
+    </a>
   )
 }
 
-// ─── Cursor-spotlight card ───────────────────────────────────────────
-
-function SpotlightCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const mx = useMotionValue(0)
-  const my = useMotionValue(0)
-  const [hovering, setHovering] = useState(false)
-  const bg = useMotionTemplate`radial-gradient(240px circle at ${mx}px ${my}px, rgba(245,158,11,0.10), transparent 70%)`
-
+function Hero() {
   return (
-    <div
-      ref={ref}
-      onPointerMove={(e) => {
-        const rect = ref.current?.getBoundingClientRect()
-        if (!rect) return
-        mx.set(e.clientX - rect.left)
-        my.set(e.clientY - rect.top)
-      }}
-      onPointerEnter={() => setHovering(true)}
-      onPointerLeave={() => setHovering(false)}
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.015] transition-colors duration-300 hover:border-white/15 ${className}`}
+    <section
+      aria-labelledby="hero-title"
+      className="relative overflow-hidden px-5 pt-20 pb-16 md:pt-28"
     >
-      <m.div
-        aria-hidden
-        style={{ background: bg }}
-        animate={{ opacity: hovering ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: EASE_OUT }}
-        className="pointer-events-none absolute inset-0"
+      <Spotlight
+        className="-top-40 left-0 md:-top-24 md:left-40"
+        fill="#fcd34d"
       />
-      {/* top hairline highlight */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      <div className="relative">{children}</div>
-    </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,black,transparent)] bg-[size:56px_56px]"
+      />
+
+      <div className="relative z-10 mx-auto max-w-3xl text-center">
+        <a
+          href={SITE.npmUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ "--i": 0 } as React.CSSProperties}
+          className="reveal inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pr-2.5 pl-3 text-xs text-neutral-300 transition-colors hover:border-white/20"
+        >
+          <span aria-hidden className="size-1.5 rounded-full bg-amber-300" />
+          {HOME_PAGE.releaseLabel}
+          <span className="text-neutral-600">·</span>
+          <span className="text-neutral-400">free and open source</span>
+        </a>
+
+        <h1
+          id="hero-title"
+          style={{ "--i": 1 } as React.CSSProperties}
+          className="reveal-text mt-7 text-4xl leading-[1.05] font-semibold tracking-[-0.035em] text-balance text-white sm:text-5xl md:text-6xl"
+        >
+          {HOME_PAGE.headline}
+        </h1>
+
+        <p
+          style={{ "--i": 2 } as React.CSSProperties}
+          className="reveal-text mx-auto mt-6 max-w-xl text-base leading-7 text-balance text-neutral-400 md:text-lg md:leading-8"
+        >
+          {HOME_PAGE.summary}
+        </p>
+
+        <div
+          style={{ "--i": 3 } as React.CSSProperties}
+          className="reveal mt-9 flex flex-col items-center gap-4"
+        >
+          <InstallCommand id="hero-install" />
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <ButtonLink href="#install">
+              <BookOpen aria-hidden className="size-4" />
+              Setup guide
+            </ButtonLink>
+            <ButtonLink href={SITE.githubUrl} variant="secondary">
+              <GithubIcon className="size-4" />
+              View on GitHub
+            </ButtonLink>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{ "--i": 5 } as React.CSSProperties}
+        className="reveal relative z-10 mx-auto mt-16 max-w-5xl"
+      >
+        <ProductDemo />
+        <p className="mt-4 text-center text-xs text-neutral-600">
+          Interactive preview. Create a user, switch to it, or change its role.
+        </p>
+      </div>
+    </section>
   )
 }
 
-// ─── The product mockup (live session switcher) ──────────────────────
-
-const MOCK_USERS = [
-  { initials: "AD", email: "admin@acme.test", role: "admin" },
-  { initials: "ED", email: "editor@acme.test", role: "editor" },
-  { initials: "VW", email: "viewer@acme.test", role: "viewer" },
-]
-
-function DevtoolsPanelMock() {
-  const reduce = useReducedMotion()
-  const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
-
-  useEffect(() => {
-    if (reduce || paused) return
-    const id = setInterval(
-      () => setActive((a) => (a + 1) % MOCK_USERS.length),
-      2600
-    )
-    return () => clearInterval(id)
-  }, [reduce, paused])
-
-  const cur = MOCK_USERS[active]
-
+function Facts() {
   return (
-    <div
-      onPointerEnter={() => setPaused(true)}
-      onPointerLeave={() => setPaused(false)}
-      className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b0e13] shadow-2xl shadow-black/60"
+    <section aria-label="Package facts" className="px-5">
+      <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.07] lg:grid-cols-4">
+        {HOME_PAGE.facts.map((fact) => (
+          <div key={fact.label} className="bg-[#09090b] px-5 py-4">
+            <dt className="text-xs text-neutral-500">{fact.label}</dt>
+            <dd className="mt-1 text-sm font-medium text-neutral-200">
+              {fact.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
+function Features() {
+  return (
+    <section
+      id="features"
+      aria-labelledby="features-title"
+      className="scroll-mt-20 px-5 py-24 md:py-32"
     >
-      {/* Title bar */}
-      <div className="flex items-center justify-between border-b border-white/[0.07] bg-white/[0.02] px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <span className="relative flex h-2 w-2">
-            {!reduce && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400/60" />
-            )}
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
-          </span>
-          <span className="font-mono text-[13px] font-medium tracking-tight text-neutral-200">
-            Auth DevTools
-          </span>
-        </div>
-        <span className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-neutral-500">
-          dev
-        </span>
-      </div>
-
-      {/* Current session — crossfades as the active user changes */}
-      <div className="border-b border-white/[0.07] p-4">
-        <p className="mb-2.5 font-mono text-[10px] tracking-[0.14em] text-neutral-500 uppercase">
-          Current session
-        </p>
-        <div className="relative flex items-center gap-3 overflow-hidden rounded-lg border border-amber-400/20 bg-amber-400/[0.05] p-3">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <m.div
-              key={cur.email}
-              initial={{ opacity: 0, filter: "blur(6px)", y: 4 }}
-              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-              exit={{ opacity: 0, filter: "blur(6px)", y: -4 }}
-              transition={{ duration: 0.32, ease: EASE_OUT }}
-              className="flex min-w-0 flex-1 items-center gap-3"
-            >
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-400/15 font-mono text-xs font-semibold text-amber-300">
-                {cur.initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium text-neutral-100">
-                  {cur.email}
-                </p>
-                <p className="font-mono text-[11px] text-neutral-500">
-                  role: {cur.role}
-                </p>
-              </div>
-            </m.div>
-          </AnimatePresence>
-          <span className="shrink-0 rounded-full bg-amber-400/15 px-2 py-1 font-mono text-[10px] font-medium text-amber-300">
-            active
-          </span>
-        </div>
-      </div>
-
-      {/* Test users — click to switch, active highlight slides between rows */}
-      <div className="p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="font-mono text-[10px] tracking-[0.14em] text-neutral-500 uppercase">
-            Test users
-          </p>
-          <span className="font-mono text-[10px] text-neutral-600">
-            {MOCK_USERS.length}
-          </span>
-        </div>
-        <div className="space-y-1">
-          {MOCK_USERS.map((u, i) => {
-            const isActive = i === active
+      <div className="mx-auto max-w-6xl">
+        <SectionHeading
+          id="features-title"
+          eyebrow="Features"
+          title={HOME_PAGE.features.title}
+          description={HOME_PAGE.features.description}
+        />
+        <ul className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-3">
+          {HOME_PAGE.features.items.map((feature, index) => {
+            const Icon = FEATURE_ICONS[index]
             return (
-              <button
-                key={u.email}
-                type="button"
-                onClick={() => setActive(i)}
-                className="relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 hover:bg-white/[0.03]"
+              <li
+                key={feature.title}
+                className="bg-[#09090b] p-7 transition-colors hover:bg-[#0d0d0f]"
               >
-                {isActive && (
-                  <m.span
-                    layoutId="active-row"
-                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-                    className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.04]"
-                  />
-                )}
-                <div className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.06] font-mono text-[11px] font-medium text-neutral-300">
-                  {u.initials}
-                </div>
-                <div className="relative min-w-0 flex-1">
-                  <p className="truncate text-[13px] text-neutral-200">
-                    {u.email}
-                  </p>
-                  <p className="font-mono text-[10px] text-neutral-600">
-                    {u.role}
-                  </p>
-                </div>
-                <span className="relative shrink-0">
-                  {isActive ? (
-                    <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-400">
-                      <Check className="h-3 w-3" />
-                      current
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 font-mono text-[10px] text-neutral-400 transition-colors group-hover:border-white/20">
-                      switch
-                      <ArrowRightLeft className="h-2.5 w-2.5" />
-                    </span>
-                  )}
-                </span>
-              </button>
+                <Icon aria-hidden className="size-5 text-amber-300" />
+                <h3 className="mt-5 text-[15px] font-medium text-neutral-100">
+                  {feature.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-neutral-400">
+                  <RichText text={feature.description} />
+                </p>
+              </li>
             )
           })}
-        </div>
+        </ul>
       </div>
-    </div>
+    </section>
   )
 }
 
-// ─── Feature visuals ─────────────────────────────────────────────────
-
-function ManagedUsersVisual() {
+function Install() {
+  const { install } = HOME_PAGE
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {[
-        "admin@acme.test",
-        "editor@acme.test",
-        "viewer@acme.test",
-        "qa@acme.test",
-      ].map((e, i) => (
-        <div
-          key={e}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pr-3 pl-1"
-        >
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-white/[0.06] font-mono text-[9px] text-neutral-300">
-            {e.slice(0, 2).toUpperCase()}
-          </span>
-          <span className="font-mono text-[11px] text-neutral-400">{e}</span>
-          {i === 0 && (
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
+    <section
+      id="install"
+      aria-labelledby="install-title"
+      className="scroll-mt-20 border-t border-white/[0.07] px-5 py-24 md:py-32"
+    >
+      <div className="mx-auto max-w-6xl">
+        <SectionHeading
+          id="install-title"
+          eyebrow="Install"
+          title={install.title}
+          description={`${install.subtitle} ${install.description}`}
+        />
 
-function SwitchVisual() {
-  const reduce = useReducedMotion()
-  return (
-    <div className="flex items-center justify-center gap-3">
-      <div className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.03] font-mono text-[11px] text-neutral-400">
-        ED
-      </div>
-      <m.div
-        animate={reduce ? undefined : { x: [0, 3, 0] }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <ArrowRightLeft className="h-4 w-4 text-amber-400" />
-      </m.div>
-      <div className="grid h-10 w-10 place-items-center rounded-lg border border-amber-400/30 bg-amber-400/10 font-mono text-[11px] text-amber-300">
-        AD
-      </div>
-    </div>
-  )
-}
-
-function InspectVisual() {
-  return (
-    <pre className="overflow-hidden rounded-lg border border-white/[0.07] bg-black/30 p-3 font-mono text-[10px] leading-relaxed">
-      <span className="text-neutral-600">{"{"}</span>
-      {"\n  "}
-      <span className="text-sky-300/80">&quot;user&quot;</span>
-      <span className="text-neutral-600">: {"{"}</span>
-      {"\n    "}
-      <span className="text-sky-300/80">&quot;role&quot;</span>
-      <span className="text-neutral-600">: </span>
-      <span className="text-amber-300">&quot;admin&quot;</span>
-      {"\n  "}
-      <span className="text-neutral-600">{"}"}</span>
-      {"\n"}
-      <span className="text-neutral-600">{"}"}</span>
-    </pre>
-  )
-}
-
-function PatchVisual() {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex flex-1 items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-        <span className="font-mono text-[11px] text-neutral-500">role</span>
-        <span className="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 font-mono text-[11px] text-amber-300">
-          editor ▾
-        </span>
-      </div>
-      <div className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
-        <Pencil className="h-3.5 w-3.5 text-neutral-400" />
-      </div>
-    </div>
-  )
-}
-
-function PersonaVisual() {
-  return (
-    <div className="flex flex-col gap-1.5">
-      {["Admin", "Editor", "Viewer"].map((p, i) => (
-        <div
-          key={p}
-          className="flex items-center gap-2 rounded-md border border-white/[0.07] bg-white/[0.02] px-2.5 py-1.5"
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              i === 0 ? "bg-amber-400" : "bg-neutral-600"
-            }`}
-          />
-          <span className="font-mono text-[11px] text-neutral-400">{p}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function SafetyVisual() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] px-3 py-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-        <span className="font-mono text-[11px] text-amber-300">
-          development · on
-        </span>
-      </div>
-      <div className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 opacity-60">
-        <span className="h-1.5 w-1.5 rounded-full bg-neutral-600" />
-        <span className="font-mono text-[11px] text-neutral-500">
-          production · off
-        </span>
-      </div>
-    </div>
-  )
-}
-
-const featurePresentation = [
-  {
-    icon: Users,
-    span: "md:col-span-2",
-    visual: <ManagedUsersVisual />,
-  },
-  {
-    icon: ArrowRightLeft,
-    span: "",
-    visual: <SwitchVisual />,
-  },
-  {
-    icon: Eye,
-    span: "",
-    visual: <InspectVisual />,
-  },
-  {
-    icon: Pencil,
-    span: "md:col-span-2",
-    visual: <PatchVisual />,
-  },
-  {
-    icon: ShieldCheck,
-    span: "",
-    visual: <PersonaVisual />,
-  },
-  {
-    icon: Lock,
-    span: "md:col-span-2",
-    visual: <SafetyVisual />,
-  },
-]
-
-const features = HOME_PAGE.features.items.map((feature, index) => ({
-  ...feature,
-  ...featurePresentation[index],
-}))
-
-// ─── Syntax-highlighted code block ───────────────────────────────────
-
-type Tok = { t: string; c: string }
-
-function tokenize(code: string): Tok[] {
-  const re =
-    /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(import|from|export|const|return|function|default|new|await|async)\b|([A-Za-z_$][\w$]*)(?=\s*\()|([{}()[\];,.<>/=]+)/g
-  const out: Tok[] = []
-  let last = 0
-  let m: RegExpExecArray | null
-  while ((m = re.exec(code)) !== null) {
-    if (m.index > last) out.push({ t: code.slice(last, m.index), c: "plain" })
-    const c = m[1]
-      ? "comment"
-      : m[2]
-        ? "string"
-        : m[3]
-          ? "keyword"
-          : m[4]
-            ? "fn"
-            : "punct"
-    out.push({ t: m[0], c })
-    last = re.lastIndex
-  }
-  if (last < code.length) out.push({ t: code.slice(last), c: "plain" })
-  return out
-}
-
-const TOKEN_CLASS: Record<string, string> = {
-  plain: "text-neutral-200",
-  comment: "text-neutral-600",
-  string: "text-amber-300",
-  keyword: "text-violet-300",
-  fn: "text-sky-300",
-  punct: "text-neutral-500",
-}
-
-function CodeBlock({ filename, code }: { filename: string; code: string }) {
-  const { copied, copy } = useCopy()
-  const tokens = tokenize(code)
-  return (
-    <div className="w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-[#0b0e13]">
-      <div className="flex items-center justify-between border-b border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
-          <span className="ml-2 font-mono text-[11px] text-neutral-500">
-            {filename}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => copy(code)}
-          className="grid h-6 w-6 place-items-center rounded-md text-neutral-500 transition-colors duration-150 hover:text-neutral-300 active:scale-90"
-          aria-label="Copy code"
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5 text-amber-400" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-        </button>
-      </div>
-      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
-        <code>
-          {tokens.map((tok, i) => (
-            <span key={i} className={TOKEN_CLASS[tok.c]}>
-              {tok.t}
-            </span>
-          ))}
-        </code>
-      </pre>
-    </div>
-  )
-}
-
-// ─── Scroll-aware nav ────────────────────────────────────────────────
-
-const NAV_LINKS = [
-  { id: "features", label: "Features" },
-  { id: "install", label: "Install" },
-]
-
-function Nav() {
-  const [scrolled, setScrolled] = useState(false)
-  const [activeSection, setActiveSection] = useState("")
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12)
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActiveSection(e.target.id)
-        })
-      },
-      { rootMargin: "-45% 0px -50% 0px" }
-    )
-    NAV_LINKS.forEach(({ id }) => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div className="mx-auto max-w-6xl px-5">
-        <nav
-          className={`mt-3 flex h-14 items-center justify-between rounded-xl border px-4 transition-[background-color,border-color,box-shadow] duration-300 ${
-            scrolled
-              ? "border-white/10 bg-[#0D1117]/80 shadow-lg shadow-black/20 backdrop-blur-xl"
-              : "border-white/[0.06] bg-[#0D1117]/50 backdrop-blur-md"
-          }`}
-        >
-          <Link href="#top" className="flex items-center gap-2">
-            <Image
-              src="/icon.svg"
-              alt="Better Auth DevTools"
-              width={24}
-              height={24}
-              className="h-6 w-6 rounded-md"
-            />
-            <span className="text-sm font-semibold tracking-tight text-neutral-100">
-              Better Auth DevTools
-            </span>
-          </Link>
-          <div className="flex items-center gap-1">
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.id}
-                href={`#${l.id}`}
-                className="relative hidden rounded-lg px-3 py-2 text-sm text-neutral-400 transition-colors hover:text-neutral-100 sm:block"
-              >
-                {activeSection === l.id && (
-                  <m.span
-                    layoutId="nav-active"
-                    transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-                    className="absolute inset-0 rounded-lg bg-white/[0.06]"
-                  />
-                )}
-                <span
-                  className={`relative ${
-                    activeSection === l.id ? "text-neutral-100" : ""
-                  }`}
-                >
-                  {l.label}
-                </span>
-              </Link>
-            ))}
-            <Link
-              href={GITHUB_URL}
-              target="_blank"
-              className="ml-1 inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 text-sm font-medium text-neutral-200 transition-[transform,border-color,background-color] duration-150 ease-out hover:border-white/20 hover:bg-white/[0.05] active:scale-[0.98]"
+        <ol className="mt-14 space-y-12 md:space-y-16">
+          {install.steps.map((step, index) => (
+            <li
+              key={step.title}
+              id={`step-${index + 1}`}
+              className="grid scroll-mt-24 items-start gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12"
             >
-              <Github className="h-4 w-4" />
-              <span className="hidden sm:inline">GitHub</span>
-            </Link>
+              <div className="flex gap-4">
+                <span
+                  aria-hidden
+                  className="grid size-7 shrink-0 place-items-center rounded-full border border-white/15 font-mono text-xs text-neutral-300"
+                >
+                  {index + 1}
+                </span>
+                <div>
+                  <h3 className="text-lg font-medium text-neutral-100">
+                    <span className="sr-only">Step {index + 1}: </span>
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-[15px] leading-7 text-neutral-400">
+                    <RichText text={step.description} />
+                  </p>
+                </div>
+              </div>
+              {step.kind === "install" ? (
+                <InstallCommand id="step-install" className="max-w-none" />
+              ) : (
+                <CodeBlock
+                  code={step.code}
+                  language={step.language}
+                  filename={step.filename}
+                />
+              )}
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-20 grid gap-6 rounded-2xl border border-white/[0.07] bg-white/[0.015] p-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12 md:p-8">
+          <div>
+            <h3 className="text-lg font-medium text-neutral-100">
+              {install.roles.title}
+            </h3>
+            <p className="mt-2 text-[15px] leading-7 text-neutral-400">
+              <RichText text={install.roles.description} />
+            </p>
+            <a
+              href={SITE.docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-1 text-sm text-amber-200 underline decoration-amber-200/30 underline-offset-4 hover:decoration-amber-200"
+            >
+              Advanced hooks and all options
+              <ArrowUpRight aria-hidden className="size-3.5" />
+            </a>
           </div>
+          <CodeBlock
+            code={install.roles.code}
+            language={install.roles.language}
+            filename={install.roles.filename}
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Security() {
+  const { security } = HOME_PAGE
+  return (
+    <section
+      id="security"
+      aria-labelledby="security-title"
+      className="scroll-mt-20 border-t border-white/[0.07] px-5 py-24 md:py-32"
+    >
+      <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <SectionHeading
+          id="security-title"
+          eyebrow="Security"
+          title={security.title}
+          description={security.description}
+        />
+        <ul className="divide-y divide-white/[0.07] border-y border-white/[0.07]">
+          {security.items.map((item) => (
+            <li
+              key={item}
+              className="flex gap-3 py-4 text-[15px] leading-6 text-neutral-300"
+            >
+              <Lock
+                aria-hidden
+                className="mt-1 size-3.5 shrink-0 text-amber-300/80"
+              />
+              <span>
+                <RichText text={item} />
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+function FaqSection() {
+  return (
+    <section
+      id="faq"
+      aria-labelledby="faq-title"
+      className="scroll-mt-20 border-t border-white/[0.07] px-5 py-24 md:py-32"
+    >
+      <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <div>
+          <SectionHeading
+            id="faq-title"
+            eyebrow="FAQ"
+            title={HOME_PAGE.faq.title}
+          />
+          <p className="mt-4 text-[15px] leading-7 text-neutral-400">
+            Something missing?{" "}
+            <a
+              href={SITE.issuesUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-200 underline decoration-white/20 underline-offset-4 hover:decoration-white/60"
+            >
+              Open an issue on GitHub
+            </a>
+            .
+          </p>
+        </div>
+        <Faq />
+      </div>
+    </section>
+  )
+}
+
+function CallToAction() {
+  return (
+    <section aria-labelledby="cta-title" className="px-5 pb-24 md:pb-32">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-white/[0.08] px-6 py-16 text-center md:py-20">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_0%,rgba(252,211,77,0.09),transparent)]"
+        />
+        <div className="relative">
+          <h2
+            id="cta-title"
+            className="mx-auto max-w-xl text-3xl leading-tight font-semibold tracking-[-0.025em] text-balance text-white md:text-4xl"
+          >
+            {HOME_PAGE.callToAction.title}
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-base leading-7 text-neutral-400">
+            {HOME_PAGE.callToAction.description}
+          </p>
+          <div className="mt-8 flex justify-center">
+            <InstallCommand id="cta-install" />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Footer() {
+  const links = [
+    { href: SITE.docsUrl, label: "Documentation" },
+    { href: SITE.changelogUrl, label: "Changelog" },
+    { href: SITE.npmUrl, label: "npm" },
+    { href: SITE.githubUrl, label: "GitHub" },
+    { href: "/llms.txt", label: "llms.txt" },
+  ]
+  return (
+    <footer className="border-t border-white/[0.07] px-5 py-10">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-2.5">
+          <Image src="/icon.svg" alt="" width={20} height={20} />
+          <p className="text-sm text-neutral-500">
+            <span className="text-neutral-300">{SITE.name}</span> v
+            {SITE.version}. Built by{" "}
+            <a
+              href={SITE.author.xUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-300 hover:text-white"
+            >
+              {SITE.author.name}
+            </a>
+            . Not affiliated with{" "}
+            <a
+              href={SITE.betterAuthUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-300 hover:text-white"
+            >
+              Better Auth
+            </a>
+            .
+          </p>
+        </div>
+        <nav aria-label="Footer">
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-neutral-500">
+            {links.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  {...(link.href.startsWith("http")
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-neutral-200"
+                >
+                  {link.label === "npm" ? <NpmIcon className="size-4" /> : null}
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </nav>
       </div>
-    </header>
+    </footer>
   )
 }
-
-// ─── Page ────────────────────────────────────────────────────────────
 
 export default function Page() {
   return (
-    <LazyMotion features={domAnimation}>
-      <div
-        id="top"
-        className="min-h-screen overflow-x-hidden bg-[#0D1117] text-neutral-200 antialiased"
-      >
-        <Nav />
-
-        {/* Hero */}
-        <section className="relative overflow-hidden px-5 pt-36 pb-20 md:pt-44 md:pb-28">
-          <div className="pointer-events-none absolute inset-0 -z-10">
-            <div
-              className="absolute inset-0 opacity-[0.04]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-                backgroundSize: "64px 64px",
-                maskImage:
-                  "radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent)",
-              }}
-            />
-            <div className="absolute top-[-15%] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[130px]" />
-          </div>
-
-          <div className="mx-auto max-w-4xl text-center">
-            <Reveal>
-              <Link
-                href={GITHUB_URL}
-                target="_blank"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-2 pl-3 text-xs text-neutral-300 transition-colors hover:border-white/20"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px] shadow-amber-400" />
-                <span>{HOME_PAGE.releaseLabel}</span>
-                <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
-            </Reveal>
-
-            <Reveal delay={0.06}>
-              <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl">
-                {HOME_PAGE.headlineLines.map((line, index) => (
-                  <React.Fragment key={line}>
-                    {index > 0 ? <br /> : null}
-                    {line}
-                  </React.Fragment>
-                ))}
-              </h1>
-            </Reveal>
-
-            <Reveal delay={0.12}>
-              <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-400 md:text-lg">
-                {HOME_PAGE.description}
-              </p>
-            </Reveal>
-
-            <Reveal delay={0.18}>
-              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Magnetic className="w-full sm:w-auto">
-                  <PrimaryButton href={GITHUB_URL}>
-                    <Github className="h-4 w-4" />
-                    View on GitHub
-                  </PrimaryButton>
-                </Magnetic>
-                <CopyPill command={INSTALL} />
-              </div>
-            </Reveal>
-          </div>
-
-          <Reveal
-            delay={0.26}
-            y={28}
-            scale={0.97}
-            className="mx-auto mt-16 max-w-md md:mt-20"
-          >
-            <div className="relative">
-              <div className="pointer-events-none absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
-              <DevtoolsPanelMock />
-              <p className="mt-4 text-center font-mono text-[11px] text-neutral-600">
-                live preview · click a user to switch
-              </p>
-            </div>
-          </Reveal>
-        </section>
-
-        {/* Features */}
-        <section id="features" className="scroll-mt-24 px-5 py-20 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <Reveal className="max-w-2xl">
-              <EyebrowLabel>Features</EyebrowLabel>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                {HOME_PAGE.features.title}
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-neutral-400">
-                {HOME_PAGE.features.description}
-              </p>
-            </Reveal>
-
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {features.map((f, i) => (
-                <Reveal key={f.title} delay={(i % 3) * 0.05} className={f.span}>
-                  <SpotlightCard className="flex h-full flex-col p-6">
-                    <div className="mb-6 flex min-h-[68px] items-center">
-                      {f.visual}
-                    </div>
-                    <div className="mt-auto">
-                      <div className="mb-3 flex items-center gap-2.5">
-                        <div className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.03] transition-[transform,background-color,border-color] duration-200 group-hover:scale-105 group-hover:border-amber-400/30 group-hover:bg-amber-400/[0.08]">
-                          <f.icon className="h-4 w-4 text-amber-400" />
-                        </div>
-                        <h3 className="text-[15px] font-medium text-neutral-100">
-                          {f.title}
-                        </h3>
-                      </div>
-                      <p className="text-sm leading-relaxed text-neutral-400">
-                        {f.description}
-                      </p>
-                    </div>
-                  </SpotlightCard>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Install / integration */}
-        <section id="install" className="scroll-mt-24 px-5 py-20 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <Reveal className="max-w-2xl">
-              <EyebrowLabel>Install</EyebrowLabel>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                {HOME_PAGE.integration.title}
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-neutral-400">
-                {HOME_PAGE.integration.description}
-              </p>
-            </Reveal>
-
-            <div className="mt-10 grid gap-4 md:grid-cols-2">
-              <Reveal className="min-w-0">
-                <div className="flex items-center gap-2 pb-3">
-                  <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
-                    1
-                  </span>
-                  <span className="text-sm font-medium text-neutral-200">
-                    {HOME_PAGE.integration.server.label}
-                  </span>
-                </div>
-                <CodeBlock
-                  filename={HOME_PAGE.integration.server.filename}
-                  code={HOME_PAGE.integration.server.code}
-                />
-              </Reveal>
-              <Reveal delay={0.06} className="min-w-0">
-                <div className="flex items-center gap-2 pb-3">
-                  <span className="grid h-5 w-5 place-items-center rounded-md bg-white/[0.06] font-mono text-[10px] text-neutral-400">
-                    2
-                  </span>
-                  <span className="text-sm font-medium text-neutral-200">
-                    {HOME_PAGE.integration.client.label}
-                  </span>
-                </div>
-                <CodeBlock
-                  filename={HOME_PAGE.integration.client.filename}
-                  code={HOME_PAGE.integration.client.code}
-                />
-              </Reveal>
-            </div>
-
-            <Reveal delay={0.1}>
-              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">
-                    <Terminal className="h-4 w-4 text-amber-400" />
-                  </div>
-                  <p className="text-sm leading-relaxed text-neutral-400">
-                    <span className="font-medium text-neutral-200">
-                      {HOME_PAGE.integration.note.lead}
-                    </span>{" "}
-                    {HOME_PAGE.integration.note.safety}{" "}
-                    {HOME_PAGE.integration.note.migrationPrefix}{" "}
-                    <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[12px] text-neutral-300">
-                      {HOME_PAGE.integration.note.migrationCommand}
-                    </code>{" "}
-                    {HOME_PAGE.integration.note.migrationSuffix}
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  <CopyPill command={INSTALL} />
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="px-5 py-20 md:py-28">
-          <div className="mx-auto max-w-4xl">
-            <Reveal>
-              <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] px-6 py-16 text-center md:px-12 md:py-20">
-                <div className="pointer-events-none absolute inset-x-0 -top-1/2 h-full bg-amber-500/10 blur-[100px]" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
-                <div className="relative">
-                  <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-balance text-white md:text-5xl">
-                    {HOME_PAGE.callToAction.title}
-                  </h2>
-                  <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-400">
-                    {HOME_PAGE.callToAction.description}
-                  </p>
-                  <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                    <Magnetic className="w-full sm:w-auto">
-                      <PrimaryButton href={GITHUB_URL}>
-                        <Github className="h-4 w-4" />
-                        View on GitHub
-                        <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                      </PrimaryButton>
-                    </Magnetic>
-                    <CopyPill command={INSTALL} />
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-white/[0.07] px-5 py-10">
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/icon.svg"
-                alt="Better Auth DevTools"
-                width={20}
-                height={20}
-                className="h-5 w-5 rounded-md"
-              />
-              <span className="text-sm font-medium text-neutral-300">
-                Better Auth DevTools
-              </span>
-            </div>
-            <p className="text-sm text-neutral-500">
-              Built by{" "}
-              <Link
-                href="https://x.com/cwd_harshit"
-                target="_blank"
-                className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-400 hover:decoration-amber-400/50"
-              >
-                Harshit
-              </Link>
-              . Unofficial, dev-only tooling.
-            </p>
-          </div>
-        </footer>
-      </div>
-    </LazyMotion>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd(buildStructuredData()),
+        }}
+      />
+      <Header />
+      <main>
+        <Hero />
+        <Facts />
+        <Features />
+        <Install />
+        <Security />
+        <FaqSection />
+        <CallToAction />
+      </main>
+      <Footer />
+    </>
   )
 }
