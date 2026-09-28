@@ -5,7 +5,8 @@ import { ENDPOINTS } from "./endpoints.js";
 describe("devtoolsClientPlugin", () => {
   it("exposes typed action factories and path methods", async () => {
     const plugin = devtoolsClientPlugin();
-    const calls: Array<{ path: string; options?: Record<string, unknown> }> = [];
+    const calls: Array<{ path: string; options?: Record<string, unknown> }> =
+      [];
     const $fetch = async (path: string, options?: Record<string, unknown>) => {
       calls.push({ path, options });
       return { ok: true };
@@ -26,6 +27,7 @@ describe("devtoolsClientPlugin", () => {
     await actions?.deleteDevtoolsUser({ userId: "user_old" });
     await actions?.loginAsDevtoolsUser({ userId: "user_admin_1" });
     await actions?.getDevtoolsSession();
+    await actions?.searchDevtoolsUsers({ query: "admin", limit: 10 });
 
     expect(calls).toEqual([
       {
@@ -46,6 +48,10 @@ describe("devtoolsClientPlugin", () => {
       },
       {
         path: ENDPOINTS.SESSION,
+        options: undefined,
+      },
+      {
+        path: `${ENDPOINTS.SEARCH_USERS}?query=admin&limit=10`,
         options: undefined,
       },
     ]);

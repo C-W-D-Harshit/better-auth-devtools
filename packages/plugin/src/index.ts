@@ -1,13 +1,13 @@
 export { devtools, devtoolsPlugin } from "./server-plugin.js";
-export { devtoolsClientPlugin, devtoolsClientPluginFor } from "./client-plugin.js";
+export {
+  devtoolsClientPlugin,
+  devtoolsClientPluginFor,
+} from "./client-plugin.js";
 export { ENDPOINTS, ROUTE_PREFIX } from "./endpoints.js";
 export { filterAllowedPatchKeys, isValidTemplateKey } from "./validation.js";
 export { DevtoolsError, ErrorCode } from "./errors.js";
 export { isDevtoolsEnabled } from "./guards.js";
-export {
-  createDevtoolsPanelProps,
-  defineDevtoolsConfig,
-} from "./panel.js";
+export { createDevtoolsPanelProps, defineDevtoolsConfig } from "./panel.js";
 export { createDevtoolsIntegration } from "./integration.js";
 
 export type {
@@ -37,14 +37,13 @@ export type {
   DevtoolsRateLimitOptions,
 } from "./types.js";
 
-export type {
-  DevtoolsPanelConfig,
-  DevtoolsPanelProps,
-} from "./panel.js";
+export type { DevtoolsPanelConfig, DevtoolsPanelProps } from "./panel.js";
 export type { DevtoolsIntegration } from "./integration.js";
 
 export type {
   ListUsersResponse,
+  SearchUsersRequest,
+  SearchUsersResponse,
   DevtoolsPublicConfig,
   CreateUserRequest,
   CreateUserResponse,

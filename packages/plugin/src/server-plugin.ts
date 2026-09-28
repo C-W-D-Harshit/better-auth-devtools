@@ -7,7 +7,7 @@ import {
   getSessionFromCtx,
   originCheckMiddleware,
 } from "better-auth/api";
-import { setSessionCookie } from "better-auth/cookies";
+import { deleteSessionCookie, setSessionCookie } from "better-auth/cookies";
 import * as z from "zod";
 import { ENDPOINTS } from "./endpoints.js";
 import { ErrorCode } from "./errors.js";
@@ -46,6 +46,29 @@ const loginBody = z.object({ userId: z.string().min(1) });
 const updateSessionBody = z.object({
   patch: z.record(z.string(), z.unknown()),
 });
+const searchUsersQuery = z.object({
+  query: z.string().max(100).optional(),
+  cursor: z.string().min(1).max(256).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(25),
+});
+
+function missingMigration(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    cause?: unknown;
+  };
+  if (candidate.code === "P2021") return true;
+  if (
+    candidate.code === "42P01" &&
+    /devtools.?user/i.test(String(candidate.message))
+  )
+    return true;
+  if (/no such table:.*devtools.?user/i.test(String(candidate.message)))
+    return true;
+  return candidate.cause !== error && missingMigration(candidate.cause);
+}
 
 function guardCheck(configured?: boolean | (() => boolean)) {
   if (!isDevtoolsEnabled(configured)) {
@@ -61,6 +84,12 @@ function guardCheck(configured?: boolean | (() => boolean)) {
   return { enabled: true } as const;
 }
 
+function freshSession(ctx: Parameters<typeof getSessionFromCtx>[0]) {
+  // An earlier Better Auth hook may have populated this request from cookie cache.
+  ctx.context.session = null;
+  return getSessionFromCtx(ctx, { disableCookieCache: true });
+}
+
 type HttpErrorStatus =
   | "BAD_REQUEST"
   | "UNAUTHORIZED"
@@ -72,7 +101,7 @@ type HttpErrorStatus =
 function fail(
   status: HttpErrorStatus,
   code: (typeof ErrorCode)[keyof typeof ErrorCode],
-  message: string
+  message: string,
 ): never {
   throw new APIError(status, { code, message });
 }
@@ -83,20 +112,22 @@ const trustedRequestMiddleware = createAuthMiddleware(async (ctx) => {
     fail(
       "FORBIDDEN",
       ErrorCode.UNTRUSTED_ORIGIN,
-      "DevTools writes require a trusted browser origin."
+      "DevTools writes require a trusted browser origin.",
     );
   }
-  if (!ctx.context.isTrustedOrigin(requestOrigin, { allowRelativePaths: false })) {
+  if (
+    !ctx.context.isTrustedOrigin(requestOrigin, { allowRelativePaths: false })
+  ) {
     fail(
       "FORBIDDEN",
       ErrorCode.UNTRUSTED_ORIGIN,
-      "The request origin is not trusted."
+      "The request origin is not trusted.",
     );
   }
 });
 
 function toManagedTestUserRecord(
-  record: Record<string, unknown>
+  record: Record<string, unknown>,
 ): ManagedTestUserRecord {
   return {
     id: String(record.id),
@@ -135,15 +166,15 @@ function defaultSessionView<
 >(
   user: Record<string, unknown>,
   session: Record<string, unknown>,
-  editableFields: EditableFieldConfig<TEditableKey>[]
+  editableFields: EditableFieldConfig<TEditableKey>[],
 ): DevtoolsSessionView<TFields, TEditableKey> {
   const safeUser = Object.fromEntries(
     Object.entries(user).filter(
       ([key]) =>
         !SENSITIVE_USER_KEYS.has(
-          key.replaceAll(/[^a-z0-9]/gi, "").toLowerCase()
-        )
-    )
+          key.replaceAll(/[^a-z0-9]/gi, "").toLowerCase(),
+        ),
+    ),
   );
   const safeSession = Object.fromEntries(
     [
@@ -154,17 +185,17 @@ function defaultSessionView<
       "updatedAt",
       "ipAddress",
       "userAgent",
-    ].flatMap((key) => (key in session ? [[key, session[key]]] : []))
+    ].flatMap((key) => (key in session ? [[key, session[key]]] : [])),
   );
 
   return {
     userId: String(user.id),
     email: typeof user.email === "string" ? user.email : undefined,
     label: typeof user.name === "string" ? user.name : undefined,
-    fields: ({
+    fields: {
       ...safeUser,
       session: safeSession,
-    } as unknown) as TFields,
+    } as unknown as TFields,
     editableFields: editableFields.map((field) => field.key),
   };
 }
@@ -180,29 +211,33 @@ function isValidFieldValue(field: EditableFieldConfig, value: unknown) {
     case "number":
       return typeof value === "number" && Number.isFinite(value);
     case "select":
-      return typeof value === "string" && Boolean(field.options?.includes(value));
+      return (
+        typeof value === "string" && Boolean(field.options?.includes(value))
+      );
     default:
       return typeof value === "string";
   }
 }
 
 export const devtools = <
-  TTemplates extends Record<string, ManagedTestUserTemplate> = typeof DEFAULT_TEMPLATES,
+  TTemplates extends Record<string, ManagedTestUserTemplate> =
+    typeof DEFAULT_TEMPLATES,
   TFields extends Record<string, unknown> = Record<string, unknown>,
   TEditableKey extends keyof TFields & string = keyof TFields & string,
 >(
-  config: DevtoolsOptions<TTemplates, TFields, TEditableKey> = {}
+  config: DevtoolsOptions<TTemplates, TFields, TEditableKey> = {},
 ) => {
   const templates = (config.templates ?? DEFAULT_TEMPLATES) as TTemplates;
   const editableFields = config.editableFields ?? [];
-  const configuredRateLimit = config.rateLimit === false ? null : config.rateLimit;
+  const configuredRateLimit =
+    config.rateLimit === false ? null : config.rateLimit;
   const rateLimitMax = configuredRateLimit?.max ?? 60;
   const rateLimitWindowMs = (configuredRateLimit?.window ?? 60) * 1_000;
   let rateLimitState = { count: 0, resetAt: 0 };
 
   if (rateLimitMax < 1 || rateLimitWindowMs < 1_000) {
     throw new Error(
-      "Better Auth DevTools rateLimit requires max >= 1 and window >= 1 second."
+      "Better Auth DevTools rateLimit requires max >= 1 and window >= 1 second.",
     );
   }
 
@@ -219,10 +254,19 @@ export const devtools = <
     }
     rateLimitState.count += 1;
     if (rateLimitState.count > rateLimitMax) {
-      fail(
+      const retryAfter = Math.max(
+        1,
+        Math.ceil((rateLimitState.resetAt - now) / 1_000),
+      );
+      throw new APIError(
         "TOO_MANY_REQUESTS",
-        ErrorCode.RATE_LIMITED,
-        "Too many DevTools requests. Wait for the current rate-limit window."
+        {
+          code: ErrorCode.RATE_LIMITED,
+          message:
+            "Too many DevTools requests. Wait for the current rate-limit window.",
+          retryAfter,
+        },
+        { "Retry-After": String(retryAfter) },
       );
     }
   });
@@ -231,9 +275,12 @@ export const devtools = <
     if (editableKeys.has(field.key)) {
       throw new Error(`Duplicate Better Auth DevTools field: ${field.key}`);
     }
-    if (field.type === "select" && (!field.options || field.options.length === 0)) {
+    if (
+      field.type === "select" &&
+      (!field.options || field.options.length === 0)
+    ) {
       throw new Error(
-        `Better Auth DevTools select field "${field.key}" requires options.`
+        `Better Auth DevTools select field "${field.key}" requires options.`,
       );
     }
     editableKeys.add(field.key);
@@ -275,6 +322,27 @@ export const devtools = <
             fail("FORBIDDEN", guard.error.code, guard.error.message);
           }
 
+          try {
+            await ctx.context.adapter.count({ model: "devtoolsUser" });
+          } catch (error) {
+            if (missingMigration(error)) {
+              fail(
+                "INTERNAL_SERVER_ERROR",
+                ErrorCode.MIGRATION_REQUIRED,
+                "The DevTools user table is missing. Run the Better Auth migration.",
+              );
+            }
+            ctx.context.logger.error(
+              "Better Auth DevTools configuration check failed",
+              error,
+            );
+            fail(
+              "INTERNAL_SERVER_ERROR",
+              ErrorCode.INVALID_CONFIG,
+              "Could not check the DevTools configuration. Check the server log.",
+            );
+          }
+
           return ctx.json({
             enabled: true as const,
             templates: Object.entries(templates).map(([key, template]) => ({
@@ -291,9 +359,12 @@ export const devtools = <
               createUsers: true as const,
               deleteUsers: true as const,
               editSession: editableFields.length > 0,
+              editTarget: config.patchSession
+                ? ("custom" as const)
+                : ("user" as const),
             },
           });
-        }
+        },
       ),
 
       listDevtoolsUsers: createAuthEndpoint(
@@ -312,9 +383,58 @@ export const devtools = <
           });
 
           return ctx.json(
-            (users as Record<string, unknown>[]).map(toManagedTestUserRecord)
+            (users as Record<string, unknown>[]).map(toManagedTestUserRecord),
           );
-        }
+        },
+      ),
+
+      searchDevtoolsUsers: createAuthEndpoint(
+        ENDPOINTS.SEARCH_USERS,
+        {
+          method: "GET",
+          query: searchUsersQuery,
+          use: [devtoolsRequestMiddleware],
+        },
+        async (ctx) => {
+          const query = ctx.query.query?.trim();
+          const cursorWhere = ctx.query.cursor
+            ? [
+                {
+                  field: "id",
+                  operator: "gt" as const,
+                  value: ctx.query.cursor,
+                },
+              ]
+            : [];
+          const records = await ctx.context.adapter.findMany<
+            Record<string, unknown>
+          >({
+            model: "devtoolsUser",
+            where: query
+              ? [
+                  ...cursorWhere,
+                  ...["label", "email", "templateKey"].map((field) => ({
+                    field,
+                    operator: "contains" as const,
+                    value: query,
+                    mode: "insensitive" as const,
+                    connector: "OR" as const,
+                  })),
+                ]
+              : cursorWhere,
+            limit: ctx.query.limit + 1,
+            sortBy: { field: "id", direction: "asc" },
+          });
+          const hasMore = records.length > ctx.query.limit;
+          const users = records
+            .slice(0, ctx.query.limit)
+            .map(toManagedTestUserRecord);
+          return ctx.json({
+            users,
+            hasMore,
+            nextCursor: hasMore ? users.at(-1)!.id : null,
+          });
+        },
       ),
 
       createDevtoolsUser: createAuthEndpoint(
@@ -340,7 +460,7 @@ export const devtools = <
             fail(
               "BAD_REQUEST",
               ErrorCode.INVALID_TEMPLATE,
-              "Choose one of the configured test-user templates."
+              "Choose one of the configured test-user templates.",
             );
           }
 
@@ -356,10 +476,28 @@ export const devtools = <
                   email,
                 })
               : await ctx.context.internalAdapter.createUser({
-                  ...(template.user ?? {}),
-                  name: template.label,
+                  ...Object.fromEntries(
+                    Object.entries(template.user ?? {}).filter(
+                      ([key]) =>
+                        ![
+                          "id",
+                          "userId",
+                          "email",
+                          "createdAt",
+                          "updatedAt",
+                          "templateKey",
+                        ].includes(key),
+                    ),
+                  ),
+                  emailVerified:
+                    typeof template.user?.emailVerified === "boolean"
+                      ? template.user.emailVerified
+                      : true,
+                  name:
+                    typeof template.user?.name === "string"
+                      ? template.user.name
+                      : template.label,
                   email,
-                  emailVerified: true,
                 });
 
             createdUserId = "userId" in result ? result.userId : result.id;
@@ -387,25 +525,26 @@ export const devtools = <
             });
           } catch (error) {
             if (createdUserId) {
-              await ctx.context.internalAdapter.deleteUser(createdUserId).catch(
-                (cleanupError: unknown) =>
+              await ctx.context.internalAdapter
+                .deleteUser(createdUserId)
+                .catch((cleanupError: unknown) =>
                   ctx.context.logger.error(
                     "Better Auth DevTools failed to roll back a managed user",
-                    cleanupError
-                  )
-              );
+                    cleanupError,
+                  ),
+                );
             }
             ctx.context.logger.error(
               "Better Auth DevTools failed to create a managed user",
-              error
+              error,
             );
             fail(
               "INTERNAL_SERVER_ERROR",
               ErrorCode.CREATION_FAILED,
-              "Could not create the test user. Check the server log."
+              "Could not create the test user. Check the server log.",
             );
           }
-        }
+        },
       ),
 
       deleteDevtoolsUser: createAuthEndpoint(
@@ -434,26 +573,29 @@ export const devtools = <
             fail(
               "FORBIDDEN",
               ErrorCode.UNMANAGED_USER,
-              "Only DevTools-managed users can be deleted."
+              "Only DevTools-managed users can be deleted.",
             );
           }
 
           const managedUser = toManagedTestUserRecord(
-            managed as Record<string, unknown>
+            managed as Record<string, unknown>,
           );
           await config.beforeDeleteManagedUser?.({
             userId: ctx.body.userId,
             managedUser,
           });
+          const current = await freshSession(ctx);
+          const deletingCurrent = current?.user.id === ctx.body.userId;
           await ctx.context.internalAdapter.deleteUser(ctx.body.userId);
           await ctx.context.internalAdapter.deleteUserSessions(ctx.body.userId);
           await ctx.context.adapter.deleteMany({
             model: "devtoolsUser",
             where: [{ field: "userId", value: ctx.body.userId }],
           });
+          if (deletingCurrent) deleteSessionCookie(ctx);
 
           return ctx.json({ success: true as const });
-        }
+        },
       ),
 
       devtoolsLogin: createAuthEndpoint(
@@ -483,7 +625,7 @@ export const devtools = <
             fail(
               "FORBIDDEN",
               ErrorCode.UNMANAGED_USER,
-              "Only DevTools-managed users can be switched to."
+              "Only DevTools-managed users can be switched to.",
             );
           }
 
@@ -493,36 +635,45 @@ export const devtools = <
               fail(
                 "NOT_FOUND",
                 ErrorCode.USER_NOT_FOUND,
-                "The managed test user no longer exists."
+                "The managed test user no longer exists.",
               );
             }
 
-            const session = await ctx.context.internalAdapter.createSession(userId);
+            const current = await freshSession(ctx);
+            const session =
+              current?.user.id === userId
+                ? current.session
+                : await ctx.context.internalAdapter.createSession(userId);
             await setSessionCookie(ctx, { session, user });
             const sessionView = config.getSessionView
               ? await config.getSessionView({ userId, sessionId: session.id })
               : defaultSessionView(
                   user as Record<string, unknown>,
                   session as Record<string, unknown>,
-                  editableFields
+                  editableFields,
                 );
 
-            return ctx.json({ session: sessionView });
+            return ctx.json({
+              session: sessionView,
+              managedUser: toManagedTestUserRecord(
+                managed as Record<string, unknown>,
+              ),
+            });
           } catch (error) {
             if (error instanceof APIError) {
               throw error;
             }
             ctx.context.logger.error(
               "Better Auth DevTools failed to switch sessions",
-              error
+              error,
             );
             fail(
               "INTERNAL_SERVER_ERROR",
               ErrorCode.SESSION_CREATION_FAILED,
-              "Could not switch sessions. Check the server log."
+              "Could not switch sessions. Check the server log.",
             );
           }
-        }
+        },
       ),
 
       getDevtoolsSession: createAuthEndpoint(
@@ -534,7 +685,7 @@ export const devtools = <
             fail("FORBIDDEN", guard.error.code, guard.error.message);
           }
 
-          const current = await getSessionFromCtx(ctx);
+          const current = await freshSession(ctx);
           if (!current) {
             return ctx.json({ session: null });
           }
@@ -548,22 +699,31 @@ export const devtools = <
               : defaultSessionView(
                   current.user as Record<string, unknown>,
                   current.session as Record<string, unknown>,
-                  editableFields
+                  editableFields,
                 );
 
-            return ctx.json({ session: sessionView });
+            const managed = await ctx.context.adapter.findOne<
+              Record<string, unknown>
+            >({
+              model: "devtoolsUser",
+              where: [{ field: "userId", value: current.user.id }],
+            });
+            return ctx.json({
+              session: sessionView,
+              managedUser: managed ? toManagedTestUserRecord(managed) : null,
+            });
           } catch (error) {
             ctx.context.logger.error(
               "Better Auth DevTools failed to read the current session",
-              error
+              error,
             );
             fail(
               "INTERNAL_SERVER_ERROR",
               ErrorCode.INVALID_CONFIG,
-              "Could not inspect the session. Check the server log."
+              "Could not inspect the session. Check the server log.",
             );
           }
-        }
+        },
       ),
 
       updateDevtoolsSession: createAuthEndpoint(
@@ -588,41 +748,64 @@ export const devtools = <
             fail(
               "BAD_REQUEST",
               ErrorCode.INVALID_PATCH,
-              "No editable fields are configured."
+              "No editable fields are configured.",
             );
           }
 
           const { allowed, disallowed } = filterAllowedPatchKeys(
             ctx.body.patch,
-            editableFields
+            editableFields,
           );
           if (disallowed.length > 0 || Object.keys(allowed).length === 0) {
             fail(
               "BAD_REQUEST",
               ErrorCode.INVALID_PATCH,
-              "The patch contains unsupported fields."
+              "The patch contains unsupported fields.",
             );
           }
 
           for (const field of editableFields) {
-            if (field.key in allowed && !isValidFieldValue(field, allowed[field.key])) {
+            if (
+              field.key in allowed &&
+              !isValidFieldValue(field, allowed[field.key])
+            ) {
               fail(
                 "BAD_REQUEST",
                 ErrorCode.INVALID_PATCH,
-                `Invalid value for ${field.label}.`
+                `Invalid value for ${field.label}.`,
               );
             }
           }
 
-          const current = await getSessionFromCtx(ctx, {
-            disableCookieCache: true,
-          });
+          const current = await freshSession(ctx);
           if (!current) {
             fail(
               "UNAUTHORIZED",
               ErrorCode.NO_ACTIVE_SESSION,
-              "Sign in before editing session data."
+              "Sign in before editing session data.",
             );
+          }
+
+          if (config.getSessionView) {
+            const view = await config.getSessionView({
+              userId: current.user.id,
+              sessionId: current.session.id,
+            });
+            const allowedForSession = view.editableFields
+              ? new Set(view.editableFields)
+              : null;
+            if (
+              allowedForSession &&
+              Object.keys(allowed).some(
+                (key) => !allowedForSession.has(key as TEditableKey),
+              )
+            ) {
+              fail(
+                "BAD_REQUEST",
+                ErrorCode.INVALID_PATCH,
+                "This field is not editable for the current session.",
+              );
+            }
           }
 
           try {
@@ -637,8 +820,16 @@ export const devtools = <
 
             const user = await ctx.context.internalAdapter.updateUser(
               current.user.id,
-              allowed
+              allowed,
             );
+            if (!user) {
+              fail(
+                "NOT_FOUND",
+                ErrorCode.USER_NOT_FOUND,
+                "The current user no longer exists.",
+              );
+            }
+            await setSessionCookie(ctx, { session: current.session, user });
             const sessionView = config.getSessionView
               ? await config.getSessionView({
                   userId: current.user.id,
@@ -647,24 +838,24 @@ export const devtools = <
               : defaultSessionView(
                   user as Record<string, unknown>,
                   current.session as Record<string, unknown>,
-                  editableFields
+                  editableFields,
                 );
             return ctx.json({ session: sessionView });
           } catch (error) {
+            if (error instanceof APIError) throw error;
             ctx.context.logger.error(
               "Better Auth DevTools failed to update session data",
-              error
+              error,
             );
             fail(
               "INTERNAL_SERVER_ERROR",
               ErrorCode.INVALID_PATCH,
-              "Could not update the field. Check the server log."
+              "Could not update the field. Check the server log.",
             );
           }
-        }
+        },
       ),
     },
-
   } satisfies BetterAuthPlugin;
 };
 

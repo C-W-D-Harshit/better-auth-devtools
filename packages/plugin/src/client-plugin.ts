@@ -10,6 +10,8 @@ import type {
   ListUsersResponse,
   LoginRequest,
   LoginResponse,
+  SearchUsersRequest,
+  SearchUsersResponse,
   SessionResponse,
   UpdateSessionRequest,
   UpdateSessionResponse,
@@ -45,20 +47,23 @@ export interface DevtoolsClientActions<
 > {
   getDevtoolsConfig: () => DevtoolsFetchResult<DevtoolsPublicConfig>;
   listDevtoolsUsers: () => DevtoolsFetchResult<ListUsersResponse>;
+  searchDevtoolsUsers: (
+    query?: SearchUsersRequest,
+  ) => DevtoolsFetchResult<SearchUsersResponse>;
   createDevtoolsUser: (
-    data: CreateUserRequest<TTemplateKey>
+    data: CreateUserRequest<TTemplateKey>,
   ) => DevtoolsFetchResult<CreateUserResponse>;
   deleteDevtoolsUser: (
-    data: DeleteUserRequest
+    data: DeleteUserRequest,
   ) => DevtoolsFetchResult<DeleteUserResponse>;
   loginAsDevtoolsUser: (
-    data: LoginRequest
+    data: LoginRequest,
   ) => DevtoolsFetchResult<LoginResponse<TFields, TEditableKey>>;
   getDevtoolsSession: () => DevtoolsFetchResult<
     SessionResponse<TFields, TEditableKey>
   >;
   updateDevtoolsSession: (
-    data: UpdateSessionRequest<TFields, TEditableKey>
+    data: UpdateSessionRequest<TFields, TEditableKey>,
   ) => DevtoolsFetchResult<UpdateSessionResponse<TFields, TEditableKey>>;
 }
 
@@ -70,8 +75,8 @@ export interface DevtoolsClientPlugin<
   getActions?: (
     $fetch: <TData, TError = DevtoolsFetchError>(
       path: string,
-      options?: Record<string, unknown>
-    ) => Promise<TData>
+      options?: Record<string, unknown>,
+    ) => Promise<TData>,
   ) => DevtoolsClientActions<TTemplateKey, TFields, TEditableKey>;
   $InferServerPlugin: ReturnType<typeof devtoolsPlugin>;
 }
@@ -94,12 +99,23 @@ export const devtoolsClientPlugin = <
       return {
         getDevtoolsConfig: async () => {
           return $fetch<DevtoolsPublicConfig, DevtoolsFetchError>(
-            ENDPOINTS.CONFIG
+            ENDPOINTS.CONFIG,
           );
         },
         listDevtoolsUsers: async () => {
           return $fetch<ListUsersResponse, DevtoolsFetchError>(
-            ENDPOINTS.LIST_USERS
+            ENDPOINTS.LIST_USERS,
+          );
+        },
+        searchDevtoolsUsers: async (query: SearchUsersRequest = {}) => {
+          const params = new URLSearchParams();
+          if (query.query) params.set("query", query.query);
+          if (query.cursor) params.set("cursor", query.cursor);
+          if (query.limit !== undefined)
+            params.set("limit", String(query.limit));
+          const suffix = params.size ? `?${params}` : "";
+          return $fetch<SearchUsersResponse, DevtoolsFetchError>(
+            `${ENDPOINTS.SEARCH_USERS}${suffix}`,
           );
         },
         createDevtoolsUser: async (data: CreateUserRequest<TTemplateKey>) => {
@@ -108,7 +124,7 @@ export const devtoolsClientPlugin = <
             {
               method: "POST",
               body: data,
-            }
+            },
           );
         },
         deleteDevtoolsUser: async (data: DeleteUserRequest) => {
@@ -117,17 +133,17 @@ export const devtoolsClientPlugin = <
             {
               method: "POST",
               body: data,
-            }
+            },
           );
         },
         loginAsDevtoolsUser: async (data: LoginRequest) => {
-          return $fetch<LoginResponse<TFields, TEditableKey>, DevtoolsFetchError>(
-            ENDPOINTS.LOGIN,
-            {
-              method: "POST",
-              body: data,
-            }
-          );
+          return $fetch<
+            LoginResponse<TFields, TEditableKey>,
+            DevtoolsFetchError
+          >(ENDPOINTS.LOGIN, {
+            method: "POST",
+            body: data,
+          });
         },
         getDevtoolsSession: async () => {
           return $fetch<
@@ -136,7 +152,7 @@ export const devtoolsClientPlugin = <
           >(ENDPOINTS.SESSION);
         },
         updateDevtoolsSession: async (
-          data: UpdateSessionRequest<TFields, TEditableKey>
+          data: UpdateSessionRequest<TFields, TEditableKey>,
         ) => {
           return $fetch<
             UpdateSessionResponse<TFields, TEditableKey>,

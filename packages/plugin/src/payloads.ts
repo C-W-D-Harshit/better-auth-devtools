@@ -13,10 +13,24 @@ export interface DevtoolsPublicConfig {
     createUsers: true;
     deleteUsers: true;
     editSession: boolean;
+    /** Default editing writes Better Auth user fields; a patch hook owns custom data. */
+    editTarget?: "user" | "custom";
   };
 }
 
 export type ListUsersResponse = ManagedTestUserRecord[];
+
+export interface SearchUsersRequest {
+  query?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface SearchUsersResponse {
+  users: ManagedTestUserRecord[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
 
 export interface CreateUserRequest<TTemplateKey extends string = string> {
   template: TTemplateKey;
@@ -43,6 +57,7 @@ export interface LoginResponse<
   TEditableKey extends keyof TFields & string = keyof TFields & string,
 > {
   session: DevtoolsSessionView<TFields, TEditableKey>;
+  managedUser?: ManagedTestUserRecord;
 }
 
 export interface SessionResponse<
@@ -50,6 +65,7 @@ export interface SessionResponse<
   TEditableKey extends keyof TFields & string = keyof TFields & string,
 > {
   session: DevtoolsSessionView<TFields, TEditableKey> | null;
+  managedUser?: ManagedTestUserRecord | null;
 }
 
 export interface UpdateSessionRequest<
@@ -69,4 +85,5 @@ export interface UpdateSessionResponse<
 export interface DevtoolsErrorResponse {
   code: string;
   message: string;
+  retryAfter?: number;
 }

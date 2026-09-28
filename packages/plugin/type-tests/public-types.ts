@@ -50,7 +50,9 @@ const config = defineDevtoolsConfig({
       label: args.template.label,
     };
   },
-  async getSessionView(args): Promise<DevtoolsSessionView<SessionFields, "role">> {
+  async getSessionView(
+    args,
+  ): Promise<DevtoolsSessionView<SessionFields, "role">> {
     return {
       userId: args.userId,
       fields: {
@@ -60,7 +62,9 @@ const config = defineDevtoolsConfig({
       editableFields: ["role"],
     };
   },
-  async patchSession(args): Promise<DevtoolsSessionView<SessionFields, "role">> {
+  async patchSession(
+    args,
+  ): Promise<DevtoolsSessionView<SessionFields, "role">> {
     expectType<Partial<Pick<SessionFields, "role">>>(args.patch);
 
     return {
@@ -86,7 +90,7 @@ type DevtoolsConfig = typeof config;
 const inferredClientPlugin = devtoolsClientPluginFor<DevtoolsConfig>();
 const inferredActions = inferredClientPlugin.getActions?.(
   async <TData>(_path: string, _options?: Record<string, unknown>) =>
-    ({} as TData)
+    ({}) as TData,
 );
 
 inferredActions?.createDevtoolsUser({ template: "admin" });
@@ -97,10 +101,14 @@ inferredActions?.updateDevtoolsSession({ patch: { role: "viewer" } });
 // @ts-expect-error invalid patch key must fail
 inferredActions?.updateDevtoolsSession({ patch: { emailVerified: false } });
 
-const clientPlugin = devtoolsClientPlugin<"admin" | "viewer", SessionFields, "role">();
+const clientPlugin = devtoolsClientPlugin<
+  "admin" | "viewer",
+  SessionFields,
+  "role"
+>();
 const actions = clientPlugin.getActions?.(
   async <TData>(_path: string, _options?: Record<string, unknown>) =>
-    ({} as TData)
+    ({}) as TData,
 );
 
 actions?.createDevtoolsUser({ template: "admin" });
@@ -110,9 +118,14 @@ actions?.createDevtoolsUser({ template: "editor" });
 actions?.updateDevtoolsSession({ patch: { role: "viewer" } });
 // @ts-expect-error invalid patch key must fail
 actions?.updateDevtoolsSession({ patch: { emailVerified: false } });
+actions?.searchDevtoolsUsers({ query: "admin", limit: 25 });
+actions?.listDevtoolsUsers();
 
-const validConfig: DevtoolsPluginConfig<typeof templates, SessionFields, "role"> =
-  config;
+const validConfig: DevtoolsPluginConfig<
+  typeof templates,
+  SessionFields,
+  "role"
+> = config;
 void validConfig;
 
 const invalidField: EditableFieldConfig<keyof SessionFields & string> = {
