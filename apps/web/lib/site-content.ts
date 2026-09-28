@@ -1,9 +1,12 @@
+import { INSTALL_SNIPPETS } from "./install-snippets"
+
 export const SITE = {
   name: "Better Auth DevTools",
   url: "https://www.better-auth-devtools.com",
   description:
     "Better Auth DevTools — unofficial, development-only tooling for Better Auth. Create test users, switch sessions, inspect auth state, and patch approved fields from a React panel.",
   githubUrl: "https://github.com/C-W-D-Harshit/better-auth-devtools",
+  agentGuideUrl: "https://www.better-auth-devtools.com/install-agent.md",
   npmUrl: "https://www.npmjs.com/package/better-auth-devtools",
   author: {
     name: "Harshit",
@@ -15,9 +18,9 @@ export const HOME_PAGE = {
   path: "/",
   markdownPath: "/index.md",
   title: "Better Auth DevTools",
-  headlineLines: ["Test any user, any role.", "One click."],
+  headlineLines: ["Test your auth roles.", "Switch in one click."],
   description:
-    "Stop logging in and out to test roles and permissions. A development-only panel for Better Auth that spawns managed test users and switches sessions instantly, right inside your app.",
+    "Create managed test users and switch the Better Auth session from a development-only React panel. Check the result in your own app.",
   releaseLabel: "Stable release ready for Better Auth",
   installCommand: "pnpm add better-auth-devtools",
   features: {
@@ -31,24 +34,24 @@ export const HOME_PAGE = {
           "Spin up test accounts from templates you define. Keep real users out of your everyday auth checks.",
       },
       {
-        title: "Instant session switching",
+        title: "Managed session switching",
         description:
-          "Jump into any managed user in one click. The app reloads against the new Better Auth session.",
+          "Switch to a DevTools-managed user. The panel reloads the page after a successful switch by default.",
       },
       {
         title: "Session inspection",
         description:
-          "Read the exact session your app exposes — user fields plus approved metadata.",
+          "Inspect the current Better Auth user and session, with the raw token and secret-like fields hidden.",
       },
       {
         title: "Field patching",
         description:
-          "Edit only the fields you explicitly allow, then refresh with the updated auth state.",
+          "Edit only fields you configure. The panel reloads after a successful edit by default.",
       },
       {
         title: "Repeatable personas",
         description:
-          "Stable roles like Admin, Editor, and Viewer make auth-gated UI easy to verify — every time.",
+          "Configure personas for the roles your app actually uses. The demo includes Viewer and Admin.",
       },
       {
         title: "Dev-only by design",
@@ -58,38 +61,25 @@ export const HOME_PAGE = {
     ],
   },
   integration: {
-    title: "Two integration points",
+    title: "Install in the existing app",
     description:
-      "One server plugin and one zero-prop React component. No client plugin, no server-to-client wiring.",
+      "Add one server plugin, apply its schema, and mount the real React panel once. No client plugin or server-to-client wiring is required.",
     server: {
-      label: "Add the plugin",
-      filename: "auth.ts",
-      code: `import { betterAuth } from "better-auth";
-import { devtools } from "better-auth-devtools";
-
-export const auth = betterAuth({
-  database,
-  plugins: [devtools({ enabled: true })],
-});`,
+      label: "Extend your auth config",
+      filename: "src/lib/auth.ts (merge these lines)",
+      code: INSTALL_SNIPPETS.authDiff,
     },
     client: {
-      label: "Mount the panel",
-      filename: "providers.tsx",
-      code: `"use client";
-
-import { BetterAuthDevtools } from "better-auth-devtools/react";
-
-export function DevtoolsWrapper() {
-  return <BetterAuthDevtools />;
-}`,
+      label: "Create the client component",
+      filename: "src/app/devtools.tsx",
+      code: INSTALL_SNIPPETS.panel,
     },
-    note: {
-      lead: "Explicitly enabled for development.",
-      safety: "Production stays disabled.",
-      migrationPrefix: "After adding it, run",
-      migrationCommand: "npx auth@latest migrate",
-      migrationSuffix: "to apply the schema.",
+    layout: {
+      label: "Render it in the root layout",
+      filename: "src/app/layout.tsx",
+      code: INSTALL_SNIPPETS.layout,
     },
+    agentPrompt: INSTALL_SNIPPETS.agentPrompt,
   },
   callToAction: {
     title: "Stop logging out to test as someone else",

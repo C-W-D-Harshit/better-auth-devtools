@@ -1,89 +1,70 @@
 "use client";
 
 import { useSession, signOut } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
+
+type ActionResult = { status: "idle" | "pending" | "allowed" | "denied" | "error"; message: string };
 
 export default function Dashboard() {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { data: session, isPending, error, refetch } = useSession();
+  const [action, setAction] = useState<ActionResult>({ status: "idle", message: "" });
 
-  useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/");
+  async function checkAdminAccess() {
+    setAction({ status: "pending", message: "Checking on the server..." });
+    try {
+      const response = await fetch("/api/admin-check", { method: "POST" });
+      if (!response.ok) {
+        const failure = (await response.json()) as { message?: string };
+        setAction({
+          status: response.status === 403 ? "denied" : "error",
+          message: failure.message ?? `Request failed (${response.status})`,
+        });
+        return;
+      }
+      const body = (await response.json()) as { message?: string };
+      setAction({
+        status: "allowed",
+        message: body.message ?? `Request failed (${response.status})`,
+      });
+    } catch (cause) {
+      setAction({ status: "error", message: cause instanceof Error ? cause.message : "Request failed" });
     }
-  }, [session, isPending, router]);
+  }
 
-  // Fetch the devtools session to get the role
-  useEffect(() => {
-    if (session) {
-      fetch("/api/auth/better-auth-devtools/session", {
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.session?.fields?.role) {
-            setUserRole(data.session.fields.role);
-          }
-        })
-        .catch(() => {});
+  async function handleSignOut() {
+    const result = await signOut();
+    if (result.error) {
+      setAction({ status: "error", message: result.error.message ?? "Could not sign out" });
+      return;
     }
-  }, [session]);
-
-  if (isPending) return <p>Loading...</p>;
-  if (!session) return null;
-
-  const role = userRole ?? "viewer";
+    window.location.reload();
+  }
 
   return (
-    <main style={{ maxWidth: 600, margin: "40px auto" }}>
-      <h1>Dashboard</h1>
-      <div style={{ padding: 16, background: "#fff", borderRadius: 8, marginBottom: 16 }}>
-        <p><strong>User:</strong> {session.user.name}</p>
-        <p><strong>Email:</strong> {session.user.email}</p>
-        <p><strong>Role:</strong> <span style={{
-          background: role === "admin" ? "#dc3545" : role === "editor" ? "#ffc107" : "#28a745",
-          color: role === "admin" ? "#fff" : role === "editor" ? "#000" : "#fff",
-          padding: "2px 8px",
-          borderRadius: 4,
-          fontSize: 13,
-          fontWeight: 600,
-        }}>{role}</span></p>
-      </div>
-
-      {role === "admin" && (
-        <div style={{ padding: 16, background: "#ffe0e0", borderRadius: 8, marginBottom: 16 }}>
-          <h3>Admin Panel</h3>
-          <p>You have full access. This section is only visible to admins.</p>
+    <main style={{ maxWidth: 640, margin: "40px auto", padding: 16 }}>
+      <h1>Application session</h1>
+      <p>DevTools creates and switches managed test users. This page reads the normal Better Auth session. The access check below runs in this app&apos;s server route.</p>
+      {isPending ? <p role="status">Loading application session...</p> : error ? (
+        <div role="alert">
+          <p>Could not read the application session: {error.message}</p>
+          <button type="button" onClick={() => void refetch()}>Retry</button>
         </div>
+      ) : !session ? (
+        <p>Signed out. Open Auth DevTools, create a Viewer or Admin, then choose Switch.</p>
+      ) : (
+        <section style={{ padding: 16, background: "#fff", borderRadius: 8 }}>
+          <h2>Signed in as {session.user.name}</h2>
+          <p>Email: {session.user.email}</p>
+          <p>Role: <strong>{session.user.role}</strong></p>
+          <button type="button" onClick={() => void checkAdminAccess()} disabled={action.status === "pending"}>
+            Check admin access
+          </button>
+          {action.message ? <p role="status">{action.message}</p> : null}
+          <p><button type="button" onClick={() => void handleSignOut()}>Sign out</button></p>
+        </section>
       )}
-
-      {(role === "admin" || role === "editor") && (
-        <div style={{ padding: 16, background: "#fff3cd", borderRadius: 8, marginBottom: 16 }}>
-          <h3>Editor Tools</h3>
-          <p>You can edit content. This section is visible to admins and editors.</p>
-        </div>
-      )}
-
-      <div style={{ padding: 16, background: "#d4edda", borderRadius: 8, marginBottom: 16 }}>
-        <h3>Content</h3>
-        <p>This section is visible to all authenticated users.</p>
-      </div>
-
-      <button
-        onClick={() => signOut().then(() => router.push("/"))}
-        style={{
-          background: "#dc3545",
-          color: "#fff",
-          border: "none",
-          padding: "8px 16px",
-          borderRadius: 6,
-          cursor: "pointer",
-        }}
-      >
-        Sign Out
-      </button>
+      <p><Link href="/">Back to demo guide</Link></p>
     </main>
   );
 }

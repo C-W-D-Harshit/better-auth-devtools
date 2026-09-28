@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DevtoolsWrapper } from "./devtools-wrapper";
+import { Devtools } from "./devtools";
 
 export const metadata: Metadata = {
   title: "Better Auth DevTools Demo",
@@ -15,7 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ fontFamily: "system-ui, sans-serif", margin: 0, padding: "20px", background: "#f5f5f5" }}>
         {children}
-        <DevtoolsWrapper />
+        <Devtools />
       </body>
     </html>
   );

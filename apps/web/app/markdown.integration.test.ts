@@ -177,6 +177,15 @@ describe.sequential("Markdown representation over HTTP", () => {
     expect(await direct.text()).toBe(await negotiated.text())
   })
 
+  it("serves the agent install guide directly", async () => {
+    const response = await fetch(`${origin}/install-agent.md`)
+    const body = await response.text()
+
+    expect(response.status).toBe(200)
+    expect(body).toContain("# Install Better Auth DevTools in an existing app")
+    expect(body).toContain("host application's normal Better Auth session")
+  })
+
   it("does not mix cached HTML and Markdown representations", async () => {
     const markdownResponse = await fetch(origin, {
       headers: { accept: "text/markdown" },
