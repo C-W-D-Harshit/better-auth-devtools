@@ -1,5 +1,15 @@
 # better-auth-devtools
 
+## 1.1.0
+
+### Minor Changes
+
+- Add paginated managed-user search and new panel controls to create and switch users, sign out, and manage sessions. Keep the current browser's session in sync after edits and deletion, and provide clearer setup, network, and rate-limit errors.
+
+### Patch Changes
+
+- e3a7d38: Document the complete integration and include the coding-agent install guide in the published package.
+
 ## 1.0.1
 
 ### Patch Changes
