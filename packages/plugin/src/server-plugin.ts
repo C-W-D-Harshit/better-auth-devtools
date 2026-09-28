@@ -406,38 +406,25 @@ export const devtools = <
                 },
               ]
             : [];
-          const fields = query ? ["label", "email", "templateKey"] : [null];
-          const pages = await Promise.all(
-            fields.map((field) =>
-              ctx.context.adapter.findMany<Record<string, unknown>>({
-                model: "devtoolsUser",
-                where: field
-                  ? [
-                      ...cursorWhere,
-                      {
-                        field,
-                        operator: "contains",
-                        value: query!,
-                        mode: "insensitive",
-                      },
-                    ]
-                  : cursorWhere,
-                limit: ctx.query.limit + 1,
-                sortBy: { field: "id", direction: "asc" },
-              }),
-            ),
-          );
-          const records = [
-            ...new Map(
-              pages.flat().map((record) => [String(record.id), record]),
-            ).values(),
-          ].sort((left, right) =>
-            String(left.id) < String(right.id)
-              ? -1
-              : String(left.id) > String(right.id)
-                ? 1
-                : 0,
-          );
+          const records = await ctx.context.adapter.findMany<
+            Record<string, unknown>
+          >({
+            model: "devtoolsUser",
+            where: query
+              ? [
+                  ...cursorWhere,
+                  ...["label", "email", "templateKey"].map((field) => ({
+                    field,
+                    operator: "contains" as const,
+                    value: query,
+                    mode: "insensitive" as const,
+                    connector: "OR" as const,
+                  })),
+                ]
+              : cursorWhere,
+            limit: ctx.query.limit + 1,
+            sortBy: { field: "id", direction: "asc" },
+          });
           const hasMore = records.length > ctx.query.limit;
           const users = records
             .slice(0, ctx.query.limit)
@@ -855,6 +842,7 @@ export const devtools = <
                 );
             return ctx.json({ session: sessionView });
           } catch (error) {
+            if (error instanceof APIError) throw error;
             ctx.context.logger.error(
               "Better Auth DevTools failed to update session data",
               error,

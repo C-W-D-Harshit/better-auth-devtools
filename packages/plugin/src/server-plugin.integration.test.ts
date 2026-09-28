@@ -534,10 +534,56 @@ describe("devtools server plugin", () => {
         users: [{ userId: created[0].userId }],
         hasMore: false,
       });
+      const matching: string[] = [];
+      cursor = null;
+      do {
+        const response = await request(
+          `${ENDPOINTS.SEARCH_USERS}?query=USER&limit=17${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+        );
+        expect(response.status).toBe(200);
+        const page = (await response.json()) as {
+          users: Array<{ userId: string }>;
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
+        matching.push(...page.users.map((user) => user.userId));
+        cursor = page.hasMore ? page.nextCursor : null;
+      } while (cursor);
+      expect(matching).toEqual(found);
       const invalid = await request(`${ENDPOINTS.SEARCH_USERS}?limit=5000`);
       expect(invalid.status).toBe(400);
     } finally {
       pagingDatabase.close();
+    }
+  });
+
+  it("preserves the not-found code when a user disappears during an edit", async () => {
+    const created = (await (
+      await call(ENDPOINTS.CREATE_USER, {
+        method: "POST",
+        body: JSON.stringify({ template: "admin" }),
+      })
+    ).json()) as { user: { userId: string } };
+    const login = await call(ENDPOINTS.LOGIN, {
+      method: "POST",
+      body: JSON.stringify({ userId: created.user.userId }),
+    });
+    const cookie = login.headers.get("set-cookie") ?? undefined;
+    const updateUser = vi
+      .spyOn((await auth.$context).internalAdapter, "updateUser")
+      .mockResolvedValueOnce(null);
+    try {
+      const response = await call(ENDPOINTS.UPDATE_SESSION, {
+        method: "POST",
+        body: JSON.stringify({ patch: { role: "viewer" } }),
+        cookie,
+      });
+      expect(response.status).toBe(404);
+      await expect(response.json()).resolves.toMatchObject({
+        code: "USER_NOT_FOUND",
+      });
+    } finally {
+      updateUser.mockRestore();
     }
   });
 
